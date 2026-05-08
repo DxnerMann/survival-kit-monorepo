@@ -38,3 +38,5 @@ backend/.env-prod
 
 frontend/.env-local
 frontend/.env-prod
+
+.env
