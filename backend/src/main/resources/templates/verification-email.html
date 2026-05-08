@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body style="margin:0; padding:0; background:#f0f0f0; font-family: Arial, sans-serif;">
+<div style="padding: 40px;">
+    <div style="max-width:580px; margin:auto; background:white; border-radius:8px; overflow:hidden; border:1px solid #ddd;">
+
+        <div style="background:#D84020; padding:24px 40px; display:flex; align-items:center; gap:14px;">
+            <div style="background:#D84020; padding:24px 40px; display:flex; align-items:center; gap:14px;">
+                <img src="cid:icon" width="42" height="42" style="border-radius:8px;" />
+                <span style="color:white; font-size:15px; font-weight:bold;">DHBW Karlsruhe Lecture Survival Kit</span>
+            </div>
+        </div>
+
+        <div style="padding:40px;">
+            <h2 style="margin:0 0 8px; font-size:22px; color:#1a1a1a;">E-Mail-Adresse bestätigen</h2>
+            <p style="color:#555; font-size:15px; line-height:1.7; margin:0 0 8px;">
+                Hallo <strong th:text="${name}">Max</strong>,
+            </p>
+            <p style="color:#555; font-size:15px; line-height:1.7; margin:0 0 28px;">
+                vielen Dank für deine Registrierung beim <strong>DHBW Karlsruhe Lecture Survival Kit</strong>.
+                Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.
+            </p>
+            <a th:href="${verifyUrl}" style="display:inline-block; background:#D84020; color:white; padding:13px 28px; border-radius:8px; text-decoration:none; font-size:15px; font-weight:bold;">
+                E-Mail bestätigen
+            </a>
+            <p style="color:#888; font-size:13px; line-height:1.7; margin:32px 0 0;">
+                Diese Schaltfläche ist <strong>24 Stunden</strong> gültig. Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.
+            </p>
+            <p style="color:#aaa; font-size:12px; margin:8px 0 0;">
+                Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br>
+                <span th:text="${verifyUrl}" style="color:#D84020;"></span>
+            </p>
+        </div>
+
+        <div style="border-top:1px solid #eee; padding:20px 40px; background:#fafafa;">
+            <p style="color:#aaa; font-size:12px; margin:0; text-align:center;">
+                © 2026 DHBW Karlsruhe Lecture Survival Kit · Dies ist eine automatisch generierte E-Mail, bitte nicht antworten.
+            </p>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

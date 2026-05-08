@@ -1,4 +1,4 @@
-package com.survivalkit.backend.adapter;
+package com.survivalkit.backend.adapter.web;
 
 import java.time.Instant;
 

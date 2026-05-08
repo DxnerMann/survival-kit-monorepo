@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>E-Mail wurde bereits bestätigt</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #f0f0f0; font-family: Arial, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .card { background: white; border-radius: 12px; overflow: hidden; width: 100%; max-width: 480px; }
+        .header { background: #D84020; padding: 24px 32px; display: flex; align-items: center; gap: 12px; }
+        .header span { color: white; font-size: 14px; font-weight: bold; }
+        .body { padding: 40px 32px; text-align: center; }
+        .icon { width: 64px; height: 64px; background: #fff3f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+        h2 { font-size: 22px; color: #1a1a1a; margin-bottom: 12px; }
+        p { color: #555; font-size: 15px; line-height: 1.7; margin-bottom: 32px; }
+        .btn { display: inline-block; background: #D84020; color: white; padding: 13px 32px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: bold; width: 100%; text-align: center; }
+        .footer { border-top: 1px solid #eee; padding: 16px 32px; background: #fafafa; text-align: center; }
+        .footer p { color: #aaa; font-size: 12px; margin: 0; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <img src="/icon.png" width="36" height="36" style="border-radius:6px;" alt="Logo"/>
+        <span>DHBW Karlsruhe Lecture Survival Kit</span>
+    </div>
+    <div class="body">
+        <div class="icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D84020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
+        <h2>Diese E-Mail wurde bereits erfolgreich bestätigt!</h2>
+        <p>Deine E-Mail-Adresse wurde erfolgreich verifiziert. Du kannst dich in deinem Konto anmelden.</p>
+        <a th:href="${loginUrl}" class="btn">Zur Anmeldung</a>
+    </div>
+    <div class="footer">
+        <p>© 2026 DHBW Karlsruhe Lecture Survival Kit</p>
+    </div>
+</div>
+</body>
+</html>

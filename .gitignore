@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secrets ###
+backend/.env-local
+backend/.env-prod
