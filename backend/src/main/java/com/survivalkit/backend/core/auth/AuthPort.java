@@ -8,4 +8,5 @@ public interface AuthPort {
     void register(RegisterRequest request);
     ModelAndView verify(String token);
     LoginResponse login(String email, String password);
+    void validate();
 }

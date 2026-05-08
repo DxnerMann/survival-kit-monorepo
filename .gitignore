@@ -35,3 +35,6 @@ build/
 ### Secrets ###
 backend/.env-local
 backend/.env-prod
+
+frontend/.env-local
+frontend/.env-prod

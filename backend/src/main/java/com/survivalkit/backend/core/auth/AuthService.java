@@ -4,6 +4,7 @@ import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;
+import com.survivalkit.backend.config.SecurityContext;
 import com.survivalkit.backend.core.auth.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
@@ -118,6 +119,14 @@ public class AuthService implements AuthPort {
                 existingUser.firstname(),
                 existingUser.lastname()
         );
+    }
+
+    @Override
+    public void validate() {
+        var user = SecurityContext.current();
+        if (tokenService.validate(user.token()).isEmpty()) {
+            throw new UserUnauthorizedException("Token is Invalid or Expired");
+        }
     }
 
     private String hashPassword(String password) {

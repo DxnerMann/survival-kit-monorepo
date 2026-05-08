@@ -50,6 +50,7 @@ public class TokenService {
             var role = RoleLevel.valueOf(claims.get("role", String.class));
 
             return Optional.of(new AuthenticatedUser(
+                    token,
                     claims.getSubject(),
                     role,
                     claims.get("email", String.class)

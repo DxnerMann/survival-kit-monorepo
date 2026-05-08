@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("api/v1/auth")
@@ -44,5 +43,13 @@ public class AuthController {
             @RequestBody LoginRequest loginRequest
     ) {
         return ResponseEntity.ok(authPort.login(loginRequest.email(), loginRequest.password()));
+    }
+
+    @Role(RoleLevel.USER)
+    @PostMapping("validate")
+    public ResponseEntity<LoginResponse> validate() {
+
+        authPort.validate();
+        return ResponseEntity.ok().build();
     }
 }
