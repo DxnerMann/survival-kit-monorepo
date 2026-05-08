@@ -1,0 +1,127 @@
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: relative;
+
+    background-image: url('/public/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.login-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.theme-toggle-wrapper {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+}
+
+.login-card {
+    position: relative;
+    z-index: 2;
+
+    width: 100%;
+    max-width: 420px;
+
+    padding: 2rem;
+
+    border-radius: 16px;
+
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.login-card h1 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.login-card input {
+    padding: 12px;
+
+    border-radius: 10px;
+    border: none;
+
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+}
+
+.login-card button {
+    padding: 12px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: var(--color-primary-accent);
+    color: white;
+
+    cursor: pointer;
+}
+
+.login-card button:disabled {
+    opacity: 0.6;
+}
+
+.error {
+    color: var(--color-error);
+    font-size: 0.9rem;
+}
+
+.switch-text {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+
+    text-align: center;
+
+    line-height: 1.5;
+}
+
+.switch-text span {
+    color: var(--color-primary-accent);
+    cursor: pointer;
+    margin: 0 4px;
+}
+
+.login-logo {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+
+    height: 42px;
+    width: auto;
+
+    z-index: 2;
+
+    object-fit: contain;
+}
+
+@media (max-width: 600px) {
+    .login-card {
+        margin: 16px;
+        padding: 1.5rem;
+    }
+
+    .login-logo {
+        height: 32px;
+        top: 12px;
+        left: 12px;
+    }
+}
