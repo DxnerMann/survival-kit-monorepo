@@ -27,19 +27,23 @@ const removeToken = () => {
 const handleApiError = async (response: Response): Promise<never> => {
     if (response.status === 500) {
         throw new Error(
-            'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut'
+            'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut.'
         )
     }
+    let message = 'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut.';
 
     try {
-        const error: ApiError = await response.json()
+        const error = (await response.json()) as Partial<ApiError>;
 
-        throw new Error(error.message)
+        if (typeof error.message === 'string') {
+            message = error.message;
+        }
     } catch {
-        throw new Error(
-            'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut'
-        )
+        // parsing failed -> keep fallback message
     }
+    throw new Error(message);
+
+
 }
 
 const login = async (

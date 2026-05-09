@@ -1,0 +1,46 @@
+export type UserRole = "USER" | "ADMIN" | "GUEST";
+
+interface TokenPayload {
+    sub: string;
+    role: UserRole;
+    exp: number;
+}
+
+function getTokenPayload(token: string): TokenPayload | null {
+    try {
+        const base64Payload = token.split(".")[1];
+        const decoded = decodeBase64Url(base64Payload);
+        return JSON.parse(decoded);
+    } catch {
+        return null;
+    }
+}
+
+function getTokenFromCookie(name: string): string | null {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
+    return null;
+}
+
+function decodeBase64Url(str: string) {
+    return decodeURIComponent(
+        atob(str.replace(/-/g, "+").replace(/_/g, "/"))
+            .split("")
+            .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+    );
+}
+export function getUserRole(): UserRole | null {
+    const token = getTokenFromCookie("token");
+
+    if (!token) return "GUEST";
+
+    const payload = getTokenPayload(token);
+
+    return payload?.role ?? null;
+}
+
+export function isAdmin(): boolean {
+    return getUserRole() === "ADMIN";
+}

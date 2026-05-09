@@ -6,7 +6,7 @@ import ThemeToggle from '../../components/ThemeToggle'
 
 import './LoginPage.css'
 
-type Mode = 'login' | 'register'
+type Mode = 'login' | 'register' | 'verify';
 
 const LoginPage = () => {
     const navigate = useNavigate()
@@ -15,16 +15,12 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // login
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
 
-    // register
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [email, setEmail] = useState('')
-    const [regUsername, setRegUsername] = useState('')
-    const [regPassword, setRegPassword] = useState('')
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
     const [repeatPassword, setRepeatPassword] = useState('')
 
     const validatePassword = (pw: string) => {
@@ -37,14 +33,20 @@ const LoginPage = () => {
             setError(null)
 
             await authService.login({
-                email: username,
+                email: email,
                 password,
             })
 
             localStorage.removeItem('guest')
             navigate('/')
         } catch (e) {
-            console.error(e)
+            if (e instanceof Error) {
+                setError(e.message);
+                console.error(e);
+            } else {
+                setError("Unbekannter Fehler");
+                console.error(e);
+            }
         } finally {
             setLoading(false)
         }
@@ -55,7 +57,7 @@ const LoginPage = () => {
             setLoading(true)
             setError(null)
 
-            if (firstName.length > 30 || lastName.length > 30 || regUsername.length > 30) {
+            if (firstName.length > 30 || lastName.length > 30 || username.length > 30) {
                 setError('Max 30 Zeichen erlaubt')
                 return
             }
@@ -65,12 +67,12 @@ const LoginPage = () => {
                 return
             }
 
-            if (!validatePassword(regPassword)) {
+            if (!validatePassword(password)) {
                 setError('Passwort erfüllt die Anforderungen nicht')
                 return
             }
 
-            if (regPassword !== repeatPassword) {
+            if (password !== repeatPassword) {
                 setError('Passwörter stimmen nicht überein')
                 return
             }
@@ -78,26 +80,33 @@ const LoginPage = () => {
             await authService.register({
                 firstName,
                 lastName,
-                username: regUsername,
+                username,
                 email,
-                password: regPassword,
+                password,
             })
 
             await authService.login({
                 email,
-                password: regPassword,
+                password,
             })
 
-            navigate('/')
+            setMode('verify');
         } catch (e) {
-            console.error(e)
+            if (e instanceof Error) {
+                setError(e.message);
+                console.error(e);
+            } else {
+                setError("Unbekannter Fehler");
+                console.error(e);
+            }
         } finally {
             setLoading(false)
         }
     }
 
     const continueAsGuest = () => {
-        localStorage.setItem('guest', 'true')
+        localStorage.setItem('guest', 'true');
+        authService.removeToken();
         navigate('/')
     }
 
@@ -121,20 +130,20 @@ const LoginPage = () => {
                 </h1>
 
                 {error && (
-                    <p className="error">{error}</p>
+                    <p className="error centerd-text">{error}</p>
                 )}
 
                 {mode === 'login' ? (
                     <>
                         <input
-                            placeholder="Username / Email"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
 
                         <input
                             type="password"
-                            placeholder="Password"
+                            placeholder="Passwort"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
@@ -157,24 +166,24 @@ const LoginPage = () => {
                             </span>
                         </p>
                     </>
-                ) : (
+                ) : mode === 'register' ? (
                     <>
                         <input
-                            placeholder="First Name"
+                            placeholder="Vorname"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                         />
 
                         <input
-                            placeholder="Last Name"
+                            placeholder="Nachname"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                         />
 
                         <input
-                            placeholder="Username"
-                            value={regUsername}
-                            onChange={(e) => setRegUsername(e.target.value)}
+                            placeholder="Benutzername"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                         />
 
                         <input
@@ -185,14 +194,14 @@ const LoginPage = () => {
 
                         <input
                             type="password"
-                            placeholder="Password"
-                            value={regPassword}
-                            onChange={(e) => setRegPassword(e.target.value)}
+                            placeholder="Passwort"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                         />
 
                         <input
                             type="password"
-                            placeholder="Repeat Password"
+                            placeholder="Passwort wiederholen"
                             value={repeatPassword}
                             onChange={(e) => setRepeatPassword(e.target.value)}
                         />
@@ -210,6 +219,18 @@ const LoginPage = () => {
                                 Login
                             </span>
                         </p>
+                    </>
+                ) : (
+                    <>
+                        <p className="centered-text">Bitte Verifizieren sie ihre Email Adresse</p>
+                        <p className="centered-text">Es wurde eine Bestätigungsmail an die angegebene Adresse gesendet.</p>
+
+                        <button
+                            onClick={() => setMode('login')}
+                            disabled={loading}
+                        >
+                            Zum Login
+                        </button>
                     </>
                 )}
             </div>

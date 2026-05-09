@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: survival-kit-local
+    environment:
+      POSTGRES_DB: survival-kit
+      POSTGRES_USER: survival-kit
+      POSTGRES_PASSWORD: survival-kit
+    ports:
+      - "5432:5432"
