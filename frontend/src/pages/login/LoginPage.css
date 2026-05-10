@@ -105,7 +105,7 @@
     top: 16px;
     left: 16px;
 
-    height: 42px;
+    height: 80px;
     width: auto;
 
     z-index: 2;
@@ -124,7 +124,7 @@
     }
 
     .login-logo {
-        height: 32px;
+        height: 80px;
         top: 12px;
         left: 12px;
     }

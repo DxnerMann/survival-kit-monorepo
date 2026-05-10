@@ -114,7 +114,7 @@ const LoginPage = () => {
         <div className="login-page">
 
             <img
-                src="/images/logo.png"
+                src="/images/icon2.png"
                 className="login-logo"
                 alt="Logo"
             />
