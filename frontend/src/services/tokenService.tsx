@@ -1,3 +1,5 @@
+import {authService} from "./authService.tsx";
+
 export type UserRole = "USER" | "ADMIN" | "GUEST";
 
 interface TokenPayload {
@@ -16,13 +18,6 @@ function getTokenPayload(token: string): TokenPayload | null {
     }
 }
 
-function getTokenFromCookie(name: string): string | null {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
-    return null;
-}
-
 function decodeBase64Url(str: string) {
     return decodeURIComponent(
         atob(str.replace(/-/g, "+").replace(/_/g, "/"))
@@ -32,7 +27,7 @@ function decodeBase64Url(str: string) {
     );
 }
 export function getUserRole(): UserRole | null {
-    const token = getTokenFromCookie("token");
+    const token = authService.getToken();
 
     if (!token) return "GUEST";
 

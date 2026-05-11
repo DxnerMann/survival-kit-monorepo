@@ -6,5 +6,6 @@ public record AuthenticatedUser(
         String token,
         String userId,
         RoleLevel role,
-        String email
+        String email,
+        Boolean isVerified
 ) {}

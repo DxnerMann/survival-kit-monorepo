@@ -1,5 +1,6 @@
 package com.survivalkit.backend.core.security;
 
+import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.core.auth.AuthenticatedUser;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.jsonwebtoken.JwtException;
@@ -18,13 +19,15 @@ public class TokenService {
 
     private final Key signingKey;
     private final long expirationMs;
+    private final UserPersistancePort userPersistancePort;
 
     public TokenService(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms}") long expirationMs
+            @Value("${app.jwt.expiration-ms}") long expirationMs, UserPersistancePort userPersistancePort
     ) {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes());
         this.expirationMs = expirationMs;
+        this.userPersistancePort = userPersistancePort;
     }
 
     public String generateToken(String userId, RoleLevel role, String email) {
@@ -49,13 +52,14 @@ public class TokenService {
 
             var role = RoleLevel.valueOf(claims.get("role", String.class));
 
-            return Optional.of(new AuthenticatedUser(
+            var user = userPersistancePort.getById(claims.getSubject());
+            return user.map(userModel -> new AuthenticatedUser(
                     token,
                     claims.getSubject(),
                     role,
-                    claims.get("email", String.class)
+                    claims.get("email", String.class),
+                    userModel.isVerified()
             ));
-
         } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
         }

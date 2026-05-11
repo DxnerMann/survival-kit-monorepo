@@ -4,10 +4,11 @@ import type {ApiError} from '../models/ApiError.tsx'
 import type {LoginRequest} from '../models/LoginRequest.tsx'
 import type {LoginResponse} from '../models/LoginResponse.tsx'
 import type {RegisterRequest} from '../models/RegisterRequest.tsx'
+import {api} from "./api.tsx";
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = api.baseUrl;
 
-const TOKEN_KEY = 'token'
+const TOKEN_KEY = 'session'
 
 const saveToken = (token: string) => {
     Cookies.set(TOKEN_KEY, token, {
@@ -61,8 +62,7 @@ const login = async (
         await handleApiError(response)
     }
 
-    const data: LoginResponse = await response.json()
-
+    const data: LoginResponse = await response.json();
     saveToken(data.token)
 
     return data
@@ -92,7 +92,7 @@ const validate = async (): Promise<boolean> => {
     }
 
     try {
-        const response = await fetch(`${API_URL}/validate`, {
+        const response = await fetch(`${API_URL}/auth/validate`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${token}`,

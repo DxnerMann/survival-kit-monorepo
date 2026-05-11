@@ -49,7 +49,21 @@ public class AuthGuard extends OncePerRequestFilter {
 
         var requiredRole = resolveRequiredRole(request);
 
-        if (requiredRole == RoleLevel.GUEST || isLocalProfile()) {
+        if (requiredRole == RoleLevel.GUEST) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (isLocalProfile()) {
+            try {
+                var token = request.getHeader("Authorization")
+                        .substring(BEARER_PREFIX.length()).trim();
+                var user = tokenService.validate(token).get();
+                SecurityContext.set(user);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             filterChain.doFilter(request, response);
             return;
         }
@@ -68,6 +82,10 @@ public class AuthGuard extends OncePerRequestFilter {
             }
 
             var user = maybeUser.get();
+
+            if (!user.isVerified()) {
+                throw new UserUnauthorizedException("User not Verified Yet.");
+            }
 
             if (!user.role().hasAtLeast(requiredRole)) {
                 throw new AccessDeniedException(requiredRole);

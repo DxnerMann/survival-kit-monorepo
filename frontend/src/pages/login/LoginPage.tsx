@@ -85,11 +85,6 @@ const LoginPage = () => {
                 password,
             })
 
-            await authService.login({
-                email,
-                password,
-            })
-
             setMode('verify');
         } catch (e) {
             if (e instanceof Error) {

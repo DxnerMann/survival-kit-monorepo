@@ -64,7 +64,7 @@ public class UserRepository implements UserPersistancePort {
         """
                 INSERT INTO users (id, firstname, lastname, username, email, password, role, verificationToken, isVerified, createdat, lastupdated)
                 VALUES (:id, :firstname, :lastname, :username, :email, :password, :role, :verificationToken, :isVerified, :currentTime, :currentTime)
-                ON CONFLICT ON CONSTRAINT uq_users_id_username
+                ON CONFLICT (id)
                 DO UPDATE SET
                     firstname   = :firstname,
                     lastname    = :lastname,
