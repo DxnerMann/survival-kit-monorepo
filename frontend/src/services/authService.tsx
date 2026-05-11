@@ -5,6 +5,7 @@ import type {LoginRequest} from '../models/LoginRequest.tsx'
 import type {LoginResponse} from '../models/LoginResponse.tsx'
 import type {RegisterRequest} from '../models/RegisterRequest.tsx'
 import {api} from "./api.tsx";
+import {setUserContext} from "./userService.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -64,6 +65,7 @@ const login = async (
 
     const data: LoginResponse = await response.json();
     saveToken(data.token)
+    setUserContext(data);
 
     return data
 }

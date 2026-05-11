@@ -5,22 +5,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-
-    position: relative;
-
-    background-image: url('/images/background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-.login-page::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-
-    backdrop-filter: blur(6px);
-    background: rgba(0, 0, 0, 0.25);
 }
 
 .theme-toggle-wrapper {

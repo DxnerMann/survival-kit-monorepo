@@ -1,27 +1,37 @@
 .dashboard-page {
     height: 100vh;
-    padding-top: var(--header-height);
+    padding: 2rem;
+    padding-top: calc(var(--header-height) + 2rem);
     box-sizing: border-box;
-    overflow: auto;
     width: 100%;
 
     display: flex;
-    justify-content: center;
-    align-items: center;
-
-    position: relative;
-
-    background-image: url('/images/background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.dashboard-page::before {
-    content: "";
+.dashboard-edit-btn {
     position: absolute;
-    inset: 0;
+    top: calc(var(--header-height) + 1rem);
+    right: 2rem;
+    z-index: 10;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: var(--border-radius);
+    border: none;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background 0.15s;
+}
 
-    backdrop-filter: blur(6px);
-    background: rgba(0, 0, 0, 0.25);
+.dashboard-edit-btn--active {
+    background: var(--color-primary-accent);
+    color: white;
+    border-color: transparent;
+}
+
+.important-text {
+    color: var(--color-primary-accent);
 }
