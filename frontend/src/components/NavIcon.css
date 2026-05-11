@@ -1,0 +1,56 @@
+.nav-icon {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-primary);
+
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    padding: 0 8px;
+    height: 50px;
+
+    transition:
+            color 0.2s ease,
+            transform 0.1s ease,
+            gap 0.2s ease;
+}
+
+.nav-icon:hover,
+.nav-icon--active {
+    color: var(--color-primary-accent);
+    gap: 6px;
+}
+
+.nav-icon:active {
+    transform: scale(0.95);
+}
+
+.nav-icon__icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.nav-icon:hover .nav-icon__icon,
+.nav-icon--active .nav-icon__icon {
+    transform: translateX(-2px);
+}
+
+.nav-icon__label {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 0;
+    opacity: 0;
+    transition:
+            max-width 0.25s ease,
+            opacity 0.2s ease 0.05s;
+}
+
+.nav-icon:hover .nav-icon__label,
+.nav-icon--active .nav-icon__label {
+    max-width: 80px;
+    opacity: 1;
+}

@@ -1,10 +1,8 @@
-import '../styles/dashboard.css'
-import {getUserRole} from "../services/tokenService.tsx";
-
+import './DashboardPage.css'
 const DashboardPage = () => {
     return (
         <div className="dashboard-page">
-            You Role is: {getUserRole()}
+
         </div>
     )
 }

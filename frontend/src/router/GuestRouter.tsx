@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import {type ReactNode, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { authService } from '../services/authService'
 
@@ -6,7 +6,7 @@ type Props = {
     children: ReactNode
 }
 
-const ProtectedRoute = ({ children }: Props) => {
+const GuestRouter = ({ children }: Props) => {
     const [loading, setLoading] = useState(true)
     const [authorized, setAuthorized] = useState(false)
 
@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children }: Props) => {
             const guest = localStorage.getItem('guest')
 
             if (guest) {
-                setAuthorized(false)
+                setAuthorized(true)
                 setLoading(false)
                 return
             }
@@ -38,10 +38,10 @@ const ProtectedRoute = ({ children }: Props) => {
     }
 
     if (!authorized) {
-        return <Navigate to="/" replace />
+        return <Navigate to="/login" replace />
     }
 
     return children
 }
 
-export default ProtectedRoute
+export default GuestRouter;

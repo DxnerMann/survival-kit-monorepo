@@ -41,7 +41,7 @@
 
     border-radius: 16px;
 
-    background: var(--color-background-secondary);
+    background: var(--color-background-primary);
     color: var(--color-text-primary);
 
     display: flex;
@@ -60,8 +60,8 @@
     border-radius: 10px;
     border: none;
 
-    background: var(--color-background-primary);
-    color: var(--color-text-primary);
+    background: var(--color-background-secondary);
+    color: var(--color-text-secondary);
 }
 
 .login-card button {
@@ -113,7 +113,7 @@
     object-fit: contain;
 }
 
-.centerd-text {
+.centered-text {
     text-align: center;
 }
 

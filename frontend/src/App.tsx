@@ -1,42 +1,15 @@
-import {
-    BrowserRouter,
-    Navigate,
-    Route,
-    Routes,
-} from 'react-router-dom'
-
-import DashboardPage from './pages/DashboardPage'
-import LoginPage from './pages/login/LoginPage'
-
-import ProtectedRoute from './router/ProtectedRoute'
-
+import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
+import Layout from "./Layout.tsx";
 
 const App = () => {
     return (
         <ThemeProvider>
             <BrowserRouter>
-                <Routes>
-                    <Route
-                        path="/login"
-                        element={<LoginPage />}
-                    />
-                    <Route
-                        path="/"
-                        element={
-                            <ProtectedRoute>
-                                <DashboardPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="*"
-                        element={<Navigate to="/" replace />}
-                    />
-                </Routes>
+                <Layout />
             </BrowserRouter>
         </ThemeProvider>
     )
 }
 
-export default App
+export default App;

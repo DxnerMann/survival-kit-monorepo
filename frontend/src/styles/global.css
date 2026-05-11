@@ -5,6 +5,7 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'FreesentationVF', sans-serif;
+    --header-height: 80px;
 }
 
 html,

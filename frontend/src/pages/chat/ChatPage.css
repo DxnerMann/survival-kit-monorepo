@@ -1,0 +1,27 @@
+.chat-page {
+    height: 100vh;
+    padding-top: var(--header-height);
+    box-sizing: border-box;
+    overflow: auto;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: relative;
+
+    background-image: url('/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.chat-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.25);
+}
