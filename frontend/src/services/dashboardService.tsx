@@ -1,6 +1,8 @@
 import {api} from "./api.tsx";
 import type {UserWidget} from "../models/UserWidget.tsx";
 import {authService} from "./authService.tsx";
+import LecturePlan from "../components/widget/lecture-plan/LecturePlan.tsx";
+import LectureTimer from "../components/widget/lecture-timer/LectureTimer.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -27,6 +29,7 @@ const getDashboardLayout =  async () : Promise<UserWidget[]> => {
 }
 
 const saveDashbordLayout = async (widgets : UserWidget[])  => {
+    console.log(widgets);
     try {
         const token = authService.getToken();
 
@@ -44,6 +47,30 @@ const saveDashbordLayout = async (widgets : UserWidget[])  => {
         }
     } catch {
         throw new Error("Failed to Save Dashboard Layout for User");
+    }
+}
+
+const saveWidgetData = async (id : string, data: string)  => {
+    try {
+        const token = authService.getToken();
+
+        const response = await fetch(`${API_URL}/dashboard/widget`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id,
+                data
+            })
+        })
+
+        if (response.ok) {
+            return;
+        }
+    } catch {
+        throw new Error("Failed to Save Widget Data for User");
     }
 }
 
@@ -70,8 +97,19 @@ const getDefaultLayout = () : UserWidget[] => {
     ]
 }
 
+const decideOnWidget = (widget : UserWidget, isPreview : boolean)=> {
+    switch (widget.type) {
+        case "LECTURE_PLAN":
+            return <LecturePlan title={"Vorlesungsplan"} data={widget.data} id={widget.id} isPreview={isPreview} />
+        case "LECTURE_TIMER":
+            return <LectureTimer title={"Vorlesungstimer"} data={widget.data} id={widget.id} isPreview={isPreview} />
+    }
+}
+
 export const dashboardService = {
     getDashboardLayout,
     saveDashbordLayout,
-    getDefaultLayout
+    saveWidgetData,
+    getDefaultLayout,
+    decideOnWidget
 }

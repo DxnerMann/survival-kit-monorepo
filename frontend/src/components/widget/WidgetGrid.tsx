@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import GridLayout from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
@@ -15,10 +15,11 @@ import {dashboardService} from "../../services/dashboardService.tsx";
 
 const widgetConstraints: Record<
     string,
-    { minW: number; minH: number; maxW?: number; maxH?: number }
+    { minW: number; minH: number; defaultW: number; defaultH: number }
 > = {
-    LECTURE_PLAN: { minW: 3, minH: 4 },
-    LECTURE_TIMER: { minW: 3, minH: 4 }
+    LECTURE_PLAN: { minW: 3, minH: 4, defaultW: 5, defaultH: 4 },
+    LECTURE_TIMER: { minW: 3, minH: 4, defaultW: 5, defaultH: 4  },
+    EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
 function getWidgetConstraints(type: string) {
@@ -32,7 +33,16 @@ export default function WidgetGrid() {
     const [layout, setLayout] = useState<Layout>([]);
     const [widgets, setWidgets] = useState<UserWidget[]>([]);
     const [editMode, setEditMode] = useState(false);
-    const bottomRef = useRef<HTMLDivElement | null>(null);
+    const [widgetDraged, setWidgetDraged] = useState<string>("")
+    const isDeleteHoveredRef = useRef(false);
+    const layoutRef = useRef(layout);
+    const isDeletingRef = useRef(false);
+    const toolbox = useMemo(() =>
+            widgets
+                .filter(w => !layout.find(l => l.i === w.id))
+                .map(w => ({ i: w.id, x: 0, y: 0, w: 2, h: 1 })),
+        [widgets, layout]
+    );
 
 
     useEffect(() => {
@@ -68,12 +78,15 @@ export default function WidgetGrid() {
                     minH: constraints.minH,
                 };
             });
-
             setLayout(mapped);
         };
 
         load();
     }, []);
+
+    useEffect(() => {
+        layoutRef.current = layout;
+    }, [layout]);
 
     const handleSave = async () => {
         const updated: UserWidget[] = layout.map((l) => {
@@ -89,32 +102,38 @@ export default function WidgetGrid() {
                 data: original?.data ?? "",
             };
         });
-
         await dashboardService.saveDashbordLayout(updated);
     };
+
+    const handleDelete = useCallback((id: string) => {
+        if (isDeleteHoveredRef.current) {
+            isDeletingRef.current = true;
+            setLayout(prev => prev.filter(l => l.i !== id));
+        }
+        setWidgetDraged("");
+        isDeleteHoveredRef.current = false;
+    }, []);
 
     return (
         <div ref={ref} className="widget-grid-wrapper">
             <GridLayout
+                key={JSON.stringify(layout)}
                 className="widget-grid"
                 layout={layout}
+                resizeConfig={{enabled: editMode}}
+                dragConfig={{enabled: editMode}}
                 width={width}
                 autoSize
                 gridConfig={{ cols: 10, rowHeight: width / 10, maxRows: 20 }}
-                onLayoutChange={(l) => setLayout(l)}
-                onDragStop={(_layout, _oldItem, newItem) => {
-                    if (!newItem) return;
-
-                    const bottom = bottomRef.current?.getBoundingClientRect();
-                    if (!bottom) return;
-
-                    const mouseY = window.event ? (window.event as MouseEvent).clientY : 0;
-
-                    if (mouseY >= bottom.top) {
-                        setLayout(prev => prev.filter(w => w.i !== newItem.i));
-                        setWidgets(prev => prev.filter(w => w.id !== newItem.i));
+                onLayoutChange={(l) => {
+                    if (isDeletingRef.current) {
+                        isDeletingRef.current = false;
+                        return;
                     }
+                    setLayout([...l]);
                 }}
+                onDragStart={(_layout, widget) => setWidgetDraged(widget?.i ?? "")}
+                onDragStop={(_layout, widget) => handleDelete(widget?.i ?? "")}
             >
                 {layout.map((l) => {
                     const widget = widgets.find((w) => w.id === l.i);
@@ -124,21 +143,29 @@ export default function WidgetGrid() {
                             key={l.i}
                             className={`widget-card ${editMode ? 'edit' : 'locked'}`}
                         >
-                            {widget?.type ?? 'unknown'}
+                            {dashboardService.decideOnWidget({
+                                id: widget?.id ?? "",
+                                data: widget?.data ?? "",
+                                width: widget?.width ?? 0,
+                                height: widget?.height ?? 0,
+                                x: widget?.x ?? 0,
+                                y: widget?.y ?? 0,
+                                type: widget?.type ?? "EMPTY"
+                            },
+                                false
+                            )}
                         </div>
                     );
                 })}
             </GridLayout>
 
-            <button
+            {  getUserRole() !== "GUEST" && <button
                 className="edit-button"
                 onClick={() => {
                     const next = !editMode;
-
                     if (!next) {
                         handleSave();
                     }
-
                     setEditMode(next);
                 }}
             >
@@ -152,13 +179,51 @@ export default function WidgetGrid() {
                         Layout anpassen
                     </div>
                 }
-            </button>
+            </button> }
 
-            <div
-                ref={bottomRef}
-                className={`bottom-bar ${editMode ? 'visible' : ''}`}
-            >
-                Drop here to delete
+            <div className={`bottom-bar ${editMode ? 'visible' : ''}`}>
+                { widgetDraged !== "" && <div
+                    className="delete-container"
+                    onMouseEnter={() => { isDeleteHoveredRef.current = true; }}
+                    onMouseLeave={() => { isDeleteHoveredRef.current = false; }}
+                >
+                    <h2>Entfernen</h2>
+                </div>}
+
+                <div className="toolbox-scroll">
+                    {toolbox.map(item => {
+                        const widget = widgets.find(w => w.id === item.i);
+                        return (
+                            <div
+                                key={item.i}
+                                className="toolbox-item"
+                                onClick={() => {
+                                    const contraints = getWidgetConstraints(widget?.type ?? "EMPTY");
+
+                                    setLayout(prev => [...prev, {
+                                        i: item.i,
+                                        x: 0,
+                                        y: Infinity,
+                                        w: contraints.defaultW,
+                                        h: contraints.defaultH,
+                                        minW: contraints.minW,
+                                        minH: contraints.minH,
+                                    }]);
+                                }}
+                            >
+                                {dashboardService.decideOnWidget({
+                                    id: widget?.id ?? "",
+                                    data: widget?.data ?? "",
+                                    width: widget?.width ?? 0,
+                                    height: widget?.height ?? 0,
+                                    x: widget?.x ?? 0,
+                                    y: widget?.y ?? 0,
+                                    type: widget?.type ?? "EMPTY"
+                                }, true)}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

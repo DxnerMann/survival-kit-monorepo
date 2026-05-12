@@ -58,10 +58,10 @@
     bottom: 0;
 
     width: 100%;
-    height: 80px;
+    height: 200px;
 
-    background: var(--color-background-primary);
-    border-top: var(--color-background-secondary);
+    background-color: var(--color-transparent-primary);
+    border-top: 1px solid var(--color-background-secondary);
 
     transform: translateY(100%);
     transition: transform 0.3s ease;
@@ -69,29 +69,40 @@
     z-index: 1000;
 }
 
-.widget-card.locked {
-    pointer-events: none;
-}
-
-.bottom-bar {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-
-    width: 100%;
-    height: 90px;
-
-    background: rgba(20,20,20,0.95);
-    border-top: 1px solid #333;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    transform: translateY(100%);
-    transition: transform 0.25s ease;
+.react-grid-item.react-grid-placeholder {
+    background: var(--color-transparent-primary);
+    border-radius: var(--border-radius);
 }
 
 .bottom-bar.visible {
     transform: translateY(0);
+}
+
+.delete-container {
+    position: absolute;
+    z-index: 1001;
+    background: rgb(255 0 0 / 0.3);
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    user-select: none;
+}
+
+.toolbox-scroll {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-x: scroll;
+    gap: 1rem;
+    height: 100%;
+    padding: 1rem;
+}
+
+.toolbox-item {
+    height: 80%;
+    width: 300px;
 }
