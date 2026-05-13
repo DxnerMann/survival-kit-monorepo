@@ -13,6 +13,7 @@ public record UserModel(
         String password,
         RoleLevel role,
         String verificationToken,
-        Boolean isVerified
+        Boolean isVerified,
+        String course
 ) {
 }

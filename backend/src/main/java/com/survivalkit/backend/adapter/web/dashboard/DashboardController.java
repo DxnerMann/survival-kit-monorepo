@@ -1,7 +1,7 @@
 package com.survivalkit.backend.adapter.web.dashboard;
 
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetModel;
-import com.survivalkit.backend.core.dashboard.WidgetQueryPort;
+import com.survivalkit.backend.core.widget.WidgetQueryPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import org.springframework.http.ResponseEntity;

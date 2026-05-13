@@ -29,6 +29,7 @@ public class UserRepository implements UserPersistancePort {
                         .addValue("role", user.role().toString())
                         .addValue("verificationToken", user.verificationToken())
                         .addValue("isVerified", user.isVerified())
+                        .addValue("course", user.course())
                         .addValue("currentTime", Utils.toTimestamp(Instant.now()))
                 ).update();
     }
@@ -58,12 +59,20 @@ public class UserRepository implements UserPersistancePort {
                 ).update();
     }
 
+    @Override
+    public void setUserCourse(String userId, String course) {
+        jdbcClient.sql(Statements.SET_COURSE.sql)
+                .paramSource(new MapSqlParameterSource("id", userId)
+                        .addValue("course", course)
+                ).update();
+    }
+
     private enum Statements{
         // language=sql
         UPSERT(
         """
-                INSERT INTO users (id, firstname, lastname, username, email, password, role, verificationToken, isVerified, createdat, lastupdated)
-                VALUES (:id, :firstname, :lastname, :username, :email, :password, :role, :verificationToken, :isVerified, :currentTime, :currentTime)
+                INSERT INTO users (id, firstname, lastname, username, email, password, role, verificationToken, isVerified, course, createdat, lastupdated)
+                VALUES (:id, :firstname, :lastname, :username, :email, :password, :role, :verificationToken, :isVerified, :course, :currentTime, :currentTime)
                 ON CONFLICT (id)
                 DO UPDATE SET
                     firstname   = :firstname,
@@ -71,6 +80,7 @@ public class UserRepository implements UserPersistancePort {
                     username    = :username,
                     password    = :password,
                     isVerified  = :isVerified,
+                    course      = :course,
                     lastupdated = :currentTime
              """
         ),
@@ -90,6 +100,12 @@ public class UserRepository implements UserPersistancePort {
         VERIFY(
                 """
                         UPDATE users SET isVerified = :isVerified WHERE id = :id;
+                    """
+        ),
+        // language=sql
+        SET_COURSE(
+                """
+                        UPDATE users SET course = :course WHERE id = :id;
                     """
         );
 

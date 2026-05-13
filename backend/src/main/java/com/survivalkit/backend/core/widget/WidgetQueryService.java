@@ -1,4 +1,4 @@
-package com.survivalkit.backend.core.dashboard;
+package com.survivalkit.backend.core.widget;
 
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetModel;
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetPersistancePort;

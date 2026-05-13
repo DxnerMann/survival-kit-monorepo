@@ -9,6 +9,7 @@ const DashboardPage = () => {
 
     return (
         <div className="dashboard-page">
+            <script src="https://gist.github.com/Mikescher/f3d51a40dd0c5228df86.js"></script>
             { getUserRole() != "GUEST" && <h1>Willkommen zurück {getUsername() === "" ? "" : ","} <a className="important-text">{username}</a> !</h1> }
             <WidgetGrid />
             <h1>Test Hier gehts weiter</h1>

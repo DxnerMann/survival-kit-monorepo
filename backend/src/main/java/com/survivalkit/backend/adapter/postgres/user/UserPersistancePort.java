@@ -8,4 +8,5 @@ public interface UserPersistancePort {
     Optional<UserModel> getById(String id);
     Optional<UserModel> findByEmailOrUsername(String email, String username);
     void setVerified(String userId, boolean verified);
+    void setUserCourse(String userId, String course);
 }
