@@ -30,12 +30,13 @@ public class TokenService {
         this.userPersistancePort = userPersistancePort;
     }
 
-    public String generateToken(String userId, RoleLevel role, String email) {
+    public String generateToken(String userId, RoleLevel role, String email, String username) {
         var now = System.currentTimeMillis();
         return Jwts.builder()
                 .subject(userId)
                 .claim("role", role.name())
                 .claim("email", email)
+                .claim("username", username)
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + expirationMs))
                 .signWith(signingKey)
@@ -56,6 +57,7 @@ public class TokenService {
             return user.map(userModel -> new AuthenticatedUser(
                     token,
                     claims.getSubject(),
+                    userModel.username(),
                     role,
                     claims.get("email", String.class),
                     userModel.isVerified()

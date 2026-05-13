@@ -47,7 +47,7 @@ public class AuthController {
 
     @Role(RoleLevel.USER)
     @PostMapping("validate")
-    public ResponseEntity<LoginResponse> validate() {
+    public ResponseEntity<Void> validate() {
 
         authPort.validate();
         return ResponseEntity.ok().build();

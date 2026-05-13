@@ -22,8 +22,13 @@
 .widget-header {
     display: flex;
     flex-direction: row;
+    justify-content: flex-end;
+    padding: 0.5rem;
+    padding-right: 1rem;
+    height: var(--widget-header-height);
     gap: 0.5rem;
-    align-items: center;
+    width: 100%;
+    z-index: 2000;
 }
 
 .widget-header-icon {

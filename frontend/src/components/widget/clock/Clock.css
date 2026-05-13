@@ -1,0 +1,209 @@
+.lecture-plan-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    justify-content: start;
+}
+
+.lecture-plan-widget.fullscreen {
+    background: var(--color-background-primary);
+    position: fixed;
+    border-radius: 0;
+    bottom: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 2000;
+}
+
+.widget-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 0.5rem;
+    padding-right: 1rem;
+    height: var(--widget-header-height);
+    gap: 0.5rem;
+    width: 100%;
+    z-index: 2000;
+}
+
+.widget-header-icon {
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+
+.widget-header-icon:hover {
+    color: var(--color-primary-accent);
+}
+
+.widget-title {
+    margin: 1rem;
+}
+
+.lecture-plan-widget button {
+    z-index: 1000;
+}
+
+.lecture-plan-widget-preview {
+    background: var(--color-background-primary);
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 5px;
+    border-radius: var(--border-radius);
+    height: 100%;
+    width: 100%;
+}
+
+.lecture-plan-preview-row {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 25%;
+}
+
+.lecture-plan-preview-column-large {
+    background: var(--color-primary-accent);
+    border-radius: calc(var(--border-radius) / 5);
+    height: 40%;
+    width: 100%;
+}
+
+.lecture-plan-preview-column-small {
+    background: var(--color-primary-accent);
+    border-radius: calc(var(--border-radius) / 5);
+    height: 20%;
+    width: 100%;
+}
+
+.widget-title-preview {
+    color: var(--color-text-primary);
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.analog-clock {
+    width: 100%;
+    height: calc(100% - var(--widget-header-height, 0px));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    position: relative;
+    pointer-events: none;
+}
+
+.analog-clock__svg {
+    pointer-events: auto;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+    display: block;
+}
+
+.analog-clock__face {
+    fill: var(--color-background-primary);
+    stroke: var(--color-border);
+    stroke-width: 0.5;
+}
+
+.analog-clock__ring {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 0.5;
+    opacity: 0.4;
+}
+
+.analog-clock__tick {
+    stroke: var(--color-text-secondary);
+    stroke-width: 0.5;
+    opacity: 0.5;
+}
+
+.analog-clock__tick--hour {
+    stroke: var(--color-text-secondary);
+    stroke-width: 1.5;
+    opacity: 1;
+}
+
+.analog-clock__numeral {
+    font-size: 12px;
+    font-weight: 500;
+    fill: var(--color-text-primary);
+}
+
+.analog-clock__hand {
+    stroke-linecap: round;
+}
+
+.analog-clock__hand--hour {
+    stroke: var(--color-text-primary);
+    stroke-width: 3.5;
+}
+
+.analog-clock__hand--minute {
+    stroke: var(--color-text-primary);
+    stroke-width: 2;
+}
+
+.analog-clock__hand--second {
+    stroke: var(--color-primary-accent);
+    stroke-width: 1;
+}
+
+.analog-clock__center-outer {
+    fill: var(--color-text-primary);
+}
+
+.analog-clock__center-inner {
+    fill: var(--color-primary-accent);
+}
+
+
+.digital-clock {
+    container-type: inline-size;
+    width: 100%;
+    height: calc(100% - var(--widget-header-height, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 1rem;
+    position: relative;
+}
+
+.digital-clock__time {
+    font-size: clamp(1rem, 15cqw, 5rem);
+    font-family: "Share Tech Mono", "Courier New", monospace;
+    font-weight: 400;
+    color: var(--color-primary-accent);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.digital-clock__date {
+    font-size: clamp(0.55rem, 4cqw, 1rem);
+    font-family: "Share Tech Mono", "Courier New", monospace;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+

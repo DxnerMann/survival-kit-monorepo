@@ -6,6 +6,7 @@
     box-sizing: border-box;
     font-family: 'FreesentationVF', sans-serif;
     --header-height: 80px;
+    --widget-header-height: 1rem;
     --border-radius: 2rem;
     --dwg-cols: 10;
     --dwg-gap: 0.5rem;
@@ -42,18 +43,12 @@ body::before {
     width: 100vw;
     height: 100vh;
 
-    /* The Background image/color */
-    background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+    background: linear-gradient(rgba(0, 0, 0, 0.25), var(--color-background-secondary)),
     url('/images/background.jpg') no-repeat center center;
     background-size: cover;
 
-    /* The Blur */
-    filter: blur(8px);
-
-    /* Vital: Move it behind everything */
+    filter: blur(10px);
     z-index: -1;
-
-    /* Optimization: prevents the blur from bleeding over edges */
     transform: scale(1.1);
 }
 

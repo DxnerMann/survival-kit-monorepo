@@ -5,9 +5,11 @@ import {getUsername} from "../../services/userService.tsx";
 
 const DashboardPage = () => {
 
+    const username = getUsername();
+
     return (
         <div className="dashboard-page">
-            { getUserRole() != "GUEST" && <h1>Willkommen zurück, <a className="important-text">{getUsername()}</a> !</h1> }
+            { getUserRole() != "GUEST" && <h1>Willkommen zurück {getUsername() === "" ? "" : ","} <a className="important-text">{username}</a> !</h1> }
             <WidgetGrid />
             <h1>Test Hier gehts weiter</h1>
             <h1>Test Hier gehts weiter</h1>

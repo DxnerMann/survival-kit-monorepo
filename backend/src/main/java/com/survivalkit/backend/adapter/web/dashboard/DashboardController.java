@@ -1,6 +1,9 @@
 package com.survivalkit.backend.adapter.web.dashboard;
 
-import com.survivalkit.backend.adapter.postgres.widget.Widget;
+import com.survivalkit.backend.adapter.postgres.widget.UserWidgetModel;
+import com.survivalkit.backend.core.dashboard.WidgetQueryPort;
+import com.survivalkit.backend.shared.Role;
+import com.survivalkit.backend.shared.RoleLevel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,25 +17,33 @@ import java.util.List;
 @RequestMapping("api/v1/dashboard")
 public class DashboardController {
 
-    @GetMapping
-    public ResponseEntity<List<Widget>> getDashboardLayout() {
-        // TODO: Return all widgets for the user
-        return ResponseEntity.ok().build();
+    private final WidgetQueryPort widgetQueryPort;
+
+    public DashboardController(WidgetQueryPort widgetQueryPort) {
+        this.widgetQueryPort = widgetQueryPort;
     }
 
+    @Role(RoleLevel.USER)
+    @GetMapping
+    public ResponseEntity<List<UserWidgetModel>> getDashboardLayout() {
+        return ResponseEntity.ok(widgetQueryPort.getAllWidgets());
+    }
+
+    @Role(RoleLevel.USER)
     @PostMapping
     public ResponseEntity<Void> saveDashboardLayout(
-            @RequestBody List<Widget> widgets
+            @RequestBody List<UserWidgetModel> userWidgetModels
     ) {
-        // TODO: Delete all stored user Widgets, create new ids and save them
+        widgetQueryPort.saveAllWidgets(userWidgetModels);
         return ResponseEntity.ok().build();
     }
 
+    @Role(RoleLevel.USER)
     @PostMapping("/widget")
     public ResponseEntity<Void> saveWidgetData(
             @RequestBody WidgetDataRequest widgetDataRequest
     ) {
-        //  TODO: get widgets by id and userId and update Data
+        widgetQueryPort.updateWidgetData(widgetDataRequest.id(), widgetDataRequest.data());
         return ResponseEntity.ok().build();
     }
 }

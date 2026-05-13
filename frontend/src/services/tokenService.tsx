@@ -5,6 +5,7 @@ export type UserRole = "USER" | "ADMIN" | "GUEST";
 interface TokenPayload {
     sub: string;
     role: UserRole;
+    username: string;
     exp: number;
 }
 
@@ -34,6 +35,16 @@ export function getUserRole(): UserRole | null {
     const payload = getTokenPayload(token);
 
     return payload?.role ?? null;
+}
+
+export function getUsernameFromToken(): string | null {
+    const token = authService.getToken();
+
+    if (!token) return null;
+
+    const payload = getTokenPayload(token);
+
+    return payload?.username ?? null;
 }
 
 export function isAdmin(): boolean {

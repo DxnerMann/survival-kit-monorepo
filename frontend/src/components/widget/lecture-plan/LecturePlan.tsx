@@ -51,7 +51,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     function saveSettings() {
         try {
             if (getUserRole() !== "GUEST") {
-                dashboardService.saveWidgetData(id, JSON.stringify(data));
+                dashboardService.saveWidgetData(id, JSON.stringify(decodedData));
             } else {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(decodedData));
             }
@@ -86,7 +86,6 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const getWidgetContent = () => (
         <div className={`lecture-plan-widget ${inFullscreen ? "fullscreen" : ""}`}>
             <div className="widget-header">
-                <h2 className="widget-title">{inSettings ? "Einstellungen" : title}</h2>
                 {!inSettings && <Settings
                      className="widget-header-icon"
                      size={20}

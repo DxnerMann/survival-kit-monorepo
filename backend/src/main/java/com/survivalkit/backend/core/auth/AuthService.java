@@ -52,7 +52,7 @@ public class AuthService implements AuthPort {
         }
 
         var userId = NanoId.generate(25);
-        var token = tokenService.generateToken(userId, RoleLevel.USER, request.email());
+        var token = tokenService.generateToken(userId, RoleLevel.USER, request.email(), request.username());
 
         emailPort.sendVerificationEmail(request.email(), request.firstName(), token);
 
@@ -114,7 +114,7 @@ public class AuthService implements AuthPort {
             throw new UserUnauthorizedException("User is not yet Verified");
         }
         return new LoginResponse(
-                tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email()),
+                tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
                 existingUser.username(),
                 existingUser.firstname(),
                 existingUser.lastname()
