@@ -20,7 +20,6 @@ import org.jsoup.nodes.Element;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
@@ -149,7 +148,10 @@ public class RaplaApiClient implements RaplaApiPort {
 
         try {
             var uri = new URI(raplaUrl);
-            String query = uri.getQuery();
+
+            var isNewRaplaLink = uri.getPath().contains("calendar");
+
+            var query = uri.getQuery();
 
             if (query == null) {
                 return raplaUrl;
@@ -163,14 +165,27 @@ public class RaplaApiClient implements RaplaApiPort {
                 }
             }
 
-            var page = "calendar";
-            var user = params.get("user");
-            var file = params.get("file");
-
             var newQuery = new StringBuilder();
-            newQuery.append("page=").append(page);
-            if (user != null) newQuery.append("&user=").append(user);
-            if (file != null) newQuery.append("&file=").append(file);
+
+            if (isNewRaplaLink) {
+                var key = params.get("key");
+                var salt = params.get("salt");
+
+                if (key == null || salt == null) {
+                    return raplaUrl;
+                }
+
+                newQuery.append("salt=").append(salt);
+                newQuery.append("&key=").append(key);
+            } else {
+                var page = "calendar";
+                var user = params.get("user");
+                var file = params.get("file");
+
+                newQuery.append("page=").append(page);
+                if (user != null) newQuery.append("&user=").append(user);
+                if (file != null) newQuery.append("&file=").append(file);
+            }
 
             var newUri = new URI(
                     uri.getScheme(),
