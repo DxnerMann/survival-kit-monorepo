@@ -78,8 +78,27 @@ const getLecturesForWeek = async (weekOffset: number, course: string) : Promise<
     }
 }
 
+const getLectureNamesForSemester = async (course: string) : Promise<string[]> => {
+    const response = await fetch(
+        `${API_URL}/lecture/all?course=${course}`,
+        {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }
+    );
+
+    if (response.ok) {
+        return await response.json();
+    } else {
+        throw new Error("Failed to get Lectures Names for Semester");
+    }
+}
+
 export const lectureService = {
     getAvailableCourses,
     getCourseOrExtract,
-    getLecturesForWeek
+    getLecturesForWeek,
+    getLectureNamesForSemester
 }

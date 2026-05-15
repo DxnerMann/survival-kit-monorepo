@@ -11,12 +11,14 @@ import Button from "../../shared/Button.tsx";
 import type {Lecture} from "../../../models/Lecture.tsx";
 import LectureCalendar from "../../LectureCalendar.tsx";
 import ColorPicker from "../../shared/ColorPicker.tsx";
+import SelectionDropdown from "../../shared/SelectionDropdown.tsx";
 
 interface LecturePlanData {
     lectureColor: string,
     examColor: string,
     otherColor: string,
-    course: string
+    course: string,
+    hiddenLectures: string[],
 }
 
 const defaultData : LecturePlanData = {
@@ -24,6 +26,7 @@ const defaultData : LecturePlanData = {
     examColor: "#e8ba02",
     otherColor: "#cac6c6",
     course: "",
+    hiddenLectures: []
 }
 
 const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
@@ -58,6 +61,11 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [selectedLectureColor, setSelectedLectureColor] = useState<string>(decodedData.lectureColor);
     const [selectedExamColor, setSelectedExamColor] = useState<string>(decodedData.examColor);
     const [selectedOtherColor, setSelectedOtherColor] = useState<string>(decodedData.otherColor);
+    const [hiddenLectures, setHiddenLectures] = useState<string[]>(decodedData.hiddenLectures);
+    const [allLectures, setAllLectures] = useState<string[]>([]);
+    const [selectedLectures, setSelectedLectures] = useState<string[]>(
+        allLectures.filter(name => !decodedData.hiddenLectures.includes(name))
+    );
 
     useEffect(() => {
         if (selectedCourse === "") {
@@ -65,9 +73,28 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
         }
         (async () => {
             const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
-            setLectures(data);
-        })();
-    }, [decodedData.course, selectedCourse, weekOffset]);
+            console.log("Filtering");
+            setLectures(data.filter(lecture => {
+                const isHidden = decodedData.hiddenLectures.some(hiddenText =>
+                    lecture.title.trim().includes(hiddenText.trim())
+                );
+                if (isHidden) {
+                    console.log("hit");
+                }
+                return !isHidden;
+            }));        })();
+    }, [decodedData.course, decodedData.hiddenLectures, selectedCourse, weekOffset]);
+
+    useEffect(() => {
+        async function load() {
+            const lectures = await lectureService.getLectureNamesForSemester(decodedData.course);
+            setAllLectures(lectures);
+
+            const initialSelected = lectures.filter(l => !hiddenLectures.includes(l));
+            setSelectedLectures(initialSelected);
+        }
+        load();
+    }, [decodedData.course]);
 
     const updateData = (partial: Partial<LecturePlanData>) => {
         setDecodedData(prev => ({ ...prev, ...partial }));
@@ -83,6 +110,15 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
         updateData({course: course});
         setSelectedCourse(course);
     }
+    function onFilterChanged(newHiddenLectures: string[]) {
+        updateData({ hiddenLectures: newHiddenLectures });
+        setHiddenLectures(newHiddenLectures);
+        const newSelected = allLectures.filter(
+            lecture => !newHiddenLectures.includes(lecture)
+        );
+
+        setSelectedLectures(newSelected);
+    }
 
     function saveSettings() {
         setDecodedData(prev => {
@@ -91,9 +127,8 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 lectureColor: selectedLectureColor,
                 examColor: selectedExamColor,
                 otherColor: selectedOtherColor,
+                hiddenLectures: hiddenLectures
             };
-
-            console.log(selectedOtherColor);
 
             try {
                 if (getUserRole() !== "GUEST") {
@@ -167,7 +202,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                             <ColorPicker startValue={decodedData.examColor} onChange={(hex) => onColorValueChange(hex, "EXAM")} label="Prüfung" key="EXAM" />
                             <ColorPicker startValue={decodedData.otherColor} onChange={(hex) => onColorValueChange(hex, "OTHER")} label="Andere" key="OTHER" />
                             <p className="widget-settings-heading">Vorlesungen Filtern</p>
-
+                            < SelectionDropdown values={allLectures} selectedItems={selectedLectures} returnSelected={true} onChange={onFilterChanged} />
                         </div>
                         <div className="widget-settings-buttons">
                             <Button text={"Zurück"} onClick={() => setInSettings(false)} variant="secondary" type="reset" fullWidth={true} />

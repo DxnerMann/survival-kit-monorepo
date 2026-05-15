@@ -5,6 +5,7 @@ import com.survivalkit.backend.core.auth.exception.AccessDeniedException;
 import com.survivalkit.backend.core.auth.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
+import com.survivalkit.backend.core.course.CourseNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -48,6 +49,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
+    }
+
+    @ExceptionHandler(CourseNotFoundException.class)
+    public ResponseEntity<ApiError> handleGeneric(CourseNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
     }
 
     @ExceptionHandler(CourseExtractionFailedException.class)

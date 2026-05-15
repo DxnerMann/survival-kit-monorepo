@@ -7,5 +7,7 @@ import java.util.List;
 public interface LecturePort {
 
     List<Lecture> getLecturesForWeek(int weekOffset, String course, String raplaUrl);
+    List<String> getLectureNamesForSemester(String course);
+
 
 }

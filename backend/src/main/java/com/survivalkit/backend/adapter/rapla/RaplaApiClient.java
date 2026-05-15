@@ -13,11 +13,14 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import org.jsoup.nodes.Element;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,6 +106,39 @@ public class RaplaApiClient implements RaplaApiPort {
         }
 
         throw new CourseExtractionFailedException("Could not extract Course from the provided Rapla Url.");
+    }
+
+    @Override
+    public List<String> getLectureNamesForSemester(String raplaCourseBaseUrl) {
+
+        var lectureNames = new HashSet<String>();
+
+        collectLectures(0, -1, raplaCourseBaseUrl, lectureNames);
+        collectLectures(1, 1, raplaCourseBaseUrl, lectureNames);
+
+        return lectureNames.stream()
+                .sorted()
+                .toList();
+    }
+
+    private void collectLectures(
+            int startOffset,
+            int direction,
+            String raplaCourseBaseUrl,
+            Set<String> lectureNames
+    ) {
+        var weekOffset = startOffset;
+
+        while (true) {
+            var week = getLectures(weekOffset, raplaCourseBaseUrl);
+
+            if (week.isEmpty()) {
+                break;
+            }
+
+            week.forEach(lecture -> lectureNames.add(lecture.title().replaceAll("\\s*\\([^)]*\\)", "")));
+            weekOffset += direction;
+        }
     }
 
     @Override

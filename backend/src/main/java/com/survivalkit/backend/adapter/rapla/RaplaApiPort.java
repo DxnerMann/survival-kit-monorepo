@@ -8,6 +8,7 @@ public interface RaplaApiPort {
 
     List<Lecture> getLectures(int weekOffset, String raplaCourseBaseUrl);
     String extractCourse(String raplaCourseBaseUrl);
+    List<String> getLectureNamesForSemester(String raplaCourseBaseUrl);
     String formatToBaseUrl(String raplaUrl);
 
 }

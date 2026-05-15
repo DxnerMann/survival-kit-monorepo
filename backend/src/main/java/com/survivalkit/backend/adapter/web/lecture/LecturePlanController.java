@@ -31,4 +31,12 @@ public class LecturePlanController {
     ) {
         return ResponseEntity.ok(lecturePort.getLecturesForWeek(weekOffset, course, raplaUrl));
     }
+
+    @Role(RoleLevel.GUEST)
+    @GetMapping("/all")
+    public ResponseEntity<List<String>> getLecturesInSemester(
+            @RequestParam String course
+    ) {
+        return ResponseEntity.ok(lecturePort.getLectureNamesForSemester(course));
+    }
 }
