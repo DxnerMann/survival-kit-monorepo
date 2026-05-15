@@ -66,7 +66,8 @@ public class AuthService implements AuthPort {
                        hashPassword(request.password()),
                        RoleLevel.USER,
                        token,
-                       false
+                       false,
+                       null
                )
         );
     }

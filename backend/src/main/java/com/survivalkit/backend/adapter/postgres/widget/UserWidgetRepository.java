@@ -53,7 +53,7 @@ public class UserWidgetRepository implements UserWidgetPersistancePort {
                 .update();
     }
 
-    public enum Statements {
+    private enum Statements {
         // language=sql
         GET_ALL_FOR_USER(
         """

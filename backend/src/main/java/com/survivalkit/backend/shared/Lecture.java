@@ -1,5 +1,6 @@
 package com.survivalkit.backend.shared;
 
+import java.time.DayOfWeek;
 import java.util.List;
 
 public record Lecture(
@@ -9,7 +10,8 @@ public record Lecture(
         String endTime,
         List<String> rooms,
         String lecturer,
-        List<String> courses
+        List<String> courses,
+        DayOfWeek day
 ) {
     public enum LectureType{
         LECTURE,

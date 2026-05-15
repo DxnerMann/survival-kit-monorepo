@@ -1,5 +1,6 @@
 package com.survivalkit.backend.adapter.web;
 
+import com.survivalkit.backend.adapter.rapla.CourseExtractionFailedException;
 import com.survivalkit.backend.core.auth.exception.AccessDeniedException;
 import com.survivalkit.backend.core.auth.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
@@ -44,6 +45,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiError> handleGeneric(InvalidCredentialsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
+    }
+
+    @ExceptionHandler(CourseExtractionFailedException.class)
+    public ResponseEntity<ApiError> handleGeneric(CourseExtractionFailedException ex) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));

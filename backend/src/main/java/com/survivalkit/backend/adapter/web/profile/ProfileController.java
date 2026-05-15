@@ -6,6 +6,7 @@ import com.survivalkit.backend.shared.RoleLevel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/profilie")
+@RequestMapping("api/v1/profile")
 public class ProfileController {
 
     private final CoursePort coursePort;
@@ -23,13 +24,21 @@ public class ProfileController {
     }
 
     @Role(RoleLevel.GUEST)
-    @GetMapping
+    @GetMapping("courses")
     public ResponseEntity<List<String>> getAvailableCourses() {
         return ResponseEntity.ok(coursePort.getAvailableCourses());
     }
 
+    @Role(RoleLevel.GUEST)
+    @GetMapping("course")
+    public ResponseEntity<String> getUserCourseOrExtract(
+            @RequestParam (required = false) String raplaUrl
+    ) {
+        return ResponseEntity.ok(coursePort.getUserCourseOrExtract(raplaUrl));
+    }
+
     @Role(RoleLevel.USER)
-    @PostMapping
+    @PostMapping("course")
     public ResponseEntity<Void> setUserCourse(
             @RequestParam(required = false) String course,
             @RequestParam(required = false) String raplaUrl

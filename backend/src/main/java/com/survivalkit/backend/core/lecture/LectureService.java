@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.survivalkit.backend.shared.Utils.formatToBaseUrl;
-
 @Service
 public class LectureService implements LecturePort {
 
@@ -22,13 +20,17 @@ public class LectureService implements LecturePort {
 
     @Override
     public List<Lecture> getLecturesForWeek(int weekOffset, String course, String raplaUrl) {
-        if (!course.isEmpty()) {
-            return raplaApiPort.getLectures(weekOffset, course);
+        if (course != null && !course.isEmpty()) {
+            var raplaCourseBaseUrl = coursePersistancePort.getRaplaUrl(course);
+            if (raplaCourseBaseUrl.isPresent()) {
+                return raplaApiPort.getLectures(weekOffset, raplaCourseBaseUrl.get());
+            }
         }
-        if (!raplaUrl.isEmpty()) {
-            var extractedCourse = raplaApiPort.extractCourse(raplaUrl);
-            coursePersistancePort.save(extractedCourse, formatToBaseUrl(raplaUrl));
-            return raplaApiPort.getLectures(weekOffset, extractedCourse);
+        if (raplaUrl != null && !raplaUrl.isEmpty()) {
+            var baseUrl = raplaApiPort.formatToBaseUrl(raplaUrl);
+            var extractedCourse = raplaApiPort.extractCourse(baseUrl);
+            coursePersistancePort.save(extractedCourse, baseUrl);
+            return raplaApiPort.getLectures(weekOffset, baseUrl);
         }
         throw new IllegalArgumentException("course and raplaUrl cannot be both empty");
     }

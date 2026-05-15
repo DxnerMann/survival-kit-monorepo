@@ -18,9 +18,4 @@ public final class Utils {
         }
         return timestamp.toInstant();
     }
-
-    public static String formatToBaseUrl(String url) {
-        //TODO
-        return url;
-    }
 }

@@ -13,7 +13,7 @@ public final class SecurityContext {
     }
 
     public static AuthenticatedUser current() {
-        AuthenticatedUser user = HOLDER.get();
+        var user = HOLDER.get();
         if (user == null) {
             throw new IllegalStateException(
                     "No authenticated user in context. " +

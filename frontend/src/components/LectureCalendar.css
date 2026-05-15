@@ -1,0 +1,136 @@
+.lecture-calendar {
+    position: relative;
+    width: 100%;
+    max-height: 90%;
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    overflow: hidden;
+}
+
+.lecture-calendar .fc {
+    flex: 1;
+    min-height: 0;
+    height: 100% !important;
+    background: transparent;
+    font-family: inherit;
+    color: var(--color-text-primary);
+}
+
+.lecture-calendar .fc-view-harness {
+    flex: 1 !important;
+    height: auto !important;
+}
+
+.lecture-calendar .fc-scrollgrid,
+.lecture-calendar .fc-scrollgrid-section > td,
+.lecture-calendar .fc-timegrid-body,
+.lecture-calendar .fc-timegrid,
+.lecture-calendar .fc-view,
+.lecture-calendar .fc-timegrid-col,
+.lecture-calendar .fc-col-header,
+.lecture-calendar .fc-col-header-cell,
+.lecture-calendar .fc-scroller,
+.lecture-calendar .fc-scroller-harness,
+.lecture-calendar thead,
+.lecture-calendar th {
+    background: transparent !important;
+}
+
+.lecture-calendar .fc-scrollgrid,
+.lecture-calendar .fc-scrollgrid td,
+.lecture-calendar .fc-scrollgrid th {
+    border-color: transparent !important;
+}
+
+.lecture-calendar .fc-scroller,
+.lecture-calendar .fc-scroller-harness,
+.lecture-calendar .fc-scroller-liquid,
+.lecture-calendar .fc-scroller-liquid-absolute {
+    overflow: hidden !important;
+    height: auto !important;
+}
+
+.lecture-calendar .fc-timegrid-slot {
+    height: var(--fc-slot-height, 40px) !important;
+    border-top-color: transparent !important;
+}
+
+.lecture-calendar .fc-timegrid-slot-lane:not(.fc-timegrid-slot-minor) {
+    border-top: 1px solid var(--color-border) !important;
+}
+
+.lecture-calendar .fc-col-header-cell {
+    padding: 6px 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+.lecture-calendar .fc-col-header-cell a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.lecture-calendar .fc-day-today {
+    background: var(--color-transparent-primary) !important;
+}
+
+.lecture-calendar .fc-col-header-cell.fc-day-today a {
+    color: var(--color-primary-accent);
+}
+
+.lecture-calendar .fc-timegrid-slot-label {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    padding-right: 8px;
+    vertical-align: top;
+}
+
+.lecture-calendar .fc-timegrid-col-events {
+    margin: 0 !important;
+}
+
+.lecture-calendar .fc-timegrid-event {
+    border: none !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 6px var(--color-shadow);
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.lecture-calendar .fc-event-main {
+    padding: 0;
+    height: 100%;
+}
+
+.lc-event {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 6px;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.lc-event__title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.lc-event__meta {
+    font-size: 0.6rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

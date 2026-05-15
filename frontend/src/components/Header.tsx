@@ -1,7 +1,7 @@
 import './Header.css';
 import ThemeToggle from "./ThemeToggle.tsx";
 import {ChartNoAxesColumn, Compass, KeyRound, Lightbulb, MessageSquare, ShieldUser, User} from 'lucide-react';
-import Seperator from "./Seperator.tsx";
+import Seperator from "./shared/Seperator.tsx";
 import {useNavigate} from "react-router-dom";
 import NavIcon from "./NavIcon.tsx";
 import {getUserRole, isAdmin} from "../services/tokenService.tsx";

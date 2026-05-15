@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.survivalkit.backend.shared.Utils.formatToBaseUrl;
-
 @Service
 public class CourseService implements CoursePort {
 
@@ -31,8 +29,8 @@ public class CourseService implements CoursePort {
             return;
         }
         if (!raplaUrl.isEmpty()) {
-            var extractedCourse = raplaApiPort.extractCourse(raplaUrl);
-            coursePersistancePort.save(extractedCourse, formatToBaseUrl(raplaUrl));
+            var extractedCourse = raplaApiPort.extractCourse(raplaApiPort.formatToBaseUrl(raplaUrl));
+            coursePersistancePort.save(extractedCourse, raplaApiPort.formatToBaseUrl(raplaUrl));
             userPersistancePort.setUserCourse(extractedCourse, course);
             return;
         }
@@ -42,5 +40,23 @@ public class CourseService implements CoursePort {
     @Override
     public List<String> getAvailableCourses() {
         return coursePersistancePort.getAvailableCourses();
+    }
+
+    @Override
+    public String getUserCourseOrExtract(String raplaUrl) {
+        if (raplaUrl == null || raplaUrl.isEmpty()) {
+            var userId = SecurityContext.current().userId();
+            var user = userPersistancePort.getById(userId);
+            if (user.isPresent()) {
+                return user.get().course();
+            }
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        } else {
+            var extractedCourse = raplaApiPort.extractCourse(raplaApiPort.formatToBaseUrl(raplaUrl));
+            coursePersistancePort.save(extractedCourse, raplaApiPort.formatToBaseUrl(raplaUrl));
+            return extractedCourse;
+        }
     }
 }
