@@ -12,6 +12,7 @@ import type {Lecture} from "../../../models/Lecture.tsx";
 import LectureCalendar from "../../LectureCalendar.tsx";
 import ColorPicker from "../../shared/ColorPicker.tsx";
 import SelectionDropdown from "../../shared/SelectionDropdown.tsx";
+import {setTimerCourse} from "../../../services/userService.tsx";
 
 interface LecturePlanData {
     lectureColor: string,
@@ -73,14 +74,10 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
         }
         (async () => {
             const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
-            console.log("Filtering");
             setLectures(data.filter(lecture => {
                 const isHidden = decodedData.hiddenLectures.some(hiddenText =>
                     lecture.title.trim().includes(hiddenText.trim())
                 );
-                if (isHidden) {
-                    console.log("hit");
-                }
                 return !isHidden;
             }));        })();
     }, [decodedData.course, decodedData.hiddenLectures, selectedCourse, weekOffset]);
@@ -96,6 +93,10 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
         load();
     }, [decodedData.course]);
 
+    useEffect(() => {
+        setTimerCourse(decodedData.course);
+    }, [decodedData.course]);
+
     const updateData = (partial: Partial<LecturePlanData>) => {
         setDecodedData(prev => ({ ...prev, ...partial }));
     };
@@ -103,12 +104,14 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     function onCourseChangeed(course: string) {
         updateData({course: course});
         setSelectedCourse(course);
+        setTimerCourse(course);
     }
 
     async function onLinkChnaged(link: string) {
         const course = await lectureService.getCourseOrExtract(link);
         updateData({course: course});
         setSelectedCourse(course);
+        setTimerCourse(course);
     }
     function onFilterChanged(newHiddenLectures: string[]) {
         updateData({ hiddenLectures: newHiddenLectures });

@@ -35,3 +35,14 @@
 .important-text {
     color: var(--color-primary-accent);
 }
+
+.heading {
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.welcome-subheading {
+    margin-top: -1rem;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}

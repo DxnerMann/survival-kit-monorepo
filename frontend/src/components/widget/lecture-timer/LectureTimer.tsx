@@ -1,10 +1,12 @@
 import './LectureTimer.css';
 import {dashboardService} from "../../../services/dashboardService.tsx";
 import type {WidgetProps} from "../../../models/WidgetProps.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "../../../services/tokenService.tsx";
+import {lectureService} from "../../../services/lectureService.tsx";
+import {useTimerCourse} from "../../../services/userService.tsx";
 
 interface LectureTimerData {
     strokeColor: string,
@@ -43,6 +45,8 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
             return defaultData;
         }
     });
+    const course = useTimerCourse();
+    const { current, next } = lectureService.useCurrentAndNextLecture(course);
 
     const updateData = (partial: Partial<LectureTimerData>) => {
         setDecodedData(prev => ({ ...prev, ...partial }));
@@ -92,7 +96,7 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
                         <button onClick={() => setInSettings(false)}>Back</button>
                         <button onClick={() => saveSettings()}>Save</button>
                     </div>
-                    : <div className="widget-content">Widget Content</div>
+                    : <div className="widget-content">Current Lecture: {current?.title}  Next: {next?.title}</div>
             }
         </div>
     );
