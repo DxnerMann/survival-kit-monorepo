@@ -7,19 +7,19 @@ const API_URL = api.baseUrl;
 
 const lectureCache = new Map<string, Promise<Lecture[]>>();
 
-const DEBUG_TIME: { day: number; hours: number; minutes: number } | null = {
-    day: 2,
-    hours: 11,
-    minutes: 44,
+const DEBUG_TIME_OFFSET: { day: number; hours: number; minutes: number } | null = {
+    day: -4,
+    hours: -1,
+    minutes: 0,
 };
 
 const getNow = (): Date => {
     const real = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
-    if (!DEBUG_TIME) return real;
+    if (!DEBUG_TIME_OFFSET) return real;
 
     const debug = new Date(real);
-    debug.setDate(real.getDate() - real.getDay() + DEBUG_TIME.day);
-    debug.setHours(DEBUG_TIME.hours, DEBUG_TIME.minutes, 0, 0);
+    debug.setDate(real.getDate() + DEBUG_TIME_OFFSET.day);
+    debug.setHours(real.getHours() + DEBUG_TIME_OFFSET.hours, real.getMinutes() + DEBUG_TIME_OFFSET.minutes, real.getSeconds(), real.getMilliseconds());
     return debug;
 };
 
@@ -201,6 +201,11 @@ const useCurrentAndNextLecture = (course: string | null) => {
 };
 
 const getLectureNamesForSemester = async (course: string) : Promise<string[]> => {
+
+    if (course === "") {
+        return [];
+    }
+
     const response = await fetch(
         `${API_URL}/lecture/all?course=${course}`,
         {
@@ -224,5 +229,6 @@ export const lectureService = {
     getLecturesForWeek,
     getLectureNamesForSemester,
     getCurrentAndNextLecture,
-    useCurrentAndNextLecture
+    useCurrentAndNextLecture,
+    getNow
 }

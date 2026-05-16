@@ -213,19 +213,29 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                         </div>
                     </div>
                     : <div className="widget-content">
-                        <h3 className="lecture-plan-heading">{defaultData.course}</h3>
-                        <LectureCalendar
-                            key={`${weekOffset}`}
-                            weekOffset={weekOffset}
-                            lectures={lectures}
-                            colorLecture={decodedData.lectureColor}
-                            colorExam={decodedData.examColor}
-                            colorOther={decodedData.otherColor}
-                        />
-                        <div className="lecture-plan-footer">
-                            <Button text="Vorherige Woche" onClick={() => setWeekOffset(weekOffset - 1)} variant="primary" fullWidth={true} />
-                            <Button text="Nächste Woche" onClick={() => setWeekOffset(weekOffset + 1)} variant="primary" fullWidth={true} />
-                        </div>
+                        {
+                            decodedData.course === ""
+
+                                ? <div className="no-course-set-info">
+                                    Du hast noch keinen Kurs angegeben, der angezeigt werden soll.
+                                    <a className="important-text" onClick={() => setInSettings(true)}>Einstellungen</a>
+                                </div>
+                                : <>
+                                    <h4 className="lecture-plan-heading">{decodedData.course}</h4>
+                                    <LectureCalendar
+                                        key={`${weekOffset}`}
+                                        weekOffset={weekOffset}
+                                        lectures={lectures}
+                                        colorLecture={decodedData.lectureColor}
+                                        colorExam={decodedData.examColor}
+                                        colorOther={decodedData.otherColor}
+                                    />
+                                    <div className="lecture-plan-footer">
+                                        <Button text="Vorherige Woche" onClick={() => setWeekOffset(weekOffset - 1)} variant="transparent" fullWidth={true} />
+                                        <Button text="Nächste Woche" onClick={() => setWeekOffset(weekOffset + 1)} variant="transparent" fullWidth={true} />
+                                    </div>
+                                </>
+                        }
                     </div>
             }
         </div>

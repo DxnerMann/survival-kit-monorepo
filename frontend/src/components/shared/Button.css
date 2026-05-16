@@ -4,7 +4,7 @@
     justify-content: center;
     padding: 9px 18px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
@@ -37,6 +37,18 @@
     background: var(--color-transparent-primary);
     border-color: var(--color-primary-accent);
     color: var(--color-primary-accent);
+}
+
+.btn--transparent {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 1.5px transparent var(--color-text-secondary);
+}
+
+.btn--transparent:hover:not(:disabled) {
+    background: var(--color-transparent-primary);
+    border-color: var(--color-secondary-accent);
+    color: var(--color-secondary-accent);
 }
 
 .btn:disabled {

@@ -27,6 +27,7 @@ const removeToken = () => {
 }
 
 const handleApiError = async (response: Response): Promise<never> => {
+    console.log(response.status);
     if (response.status === 500) {
         throw new Error(
             'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut.'

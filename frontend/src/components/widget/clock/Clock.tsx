@@ -5,6 +5,7 @@ import {useEffect, useState} from "react";
 import {Clock1, Fullscreen} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "../../../services/tokenService.tsx";
+import {lectureService} from "../../../services/lectureService.tsx";
 
 interface ClockData {
     color: string,
@@ -33,16 +34,10 @@ const Clock = ({title, data, id, isPreview} : WidgetProps) => {
         }
     });
 
-    function getGermanTime() {
-        return new Date(
-            new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" })
-        );
-    }
-
-    const [time, setTime] = useState<Date>(getGermanTime);
+    const [time, setTime] = useState<Date>(lectureService.getNow());
 
     useEffect(() => {
-        const id = setInterval(() => setTime(getGermanTime()), 200);
+        const id = setInterval(() => setTime(lectureService.getNow()), 200);
         return () => clearInterval(id);
     }, []);
 
@@ -196,7 +191,7 @@ const Clock = ({title, data, id, isPreview} : WidgetProps) => {
     if (isPreview) {
         return <>
             <div className="lecture-plan-widget-preview">
-                Digital
+                {DigitalClock()}
             </div>
             <h3 className="widget-title-preview">{title}</h3>
         </>

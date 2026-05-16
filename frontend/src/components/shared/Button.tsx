@@ -3,7 +3,7 @@ import './Button.css';
 interface ButtonProps {
     text: string;
     onClick: () => void;
-    variant?: "primary" | "secondary";
+    variant?: "primary" | "secondary" | "transparent";
     disabled?: boolean;
     type?: "button" | "submit" | "reset";
     fullWidth?: boolean;

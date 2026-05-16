@@ -19,7 +19,11 @@ const getDashboardLayout =  async () : Promise<UserWidget[]> => {
         })
 
         if (response.ok) {
-            return await response.json();
+            const widgets = await response.json();
+            if (widgets.length === 1 && widgets.get(0).id === "empty_dashboard") {
+                return [];
+            }
+            return widgets;
         }
         else {
             return [];
@@ -30,7 +34,20 @@ const getDashboardLayout =  async () : Promise<UserWidget[]> => {
 }
 
 const saveDashbordLayout = async (widgets : UserWidget[])  => {
-    console.log(widgets);
+    if (widgets.length === 0) {
+        widgets = [
+            {
+                id: "empty_dashboard",
+                type: "EMPTY",
+                y: 0,
+                x: 0,
+                width: 0,
+                height: 0,
+                data: ""
+            }
+        ]
+    }
+
     try {
         const token = authService.getToken();
 

@@ -42,7 +42,6 @@ const LoginPage = () => {
         } catch (e) {
             if (e instanceof Error) {
                 setError(e.message);
-                console.error(e);
             } else {
                 setError("Unbekannter Fehler");
                 console.error(e);

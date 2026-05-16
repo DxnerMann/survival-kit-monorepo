@@ -18,9 +18,6 @@ public class MailSenderConfig {
             @Value("${spring.mail.username}") String username,
             @Value("${spring.mail.password}") String password
     ) {
-        System.out.printf("##########################");
-        System.out.printf(password);
-
         var sender = new JavaMailSenderImpl();
         sender.setHost(host);
         sender.setPort(port);
