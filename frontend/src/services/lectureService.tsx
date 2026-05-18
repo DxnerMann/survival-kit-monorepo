@@ -7,16 +7,15 @@ const API_URL = api.baseUrl;
 
 const lectureCache = new Map<string, Promise<Lecture[]>>();
 
-const DEBUG_TIME_OFFSET: { day: number; hours: number; minutes: number } | null = {
-    day: -4,
-    hours: -1,
+const DEBUG_TIME_OFFSET: { day: number; hours: number; minutes: number } =
+{
+    day: 0,
+    hours: 0,
     minutes: 0,
 };
 
 const getNow = (): Date => {
     const real = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
-    if (!DEBUG_TIME_OFFSET) return real;
-
     const debug = new Date(real);
     debug.setDate(real.getDate() + DEBUG_TIME_OFFSET.day);
     debug.setHours(real.getHours() + DEBUG_TIME_OFFSET.hours, real.getMinutes() + DEBUG_TIME_OFFSET.minutes, real.getSeconds(), real.getMilliseconds());
@@ -110,14 +109,15 @@ const DAYS_OF_WEEK: DayOfWeek[] = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY",
 
 interface CurrentLectureInfo {
     current: Lecture | null;
-    next: Lecture | null;
+    next: Lecture[] | null;
 }
 
 const getCurrentAndNextLecture = async (course: string): Promise<CurrentLectureInfo> => {
     const now = getNow()
     const todayIndex = now.getDay() === 0 ? 6 : now.getDay() - 1;
-    const today = DAYS_OF_WEEK[now.getDay() === 0 ? 6 : now.getDay() - 1]; // JS: Sun=0, Mon=1 → remap
+    const today = DAYS_OF_WEEK[todayIndex];
     const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const hidden = _hiddenLectures ?? [];
 
     const cacheKey = `0-${course}`;
     let lectures: Lecture[];
@@ -129,27 +129,34 @@ const getCurrentAndNextLecture = async (course: string): Promise<CurrentLectureI
     }
 
     const todaysLectures = lectures
-        .filter(l => l.day === today)
+        .filter(l => l.day === today && l.type === "LECTURE")
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-    const current = todaysLectures.find(l => l.startTime <= currentTime && currentTime < l.endTime) ?? null;
-    let next = todaysLectures.find(l => l.startTime > currentTime) ?? null;
-    if (!next) {
-        next = DAYS_OF_WEEK
-            .slice(todayIndex + 1)
-            .flatMap(day =>
-                lectures
-                    .filter(l => l.day === day)
-                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
-            )
-            .at(0) ?? null;
-    }
+    const current = todaysLectures.filter(lecture => {
+        const isHidden = hidden.some(hiddenText =>
+            lecture.title.trim().includes(hiddenText.trim())
+        );
+        return !isHidden;
+    }).find(l => l.startTime <= currentTime && currentTime < l.endTime) ?? null;
+
+    const remainingToday = todaysLectures.filter(l => l.startTime > currentTime);
+
+    const upcomingOtherDays = DAYS_OF_WEEK
+        .slice(todayIndex + 1)
+        .flatMap(day =>
+            lectures
+                .filter(l => l.day === day && l.type === "LECTURE")
+                .sort((a, b) => a.startTime.localeCompare(b.startTime))
+        );
+
+    const next = [...remainingToday, ...upcomingOtherDays];
+
     return { current, next };
 };
 
 const useCurrentAndNextLecture = (course: string | null) => {
     const [current, setCurrent] = useState<Lecture | null>(null);
-    const [next, setNext] = useState<Lecture | null>(null);
+    const [next, setNext] = useState<Lecture[] | null>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const refreshRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -176,9 +183,9 @@ const useCurrentAndNextLecture = (course: string | null) => {
 
                 const msUntilEnd = currentEnd.getTime() - now.getTime();
                 timeoutRef.current = setTimeout(() => refreshRef.current?.(), msUntilEnd);
-            } else if (next && next.day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : new Date().getDay() - 1]) {
+            } else if (next && next[0].day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : new Date().getDay() - 1]) {
                 const now = getNow()
-                const [hours, minutes] = next.startTime.split(":").map(Number);
+                const [hours, minutes] = next[0].startTime.split(":").map(Number);
                 const nextStart = new Date(now);
                 nextStart.setHours(hours, minutes, 0, 0);
 
@@ -223,6 +230,45 @@ const getLectureNamesForSemester = async (course: string) : Promise<string[]> =>
     }
 }
 
+const isToday = (day : string) =>
+{
+    const now = getNow();
+    return DAYS_OF_WEEK[now.getDay() === 0 ? 6 : now.getDay() - 1] === day;
+}
+
+const isTomorrow = (day : string) =>
+{
+    const now = getNow();
+    return DAYS_OF_WEEK[(now.getDay() + 1 )=== 0 ? 6 : now.getDay()] === day;
+}
+
+let timerCourse: string | null = null;
+const courseListeners = new Set<(course: string | null) => void>();
+
+export const setTimerCourse = (course: string | null) => {
+    timerCourse = course;
+    courseListeners.forEach(l => l(course));
+};
+
+export const useTimerCourse = (): string | null => {
+    const [course, setCourse] = useState<string | null>(timerCourse);
+
+    useEffect(() => {
+        courseListeners.add(setCourse);
+        return () => { courseListeners.delete(setCourse); };
+    }, []);
+
+    return course;
+};
+
+let _hiddenLectures: string[] | null = null;
+const hiddenLecturesListeners = new Set<(hiddenLectures: string[] | null) => void>();
+
+export const setHiddenLectures = (lectures: string[] | null) => {
+    _hiddenLectures = lectures;
+    hiddenLecturesListeners.forEach(l => l(lectures));
+};
+
 export const lectureService = {
     getAvailableCourses,
     getCourseOrExtract,
@@ -230,5 +276,8 @@ export const lectureService = {
     getLectureNamesForSemester,
     getCurrentAndNextLecture,
     useCurrentAndNextLecture,
-    getNow
+    getNow,
+    isToday,
+    isTomorrow,
+    setHiddenLectures
 }

@@ -5,14 +5,13 @@ import {useEffect, useState} from "react";
 import {Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "../../../services/tokenService.tsx";
-import {lectureService} from "../../../services/lectureService.tsx";
+import {lectureService, setTimerCourse} from "../../../services/lectureService.tsx";
 import CourseSelection from "../../shared/CourseSelection.tsx";
 import Button from "../../shared/Button.tsx";
 import type {Lecture} from "../../../models/Lecture.tsx";
 import LectureCalendar from "../../LectureCalendar.tsx";
 import ColorPicker from "../../shared/ColorPicker.tsx";
 import SelectionDropdown from "../../shared/SelectionDropdown.tsx";
-import {setTimerCourse} from "../../../services/userService.tsx";
 
 interface LecturePlanData {
     lectureColor: string,
@@ -91,11 +90,12 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
             setSelectedLectures(initialSelected);
         }
         load();
-    }, [decodedData.course]);
+    }, [decodedData.course, hiddenLectures]);
 
     useEffect(() => {
         setTimerCourse(decodedData.course);
-    }, [decodedData.course]);
+        lectureService.setHiddenLectures(decodedData.hiddenLectures);
+    }, [decodedData.course, decodedData.hiddenLectures]);
 
     const updateData = (partial: Partial<LecturePlanData>) => {
         setDecodedData(prev => ({ ...prev, ...partial }));
@@ -116,6 +116,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     function onFilterChanged(newHiddenLectures: string[]) {
         updateData({ hiddenLectures: newHiddenLectures });
         setHiddenLectures(newHiddenLectures);
+        lectureService.setHiddenLectures(newHiddenLectures);
         const newSelected = allLectures.filter(
             lecture => !newHiddenLectures.includes(lecture)
         );
@@ -132,6 +133,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 otherColor: selectedOtherColor,
                 hiddenLectures: hiddenLectures
             };
+            lectureService.setHiddenLectures(hiddenLectures);
 
             try {
                 if (getUserRole() !== "GUEST") {
@@ -177,7 +179,6 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
             </div>
             <h3 className="widget-title-preview">{title}</h3>
         </>
-
     }
 
     const getWidgetContent = () => (
@@ -215,7 +216,6 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                     : <div className="widget-content">
                         {
                             decodedData.course === ""
-
                                 ? <div className="no-course-set-info">
                                     Du hast noch keinen Kurs angegeben, der angezeigt werden soll.
                                     <a className="important-text" onClick={() => setInSettings(true)}>Einstellungen</a>

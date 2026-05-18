@@ -1,4 +1,4 @@
-.lecture-plan-widget {
+.clock-widget {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -7,7 +7,7 @@
     justify-content: start;
 }
 
-.lecture-plan-widget.fullscreen {
+.clock-widget.fullscreen {
     background: var(--color-background-primary);
     position: fixed;
     border-radius: 0;

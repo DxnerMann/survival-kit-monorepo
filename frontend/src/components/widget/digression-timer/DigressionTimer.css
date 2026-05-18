@@ -1,0 +1,141 @@
+.digression-timer-widget {
+    height: 100%;
+}
+
+.digression-timer-widget.fullscreen {
+    background: var(--color-background-primary);
+    position: fixed !important;
+    border-radius: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 5000;
+}
+
+
+.widget-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 1rem;
+}
+.digression-video-wrapper {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+}
+
+.digression-video-wrapper video {
+    grid-row: 1;
+    grid-column: 1;
+    width: 100%;
+    height: 95%;
+    object-fit: fill;
+    display: block;
+    border-radius: var(--border-radius);
+}
+
+.digression-timer-caption {
+    grid-row: 1;
+    grid-column: 1;
+    align-self: start;
+    justify-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1rem;
+    z-index: 10;
+    font-family: "Impact", "Arial Narrow", Arial, sans-serif;
+    color: #fff;
+    -webkit-text-stroke: 1.5px #000;
+    pointer-events: none; /* let clicks pass through to video */
+}
+
+.digression-timer-caption > .digression-video-caption {
+    pointer-events: all;
+}
+
+.digression-video-caption {
+    max-width: 90%;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: "Impact", "Arial Narrow", Arial, sans-serif;
+    color: #fff;
+    -webkit-text-stroke: 1.5px #000;
+}
+
+.fullscreen .digression-video-caption {
+    font-size: 5rem;
+    -webkit-text-stroke: 3px #000;
+    padding-top: 4%;
+}
+
+.fullscreen .digression-video-timer {
+    font-size: 2rem;
+}
+
+.digression-video-caption::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+    -webkit-text-stroke: 1px #000;
+}
+
+.digression-video-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    gap: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.widget-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 0.5rem;
+    padding-right: 1rem;
+    height: var(--widget-header-height);
+    gap: 0.5rem;
+    width: 100%;
+    z-index: 2000;
+}
+
+.widget-header-icon {
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+
+.widget-header-icon:hover {
+    color: var(--color-primary-accent);
+}
+
+.digression-widget-preview {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--border-radius);
+}
+
+.digression-widget-preview video {
+    height: 100%;
+    width: 100%;
+    object-fit: fill;
+    border-radius: var(--border-radius);
+}

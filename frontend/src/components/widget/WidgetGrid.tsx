@@ -20,6 +20,7 @@ const widgetConstraints: Record<
     LECTURE_PLAN: { minW: 3, minH: 4, defaultW: 5, defaultH: 4 },
     LECTURE_TIMER: { minW: 3, minH: 4, defaultW: 5, defaultH: 4  },
     CLOCK: { minW: 2, minH : 1, defaultW: 2, defaultH: 2},
+    DIGRESSION_TIMER: {minW: 4, minH: 3, defaultW: 4, defaultH: 3},
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
@@ -187,26 +188,11 @@ export default function WidgetGrid() {
                 })}
             </GridLayout>
 
-            {getUserRole() !== "GUEST" && <button
-                className="edit-button"
-                onClick={() => {
-                    const next = !editMode;
-                    if (!next) {
-                        handleSave();
-                    }
-                    setEditMode(next);
-                }}
-            >
-                {editMode
-                    ? <div className="edit-button-content">
-                        <Check size={20} />
-                        Speichern
-                    </div>
-                    : <div className="edit-button-content">
+            {!editMode && getUserRole() !== "GUEST" && <button className="edit-button" onClick={() => setEditMode(true)}>
+                <div className="edit-button-content">
                         <Pencil size={20} />
                         Layout anpassen
-                    </div>
-                }
+                </div>
             </button>}
 
             <div className={`bottom-bar ${editMode ? 'visible' : ''}`}>
@@ -216,8 +202,23 @@ export default function WidgetGrid() {
                     onMouseLeave={() => { isDeleteHoveredRef.current = false; }}
                 >
                     <h2>Entfernen</h2>
-                </div>}
-
+                </div>
+                }
+                { editMode && <button
+                    className="edit-button"
+                    style={{
+                        top: "1rem",
+                        right: "1rem"
+                    }}
+                    onClick={() => {
+                        setEditMode(false);
+                        handleSave();
+                    }}
+                ><div className="edit-button-content">
+                        <Pencil size={20} />
+                        Speichern
+                    </div>
+                </button> }
                 <div className="toolbox-scroll">
                     {toolbox.map(widget => (
                         <div

@@ -4,6 +4,7 @@ import {authService} from "./authService.tsx";
 import LecturePlan from "../components/widget/lecture-plan/LecturePlan.tsx";
 import LectureTimer from "../components/widget/lecture-timer/LectureTimer.tsx";
 import Clock from "../components/widget/clock/Clock.tsx";
+import DigressionTimer from "../components/widget/digression-timer/DigressionTimer.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -125,6 +126,15 @@ const getDefaultToolbox = () : UserWidget[] => {
             x: 0,
             y: 0,
             data: ""
+        },
+        {
+            id: "default-digression-timer",
+            type: "DIGRESSION_TIMER",
+            height: 3,
+            width: 4,
+            x: 0,
+            y: 0,
+            data: ""
         }
     ]
 }
@@ -137,6 +147,8 @@ const decideOnWidget = (widget : UserWidget, isPreview : boolean)=> {
             return <LectureTimer title={"Vorlesungstimer"} data={widget.data} id={widget.id} isPreview={isPreview} />
         case "CLOCK":
             return <Clock title={"Uhr"} data={widget.data} id={widget.id} isPreview={isPreview} />
+        case "DIGRESSION_TIMER":
+            return <DigressionTimer title={"Schwurbeltimer"} data={widget.data} id={widget.id} isPreview={isPreview} />
     }
 }
 

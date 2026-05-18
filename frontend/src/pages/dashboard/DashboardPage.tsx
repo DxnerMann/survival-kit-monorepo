@@ -80,13 +80,11 @@ const DashboardPage = () => {
 
     return (
         <div className="dashboard-page">
-            { getUserRole() !== "GUEST" && <h1 className="heading" >Willkommen zurück {getUsername() === "" ? "" : ","} <a className="important-text">{username}</a>!</h1> }
+            { getUserRole() !== "GUEST" && <h1 className="heading" >Willkommen zurück{getUsername() === "" ? "" : ","} <a className="important-text">{username}</a>!</h1> }
             { getUserRole() === "GUEST" && <h1 className="heading" >Willkommen auf dem <a className="important-text">Lecture Survival Kit</a>!</h1>}
             <h4 className="welcome-subheading" >{welcomePhrase}</h4>
             <WidgetGrid />
-            <h1>Test Hier gehts weiter</h1>
-            <h1>Test Hier gehts weiter</h1>
-            <h1>Test Hier gehts weiter</h1>
+            <h1 className="heading">Test Hier gehts weiter</h1>
         </div>
     )
 }

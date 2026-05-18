@@ -199,7 +199,7 @@ const Clock = ({title, data, id, isPreview} : WidgetProps) => {
     }
 
     const getWidgetContent = () => (
-        <div className={`lecture-plan-widget ${inFullscreen ? "fullscreen" : ""}`}>
+        <div className={`clock-widget ${inFullscreen ? "fullscreen" : ""}`}>
             <div className="widget-header">
                 {<Clock1
                      className="widget-header-icon"
