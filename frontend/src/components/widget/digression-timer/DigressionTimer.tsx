@@ -2,44 +2,74 @@ import './DigressionTimer.css';
 import {Fullscreen} from "lucide-react";
 import {useEffect, useRef, useState} from "react";
 import type {WidgetProps} from "../../../models/WidgetProps.tsx";
-import {getUserRole} from "../../../services/tokenService.tsx";
 import Button from "../../shared/Button.tsx";
 import {createPortal} from "react-dom";
-import {dashboardService} from "../../../services/dashboardService.tsx";
 
 interface DigressionTimerData {
     lecturerName: string,
-    timeElapsed: number
+    timeElapsed: number,
+    running: boolean
 }
 
 const defaultData : DigressionTimerData = {
     lecturerName: "",
-    timeElapsed: 0
+    timeElapsed: 0,
+    running: false
 }
 
-const DigressionTimer = ({title, data, id, isPreview} : WidgetProps) => {
+const DigressionTimer = ({title, isPreview} : WidgetProps) => {
     const [inFullscreen, setInFullscreen] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [text, setText] = useState("");
-    const [elapsed, setElapsed] = useState(0);       // ms
-    const [running, setRunning] = useState(false);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const elapsedRef = useRef<number>(0);
+    const textRef = useRef<string>("");
+    const runningRef = useRef<boolean>(false);
+    const isMounted = useRef(false);
 
-    const [decodedData, setDecodedData] = useState<DigressionTimerData>(() => {
+    const LOCAL_STORAGE_KEY = "digression_timer_data";
+
+    const loadFromStorage = (): DigressionTimerData => {
+        const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (data === null) return defaultData;
         try {
-            if (getUserRole() !== "GUEST") {
-                if (data === "") {
-                    return defaultData;
-                }
-                return JSON.parse(data);
-            } else {
-                return defaultData;
-            }
+            return JSON.parse(data);
         } catch {
             return defaultData;
         }
-    });
+    };
+
+    const stored = loadFromStorage();
+    const [text, setText] = useState(stored.lecturerName);
+    const [elapsed, setElapsed] = useState(stored.timeElapsed);
+    const [running, setRunning] = useState(stored.running);
+
+    // eslint-disable-next-line react-hooks/refs
+    elapsedRef.current = elapsed;
+    // eslint-disable-next-line react-hooks/refs
+    textRef.current = text;
+    // eslint-disable-next-line react-hooks/refs
+    runningRef.current = running;
+
+    function saveSettings(currentText: string, currentElapsed: number, currentRunning: boolean) {
+        const updated: DigressionTimerData = {
+            lecturerName: currentText,
+            timeElapsed: currentElapsed,
+            running: currentRunning
+        };
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+        } catch (e) {
+            throw new Error("Error while trying to parse data for " + title, { cause: e });
+        }
+    }
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (stored.running && video) {
+            video.play();
+        }
+    }, []);
 
     useEffect(() => {
         if (running) {
@@ -55,16 +85,27 @@ const DigressionTimer = ({title, data, id, isPreview} : WidgetProps) => {
     }, [running]);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setText(decodedData.lecturerName);
-        setElapsed(decodedData.timeElapsed);
-    }, [decodedData.lecturerName, decodedData.timeElapsed]);
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
+        }
+        saveSettings(textRef.current, elapsedRef.current, running);
+    }, [running]);
+
+    useEffect(() => {
+        if (!running) return;
+
+        const saveInterval = setInterval(() => {
+            saveSettings(textRef.current, elapsedRef.current, runningRef.current);
+        }, 1000);
+
+        return () => clearInterval(saveInterval);
+    }, [running]);
 
     useEffect(() => {
         return () => {
-            if (debounceTimer.current) {
-                clearTimeout(debounceTimer.current);
-            }
+            if (debounceTimer.current) clearTimeout(debounceTimer.current);
+            saveSettings(textRef.current, elapsedRef.current, runningRef.current);
         };
     }, []);
 
@@ -78,14 +119,15 @@ const DigressionTimer = ({title, data, id, isPreview} : WidgetProps) => {
             setRunning(true);
             if (video) video.play();
         }
-
     }
+
     const handleReset = () => {
         setRunning(false);
         setElapsed(0);
         setText("");
         const video = videoRef.current;
         if (video) video.pause();
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
     };
 
     const handleTextChange = (value: string) => {
@@ -96,30 +138,19 @@ const DigressionTimer = ({title, data, id, isPreview} : WidgetProps) => {
         }
 
         debounceTimer.current = setTimeout(() => {
-            saveSettings();
-        }, 500);
+            saveSettings(value, elapsedRef.current, runningRef.current);
+        }, 2000);
     };
-
-    function saveSettings() {
-        setDecodedData(prev => {
-            const updated = {
-                ...prev,
-                lecturerName: text,
-                timeElapsed: elapsed
-            };
-            try {
-                dashboardService.saveWidgetData(id, JSON.stringify(updated));
-            } catch (e) {
-                throw new Error("Error while trying to parse data for " + title, { cause: e });
-            }
-            return updated;
-        });
-    }
 
     const handleLoaded = () => {
-        videoRef.current?.pause();
+        const video = videoRef.current;
+        if (!video) return;
+        if (runningRef.current) {
+            video.play();
+        } else {
+            video.pause();
+        }
     };
-
 
     const formatTime = (ms: number) => {
         const minutes = Math.floor(ms / 60000);
