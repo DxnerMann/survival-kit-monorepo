@@ -1,0 +1,77 @@
+.quick-link-card {
+    width: 24%;
+    aspect-ratio: 1 / 1;
+    border-radius: 3vw;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2vw;
+    cursor: pointer;
+    background: var(--color-background-primary);
+}
+
+.quick-link-card:hover {
+    transform: scale(1.02);
+}
+
+.quick-link-preview-img {
+    height: 50%;
+    width: 100%;
+    background: var(--color-background-secondary);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quick-link-preview-img img{
+    object-fit: contain;
+    max-width: 100%;
+}
+
+.quick-link-info {
+    height: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.quick-link-info-1 {
+    max-height: 70%;
+}
+
+.quick-link-info .quick-link-title {
+    background: var(--color-primary-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-transform: uppercase;
+    font-size: 1.5vw;
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    padding: 1vw;
+    height: 2.8vw;
+}
+
+.quick-link-info .quick-link-description {
+    color: var(--color-text-primary);
+    padding-left: 1vw;
+    padding-right: 1vw;
+    text-align: center;
+    font-size: 1vw;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-height: 50%;
+}
+
+.quick-link-info .quick-link-clicked-this-month {
+    color: var(--color-text-secondary);
+    padding: 1vw;
+    text-align: center;
+    font-size: 1vw;
+}

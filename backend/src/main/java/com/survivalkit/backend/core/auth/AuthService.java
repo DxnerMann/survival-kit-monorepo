@@ -123,11 +123,23 @@ public class AuthService implements AuthPort {
     }
 
     @Override
-    public void validate() {
+    public LoginResponse validate() {
         var user = SecurityContext.current();
         if (tokenService.validate(user.token()).isEmpty()) {
             throw new UserUnauthorizedException("Token is Invalid or Expired");
         }
+
+        var existingUser = userPersistancePort.findByEmailOrUsername(user.email(), "");
+        if (existingUser.isEmpty()) {
+            throw new UserUnauthorizedException("User Does not exist");
+        }
+
+        return new LoginResponse(
+                tokenService.generateToken(user.userId(), user.role(), user.email(), user.username()),
+                user.username(),
+                existingUser.get().firstname(),
+                existingUser.get().lastname()
+        );
     }
 
     private String hashPassword(String password) {

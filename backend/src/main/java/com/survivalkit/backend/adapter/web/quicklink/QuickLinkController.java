@@ -31,13 +31,14 @@ public class QuickLinkController {
     }
 
     @Role(RoleLevel.GUEST)
-    @GetMapping()
+    @GetMapping("/filter")
     public ResponseEntity<Page<QuickLink>> getQuickLinksFiltered(
             @RequestParam(required = false) boolean approved,
             @RequestParam(required = false) Integer pageSize,
-            @RequestParam(required = false) String continuation
+            @RequestParam(required = false) String continuation,
+            @RequestParam(required = true) boolean sortByPopularity
     ) {
-        return ResponseEntity.ok(quickLinkPort.getQuickLinksFiltered(approved, pageSize, continuation));
+        return ResponseEntity.ok(quickLinkPort.getQuickLinksFiltered(approved, pageSize, continuation, sortByPopularity));
     }
 
     @Role(RoleLevel.USER)

@@ -3,7 +3,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import GridLayout from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 
-import { Pencil, Check } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -24,18 +24,22 @@ const widgetConstraints: Record<
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
+interface WidgetGridProps {
+    editMode: boolean;
+    closeEditMode: () => void
+}
+
 function getWidgetConstraints(type: string) {
     return widgetConstraints[type] ?? widgetConstraints.default;
 }
 
-export default function WidgetGrid() {
+export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) {
     const ref = useRef<HTMLDivElement | null>(null);
 
     const [width, setWidth] = useState(1200);
     const [layout, setLayout] = useState<Layout>([]);
     const [layoutWidgets, setLayoutWidgets] = useState<UserWidget[]>([]);
     const [toolboxPool, setToolboxPool] = useState<UserWidget[]>([]);
-    const [editMode, setEditMode] = useState(false);
     const [widgetDraged, setWidgetDraged] = useState<string>("");
     const isDeleteHoveredRef = useRef(false);
     const layoutRef = useRef(layout);
@@ -188,13 +192,6 @@ export default function WidgetGrid() {
                 })}
             </GridLayout>
 
-            {!editMode && getUserRole() !== "GUEST" && <button className="edit-button" onClick={() => setEditMode(true)}>
-                <div className="edit-button-content">
-                        <Pencil size={20} />
-                        Layout anpassen
-                </div>
-            </button>}
-
             <div className={`bottom-bar ${editMode ? 'visible' : ''}`}>
                 {widgetDraged !== "" && <div
                     className="delete-container"
@@ -211,7 +208,7 @@ export default function WidgetGrid() {
                         right: "1rem"
                     }}
                     onClick={() => {
-                        setEditMode(false);
+                        closeEditMode();
                         handleSave();
                     }}
                 ><div className="edit-button-content">

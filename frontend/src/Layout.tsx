@@ -20,24 +20,24 @@ const Layout = () => {
     return (
         <>
             {showHeader && <Header />}
-            <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/chat" element={<ProtectedRoute> <ChatPage /> </ProtectedRoute>} />
-                <Route path="/explore" element={<ExplorePage />} />
-                <Route path="/ideas" element={<IdeasPage />} />
-                <Route path="/profile" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute>} />
-                <Route path="/stats" element={<StatsPage />} />
-                <Route
-                    path="/"
-                    element={
-                        <GuestRouter>
-                            <DashboardPage />
-                        </GuestRouter>
-                    }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+                <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route path="/chat" element={<ProtectedRoute> <ChatPage /> </ProtectedRoute>} />
+                    <Route path="/explore" element={<ExplorePage />} />
+                    <Route path="/ideas" element={<IdeasPage />} />
+                    <Route path="/profile" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute>} />
+                    <Route path="/stats" element={<StatsPage />} />
+                    <Route
+                        path="/"
+                        element={
+                            <GuestRouter>
+                                <DashboardPage />
+                            </GuestRouter>
+                        }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
         </>
     )
 }

@@ -107,7 +107,10 @@ const validate = async (): Promise<boolean> => {
             return false
         }
 
-        return true
+        const data: LoginResponse = await response.json();
+        saveToken(data.token);
+        setUserContext(data);
+        return true;
     } catch {
         removeToken()
         return false

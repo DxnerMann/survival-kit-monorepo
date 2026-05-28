@@ -8,7 +8,7 @@ public interface QuickLinkPersistancePort {
 
     void incrementClickedLink(String id);
     void incrementFavCount(String id);
-    Page<QuickLink> getQuickLinksFiltered(boolean approved, int pageSize, String continuation);
+    Page<QuickLink> getQuickLinksFiltered(boolean approved, int pageSize, String continuation, boolean sortByPopularity);
     void upsertquickLink(QuickLink quickLink);
     void deleteQuickLink(String id);
     List<QuickLink> getFromIds(List<String> ids);

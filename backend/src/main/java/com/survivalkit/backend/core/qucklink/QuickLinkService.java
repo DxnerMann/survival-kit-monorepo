@@ -30,12 +30,12 @@ public class QuickLinkService implements QuickLinkPort {
     }
 
     @Override
-    public Page<QuickLink> getQuickLinksFiltered(boolean approved, Integer pageSize, String continuation) {
+    public Page<QuickLink> getQuickLinksFiltered(boolean approved, Integer pageSize, String continuation, boolean sortByPopularity) {
 
         pageSize = pageSize == null ? 20 : pageSize;
         pageSize = pageSize > 50 ? 50 : pageSize;
 
-        return quickLinkPersistancePort.getQuickLinksFiltered(approved, pageSize, continuation);
+        return quickLinkPersistancePort.getQuickLinksFiltered(approved, pageSize, continuation, sortByPopularity);
     }
 
     @Override

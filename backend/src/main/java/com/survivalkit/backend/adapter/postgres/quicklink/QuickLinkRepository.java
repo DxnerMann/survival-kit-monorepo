@@ -23,19 +23,20 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
 
     @Override
     public void incrementClickedLink(String id) {
-        jdbcClient.sql(Statements.INCREMENT_CLICKS.sql).update();
+        jdbcClient.sql(Statements.INCREMENT_CLICKS.sql).paramSource(new MapSqlParameterSource("id", id)).update();
     }
 
     @Override
     public void incrementFavCount(String id) {
-        jdbcClient.sql(Statements.INCREMENT_FAVS.sql).update();
+        jdbcClient.sql(Statements.INCREMENT_FAVS.sql).paramSource(new MapSqlParameterSource("id", id)).update();
     }
 
     @Override
-    public Page<QuickLink> getQuickLinksFiltered(boolean approved, int pageSize, String continuation) {
+    public Page<QuickLink> getQuickLinksFiltered(boolean approved, int pageSize, String continuation, boolean sortByPopularity) {
         var quicklinks = jdbcClient.sql(Statements.GET_FILTERED.sql)
                 .paramSource(new MapSqlParameterSource("approved", approved)
                         .addValue("pageSize", pageSize)
+                        .addValue("sortByPopularity", sortByPopularity)
                         .addValue("continuation", decode(continuation))
                 ).query(QuickLink.class)
                 .list();
@@ -88,24 +89,29 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
         // language=sql
         INCREMENT_CLICKS(
                 """
-                    UPDATE quicklinks SET clickedThisMonth = clickedThisMonth + 1, clickedOverall = clickedOverall + 1;
+                    UPDATE quicklinks SET clickedThisMonth = clickedThisMonth + 1, clickedOverall = clickedOverall + 1 WHERE id = :id;
                     """
         ),
         // language=sql
         INCREMENT_FAVS(
                 """
-                    UPDATE quicklinks SET favouriteCount = favouriteCount + 1;
+                    UPDATE quicklinks SET favouriteCount = favouriteCount + 1 WHERE id = :id;
                     """
         ),
         // language=sql
         GET_FILTERED(
                 """
-                    SELECT * 
-                    FROM quicklinks 
+                        SELECT *
+                    FROM quicklinks
                     WHERE (:approved::BOOLEAN IS NULL OR approvedByAdmin = :approved)
-                    AND (:continuation::TEXT IS NULL OR id > :continuation)
-                    ORDER BY id
-                    LIMIT :pageSize
+                      AND (:continuation::TEXT IS NULL OR id > :continuation)
+                    ORDER BY
+                      CASE\s
+                        WHEN :sortByPopularity::BOOLEAN = TRUE THEN clickedThisMonth
+                        ELSE NULL
+                      END DESC,
+                      id ASC
+                    LIMIT :pageSize;
                     """
         ),
         // language=sql

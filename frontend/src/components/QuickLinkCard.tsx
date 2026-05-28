@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
-import {getPreviewImage, onLinkclick} from "../services/quickLinkService.tsx";
+import {getPreviewImage, onLinkClick} from "../services/quickLinkService.tsx";
 import type {QuickLink} from "../models/QuickLink.tsx";
+import './QuickLinkCard.css';
 
 const QuickLinkCard = (quickLink : QuickLink) => {
     const [img, setImg] = useState<string | null>(null);
@@ -11,7 +12,7 @@ const QuickLinkCard = (quickLink : QuickLink) => {
     }, []);
 
     const onClick = () => {
-        onLinkclick(quickLink);
+        onLinkClick(quickLink);
         setLocalClickUpdate(localClickUpdate + 1);
         window.open(quickLink.url, "_blank", "noopener,noreferrer");
     };
@@ -25,7 +26,7 @@ const QuickLinkCard = (quickLink : QuickLink) => {
             </div>
             <div className="quick-link-info">
                 <div className="quick-link-info-1">
-                    <h2 className="quick-link-title">{quickLink.name}</h2>
+                    <h2 className="quick-link-title">{quickLink.title}</h2>
                     <h3 className="quick-link-description">{quickLink.description}</h3>
                 </div>
                 <h3 className="quick-link-clicked-this-month">{quickLink.clickedThisMonth + localClickUpdate} mal gespielt diesen Monat.</h3>

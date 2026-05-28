@@ -6,6 +6,7 @@
     box-sizing: border-box;
     font-family: 'FreesentationVF', sans-serif;
     --header-height: 80px;
+    --footer-height: 180px;
     --widget-header-height: 1rem;
     --border-radius: 2rem;
     --dwg-cols: 10;
@@ -74,4 +75,10 @@ a {
     font-weight: normal;
     font-style: normal;
     font-display: swap;
+}
+
+.survival-kit-page {
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
 }

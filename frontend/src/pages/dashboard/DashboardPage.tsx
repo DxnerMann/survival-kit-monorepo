@@ -2,6 +2,12 @@ import './DashboardPage.css'
 import WidgetGrid from "../../components/widget/WidgetGrid.tsx";
 import {getUserRole} from "../../services/tokenService.tsx";
 import {getUsername} from "../../services/userService.tsx";
+import PopularLinks from "../../components/PopularLinks.tsx";
+import SectionHeading from "../../components/shared/SectionHeading.tsx";
+import {LayersPlus, LayoutGrid, Pencil} from "lucide-react";
+import {useState} from "react";
+import Footer from "../../components/Footer.tsx";
+import QuickLinkCard from "../../components/QuickLinkCard.tsx";
 
 const DashboardPage = () => {
 
@@ -73,18 +79,46 @@ const DashboardPage = () => {
         "Ich bin hier aus gesellschaftlichem Druck.",
         "Die Pause ist das eigentliche Studienziel.",
         "Manche suchen Erleuchtung. Ich suche die Steckdose.",
+        "Fick dich Kollege!",
     ];
 
     // eslint-disable-next-line react-hooks/purity
     const welcomePhrase = welcomePhrases[Math.floor(Math.random() * welcomePhrases.length)];
+    const [editMode, setEditMode] = useState(false);
 
     return (
-        <div className="dashboard-page">
-            { getUserRole() !== "GUEST" && <h1 className="heading" >Willkommen zurück{getUsername() === "" ? "" : ","} <a className="important-text">{username}</a>!</h1> }
-            { getUserRole() === "GUEST" && <h1 className="heading" >Willkommen auf dem <a className="important-text">Lecture Survival Kit</a>!</h1>}
-            <h4 className="welcome-subheading" >{welcomePhrase}</h4>
-            <WidgetGrid />
-            <h1 className="heading">Die beliebtesten Spiele</h1>
+        <div className="survival-kit-page">
+            <div className="dashboard-page">
+                <SectionHeading
+                    heading={
+                        getUserRole() === "GUEST"
+                            ? "Willkommen auf dem <a class='important-text'>Lecture Survival Kit</a>!"
+                            : `Willkommen zurück${getUsername() === "" ? "" : ","} <a class='important-text'>${username}</a>!`
+                    }
+                    subheading={welcomePhrase}
+                    actions={[
+                        ...(!editMode ? [{ icon: Pencil, text: "Layout anpassen", link: () => setEditMode(true) }] : []),
+                    ]}
+                />
+                <WidgetGrid editMode={editMode} closeEditMode={() => setEditMode(false)} />
+                <SectionHeading
+                    heading={"Die <a class='important-text'>beliebtesten</a> Spiele"}
+                    actions={[
+                        { icon: LayersPlus, text: "Spiel Vorschlagen", link: "/explore/suggest" },
+                        { icon: LayoutGrid, text: "Alle Spiele", link: "/explore" },
+                    ]}
+                />
+                <PopularLinks />
+                <SectionHeading
+                    heading={"Weitere nützliche links"}
+                    subheading={"Falls du tatsächlich mal etwas ''Produktives'' machen willst"}
+                />
+                <SectionHeading
+                    heading={"Wenn <a class='important-text'>nichts</a> mehr hilft..."}
+                    subheading={"Dann hilft nur noch das"}
+                />
+            </div>
+            <Footer />
         </div>
     )
 }
