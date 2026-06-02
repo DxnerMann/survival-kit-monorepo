@@ -10,6 +10,7 @@ import Footer from "../../components/Footer.tsx";
 import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionDialog.tsx";
 import {suggestLink} from "../../services/quickLinkService.tsx";
 import LinkCard from "../../components/LinkCard/LinkCard.tsx";
+import UsefullLinks from "../../components/UsefullLinks.tsx";
 
 const DashboardPage = () => {
 
@@ -127,6 +128,7 @@ const DashboardPage = () => {
                     subheading={"Falls du tatsächlich mal etwas ''Produktives'' machen willst"}
                     centered={false}
                 />
+                <UsefullLinks />
                 <SectionHeading
                     heading={"Wenn <a class='important-text'>nichts</a> mehr hilft..."}
                     subheading={"Dann hilft nur noch das"}

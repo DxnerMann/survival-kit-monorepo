@@ -3,7 +3,12 @@ import {getPreviewImage, onLinkClick} from "../services/quickLinkService.tsx";
 import type {QuickLink} from "../models/QuickLink.tsx";
 import './QuickLinkCard.css';
 
-const QuickLinkCard = (quickLink : QuickLink) => {
+interface QuickLinkCardProps {
+    quickLink: QuickLink,
+    showClickedThisMonth: boolean
+}
+
+const QuickLinkCard = ({quickLink, showClickedThisMonth} : QuickLinkCardProps) => {
     const [img, setImg] = useState<string | null>(null);
     const [localClickUpdate, setLocalClickUpdate] = useState(0);
 
@@ -34,7 +39,7 @@ const QuickLinkCard = (quickLink : QuickLink) => {
                         {quickLink.description}
                     </h3>
                 </div>
-                <h3 className="quick-link-clicked-this-month">{quickLink.clickedThisMonth + localClickUpdate} mal gespielt diesen Monat.</h3>
+                { showClickedThisMonth && <h3 className="quick-link-clicked-this-month">{quickLink.clickedThisMonth + localClickUpdate} mal gespielt diesen Monat.</h3>}
             </div>
         </div>
     );

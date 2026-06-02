@@ -7,10 +7,26 @@ export const onLinkClick = async (link: QuickLink) => {
     await fetch(`${API_URL}/link/click?linkId=${link.id}`, { method: "POST" });
 };
 
-export const getPreviewImage = async (url: string) => {
-    const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
-    const data = await res.json();
-    return data.data.image?.url;
+export const getPreviewImage = async (url: string): Promise<string> => {
+    // 1. Try microlink for OG/meta image
+    try {
+        const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        const image = data?.data?.image?.url;
+        if (image) return image;
+    } catch { /* fall through */ }
+
+    // 2. Try microlink screenshot
+    try {
+        const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false`);
+        const data = await res.json();
+        const screenshot = data?.data?.screenshot?.url;
+        if (screenshot) return screenshot;
+    } catch { /* fall through */ }
+
+    // 3. Favicon as last resort (always works)
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 };
 
 export const getQuickLinksFiltered = async (

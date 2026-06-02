@@ -8,38 +8,51 @@ import {createPortal} from "react-dom";
 interface DigressionTimerData {
     lecturerName: string,
     timeElapsed: number,
-    running: boolean
+    running: boolean,
+    lastSavedAt: number | null
 }
 
-const defaultData : DigressionTimerData = {
+const defaultData: DigressionTimerData = {
     lecturerName: "",
     timeElapsed: 0,
-    running: false
+    running: false,
+    lastSavedAt: null
 }
 
-const DigressionTimer = ({title, isPreview} : WidgetProps) => {
+const LOCAL_STORAGE_KEY = "digression_timer_data";
+
+const loadFromStorage = (): DigressionTimerData => {
+    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (data === null) return defaultData;
+    try {
+        const parsed: DigressionTimerData = JSON.parse(data);
+        if (
+            parsed.running &&
+            parsed.lastSavedAt !== null &&
+            Number.isFinite(parsed.lastSavedAt) &&
+            Number.isFinite(parsed.timeElapsed)
+        ) {
+            parsed.timeElapsed += Date.now() - parsed.lastSavedAt;
+        }
+        return parsed;
+    } catch {
+        return defaultData;
+    }
+};
+
+const stored = loadFromStorage();
+
+const DigressionTimer = ({title, isPreview}: WidgetProps) => {
     const [inFullscreen, setInFullscreen] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const elapsedRef = useRef<number>(0);
-    const textRef = useRef<string>("");
-    const runningRef = useRef<boolean>(false);
+    const elapsedRef = useRef<number>(stored.timeElapsed);
+    const textRef = useRef<string>(stored.lecturerName);
+    const runningRef = useRef<boolean>(stored.running);
+    const baseElapsedRef = useRef<number>(stored.timeElapsed);
     const isMounted = useRef(false);
 
-    const LOCAL_STORAGE_KEY = "digression_timer_data";
-
-    const loadFromStorage = (): DigressionTimerData => {
-        const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (data === null) return defaultData;
-        try {
-            return JSON.parse(data);
-        } catch {
-            return defaultData;
-        }
-    };
-
-    const stored = loadFromStorage();
     const [text, setText] = useState(stored.lecturerName);
     const [elapsed, setElapsed] = useState(stored.timeElapsed);
     const [running, setRunning] = useState(stored.running);
@@ -51,30 +64,31 @@ const DigressionTimer = ({title, isPreview} : WidgetProps) => {
     // eslint-disable-next-line react-hooks/refs
     runningRef.current = running;
 
-    function saveSettings(currentText: string, currentElapsed: number, currentRunning: boolean) {
+    const saveSettings = (currentText: string, currentElapsed: number, currentRunning: boolean) => {
         const updated: DigressionTimerData = {
             lecturerName: currentText,
             timeElapsed: currentElapsed,
-            running: currentRunning
+            running: currentRunning,
+            lastSavedAt: Date.now()
         };
         try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
         } catch (e) {
-            throw new Error("Error while trying to parse data for " + title, { cause: e });
+            throw new Error("Error while trying to parse data for " + title, {cause: e});
         }
-    }
+    };
 
     useEffect(() => {
         const video = videoRef.current;
-        if (stored.running && video) {
-            video.play();
-        }
+        if (stored.running && video) video.play();
     }, []);
 
     useEffect(() => {
         if (running) {
+            const startedAt = Date.now();
+            const base = baseElapsedRef.current;
             intervalRef.current = setInterval(() => {
-                setElapsed((prev) => prev + 10);
+                setElapsed(base + (Date.now() - startedAt));
             }, 10);
         } else {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -94,11 +108,9 @@ const DigressionTimer = ({title, isPreview} : WidgetProps) => {
 
     useEffect(() => {
         if (!running) return;
-
         const saveInterval = setInterval(() => {
             saveSettings(textRef.current, elapsedRef.current, runningRef.current);
         }, 1000);
-
         return () => clearInterval(saveInterval);
     }, [running]);
 
@@ -111,17 +123,19 @@ const DigressionTimer = ({title, isPreview} : WidgetProps) => {
 
     const togglePlay = () => {
         const video = videoRef.current;
-
         if (running) {
+            baseElapsedRef.current = elapsedRef.current;
             setRunning(false);
             if (video) video.pause();
         } else {
             setRunning(true);
             if (video) video.play();
         }
-    }
+    };
 
     const handleReset = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        baseElapsedRef.current = 0;
         setRunning(false);
         setElapsed(0);
         setText("");
@@ -132,11 +146,7 @@ const DigressionTimer = ({title, isPreview} : WidgetProps) => {
 
     const handleTextChange = (value: string) => {
         setText(value);
-
-        if (debounceTimer.current) {
-            clearTimeout(debounceTimer.current);
-        }
-
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(() => {
             saveSettings(value, elapsedRef.current, runningRef.current);
         }, 2000);
@@ -145,11 +155,8 @@ const DigressionTimer = ({title, isPreview} : WidgetProps) => {
     const handleLoaded = () => {
         const video = videoRef.current;
         if (!video) return;
-        if (runningRef.current) {
-            video.play();
-        } else {
-            video.pause();
-        }
+        if (runningRef.current) video.play();
+        else video.pause();
     };
 
     const formatTime = (ms: number) => {
@@ -166,18 +173,15 @@ const DigressionTimer = ({title, isPreview} : WidgetProps) => {
                     ref={videoRef}
                     src="/videos/digression.mp4"
                     onLoadedMetadata={() => handleLoaded()}
-                    loop
-                    muted
-                    playsInline
+                    loop muted playsInline
                 />
             </div>
             <h3 className="widget-title-preview">{title}</h3>
         </>
-
     }
 
-    const getComponent = ()  => {
-        return <div className={`digression-timer-widget ${inFullscreen ? "fullscreen" : ""}`}>
+    const getComponent = () => (
+        <div className={`digression-timer-widget ${inFullscreen ? "fullscreen" : ""}`}>
             <div className="widget-header">
                 <Fullscreen
                     className="widget-header-icon"
@@ -193,31 +197,29 @@ const DigressionTimer = ({title, isPreview} : WidgetProps) => {
                             type="text"
                             maxLength={30}
                             value={text}
-                            onChange={(event) => handleTextChange(event.target.value)}
+                            onChange={(e) => handleTextChange(e.target.value)}
                             placeholder="<Caption>"
                         />
-                        <h3 className="digression-video-timer">{"SEIT " +  formatTime(elapsed)}</h3>
+                        <h3 className="digression-video-timer">{"SEIT " + formatTime(elapsed)}</h3>
                     </div>
                     <video
                         ref={videoRef}
                         src="/videos/digression.mp4"
                         onLoadedMetadata={() => handleLoaded()}
-                        loop
-                        muted
-                        playsInline
+                        loop muted playsInline
                     />
                 </div>
                 <div className="digression-video-buttons">
-                    <Button text={running ? "Pause" : "Start"} onClick={() => togglePlay()} type="submit" variant="secondary" fullWidth={true} />
-                    <Button text={"Reset"} onClick={() => handleReset()} type="reset" variant="primary" fullWidth={true} />
+                    <Button text={running ? "Pause" : "Start"} onClick={togglePlay} type="submit" variant="secondary" fullWidth={true}/>
+                    <Button text={"Reset"} onClick={handleReset} type="reset" variant="primary" fullWidth={true}/>
                 </div>
             </div>
         </div>
-    }
+    );
 
     return <>
-        { inFullscreen && createPortal(getComponent(), document.body) }
-        { !inFullscreen && getComponent() }
+        {inFullscreen && createPortal(getComponent(), document.body)}
+        {!inFullscreen && getComponent()}
     </>
 }
 
