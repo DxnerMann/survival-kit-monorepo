@@ -5,3 +5,92 @@
     overflow: auto;
     width: 100%;
 }
+
+.tab-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    padding: 15px;
+    border-bottom: 2px solid var(--color-background-secondary);
+}
+
+.tab-bar-tab {
+    text-align: center;
+    cursor: pointer;
+    color: var(--color-text-primary);
+}
+
+.tab-bar-tab.active {
+    color: var(--color-primary-accent);
+}
+
+.tab-bar-tab:hover {
+    color: var(--color-secondary-accent);
+}
+
+.tab-page {
+    padding: 2rem;
+}
+
+.suggested-games-table-header,
+.suggested-games-table-item {
+    display: grid;
+    grid-template-columns: 80px 1fr 2fr 2fr 120px;
+    gap: 12px;
+    padding: 10px;
+    align-items: center;
+}
+
+.suggested-games-table-header {
+    font-weight: bold;
+    border-bottom: 1px solid #333;
+    margin-top: 1rem;
+    color: var(--color-primary-accent);
+}
+
+.input-field {
+    width: 100%;
+    padding: 6px 8px;
+    background: #1e1e1e;
+    color: white;
+    border: 1px solid #333;
+    border-radius: 4px;
+}
+
+.icon-button {
+    cursor: pointer;
+}
+
+.icon-button.approve {
+    color: #1f7a1f;
+}
+
+.icon-button.reject {
+    color: #8a1f1f;
+}
+
+.icon-button:hover {
+    color: var(--color-text-primary);
+}
+
+.cell {
+    padding-right: 10px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.no-items-info {
+    width: 100%;
+    text-align: center;
+    padding: 3rem;
+    color: var(--color-text-secondary);
+}
+

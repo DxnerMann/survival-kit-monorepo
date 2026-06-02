@@ -9,27 +9,27 @@ import DigressionTimer from "../components/widget/digression-timer/DigressionTim
 const API_URL = api.baseUrl;
 
 const getDashboardLayout =  async () : Promise<UserWidget[]> => {
-    try {
-        const token = authService.getToken();
+    const token = authService.getToken();
 
-        const response = await fetch(`${API_URL}/dashboard`, {
-            method: 'GET',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
+    const response = await fetch(`${API_URL}/dashboard`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
 
-        if (response.ok) {
-            const widgets = await response.json();
-            if (widgets.length === 1 && widgets.get(0).id === "empty_dashboard") {
-                return [];
-            }
-            return widgets;
-        }
-        else {
+    if (response.ok) {
+        const widgets = await response.json();
+        if (widgets.length === 1 && widgets.get(0).id === "empty_dashboard") {
             return [];
         }
-    } catch {
+        return widgets;
+    }
+
+    else if (response.status === 404) {
+        throw new Error("No Widgets found for user");
+    }
+    else {
         return [];
     }
 }

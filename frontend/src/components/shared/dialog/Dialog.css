@@ -1,0 +1,42 @@
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 1rem;
+
+    background: var(--color-transparent-primary);
+    backdrop-filter: blur(4px);
+}
+
+.dialog-container {
+    width: min(600px, 100%);
+    max-height: calc(100vh - 2rem);
+
+    overflow-y: auto;
+
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    box-shadow: 0 10px 30px var(--color-shadow);
+}
+
+.dialog-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dialog-header h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: 1.4rem;
+}
+
+.dialog-subheading {
+    color: var(--color-text-secondary);
+}

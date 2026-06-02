@@ -41,15 +41,15 @@ public class QuickLinkService implements QuickLinkPort {
     @Override
     public void suggestLink(QuickLinkSuggestionRequest suggestion) {
 
-        if (suggestion.title().isEmpty()) {
+        if (suggestion.title() == null || suggestion.title().isEmpty()) {
             throw new IllegalArgumentException("title can not be empty");
         }
 
-        if (suggestion.description().isEmpty()) {
+        if (suggestion.description() == null || suggestion.description().isEmpty()) {
             throw new IllegalArgumentException("description can not be empty");
         }
 
-        if (suggestion.url().isEmpty()) {
+        if (suggestion.url() == null || suggestion.url().isEmpty()) {
             throw new IllegalArgumentException("url can not be empty");
         }
 

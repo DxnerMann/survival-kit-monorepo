@@ -17,7 +17,7 @@ export const getQuickLinksFiltered = async (
     sortByPopularity: boolean,
     approved?: boolean,
     pageSize?: number,
-    continuation?: string
+    continuation?: string | null
 ): Promise<{ data: QuickLink[]; continuation: string | null }> => {
     const params = new URLSearchParams();
 
@@ -34,4 +34,45 @@ export const getQuickLinksFiltered = async (
     }
 
     return response.json();
+};
+
+export const suggestLink = async (data: {
+    title: string;
+    description: string;
+    url: string;
+}) => {
+    const response = await fetch(`${API_URL}/link`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error("Fehler beim Senden des Vorschlags");
+    }
+
+    return response.json();
+};
+
+export const approveLink = async (data: {
+    linkId: string;
+    approved: boolean;
+    improvedDescription: string;
+    improvedTitle: string;
+}) => {
+    const response = await fetch(`${API_URL}/link/approve`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error("Error trying to Approve / Disapprove");
+    }
+
+    return;
 };

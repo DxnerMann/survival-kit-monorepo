@@ -19,7 +19,11 @@ public class WidgetQueryService implements WidgetQueryPort {
     @Override
     public List<UserWidgetModel> getAllWidgets() {
         var userId = SecurityContext.current().userId();
-        return userWidgetPersistancePort.getAllForUser(userId);
+        var userWidgets = userWidgetPersistancePort.getAllForUser(userId);
+        if (userWidgets.isEmpty()) {
+            throw new NoWidgetsFoundException("No widgets found for user: " + userId);
+        }
+        return userWidgets;
     }
 
     @Override

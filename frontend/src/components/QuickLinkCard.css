@@ -1,5 +1,5 @@
 .quick-link-card {
-    width: 24%;
+    width: 100%;
     aspect-ratio: 1 / 1;
     border-radius: 3vw;
     background: transparent;
@@ -63,10 +63,12 @@
     padding-right: 1vw;
     text-align: center;
     font-size: 1vw;
-    white-space: normal;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    max-height: 50%;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
 }
 
 .quick-link-info .quick-link-clicked-this-month {

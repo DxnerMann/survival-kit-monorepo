@@ -5,10 +5,10 @@ import {getQuickLinksFiltered} from "../services/quickLinkService.tsx";
 import QuickLinkCard from "./QuickLinkCard.tsx";
 
 const PopularLinks = () => {
-    const [popularLinks, setPopularLinks] = useState<QuickLink[]>([])
+    const [popularLinks, setPopularLinks] = useState<QuickLink[]>([]);
 
     useEffect(() => {
-        getQuickLinksFiltered(true,true,  4)
+        getQuickLinksFiltered(true,true,  5)
             .then((res) => setPopularLinks(res.data))
             .catch(console.error);
     }, []);

@@ -4,18 +4,28 @@ import type {Action} from "../../models/Action.tsx";
 interface SectionHeadingProps {
     heading: string;
     subheading?: string;
+    centered: boolean
     actions?: Action[];
 }
 
-const SectionHeading = ({ heading, subheading, actions }: SectionHeadingProps) => {
+const SectionHeading = ({ heading, subheading, centered, actions }: SectionHeadingProps) => {
     return (
         <div className={"section-heading-wrapper"}>
             <div className={"section-heading-left"}>
                 <h1
                     className={"section-heading-heading"}
                     dangerouslySetInnerHTML={{ __html: heading }}
+                    style={{
+                        textAlign: centered ? "center" : "left"
+                    }}
                 />
-                {subheading && <h4 className={"section-heading-subheading"}>{subheading}</h4>}
+                {subheading && <h4
+                    className={"section-heading-subheading"}
+                    dangerouslySetInnerHTML={{ __html: subheading }}
+                    style={{
+                        textAlign: centered ? "center" : "left"
+                    }}
+                />}
             </div>
 
             {actions && actions.length > 0 && (

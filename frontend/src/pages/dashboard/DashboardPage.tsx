@@ -7,7 +7,9 @@ import SectionHeading from "../../components/shared/SectionHeading.tsx";
 import {LayersPlus, LayoutGrid, Pencil} from "lucide-react";
 import {useState} from "react";
 import Footer from "../../components/Footer.tsx";
-import QuickLinkCard from "../../components/QuickLinkCard.tsx";
+import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionDialog.tsx";
+import {suggestLink} from "../../services/quickLinkService.tsx";
+import LinkCard from "../../components/LinkCard/LinkCard.tsx";
 
 const DashboardPage = () => {
 
@@ -85,6 +87,7 @@ const DashboardPage = () => {
     // eslint-disable-next-line react-hooks/purity
     const welcomePhrase = welcomePhrases[Math.floor(Math.random() * welcomePhrases.length)];
     const [editMode, setEditMode] = useState(false);
+    const [showGameSuggestionDialog, setShowGameSuggestionDialog] = useState(false);
 
     return (
         <div className="survival-kit-page">
@@ -99,23 +102,53 @@ const DashboardPage = () => {
                     actions={[
                         ...(!editMode ? [{ icon: Pencil, text: "Layout anpassen", link: () => setEditMode(true) }] : []),
                     ]}
+                    centered={false}
                 />
                 <WidgetGrid editMode={editMode} closeEditMode={() => setEditMode(false)} />
                 <SectionHeading
                     heading={"Die <a class='important-text'>beliebtesten</a> Spiele"}
                     actions={[
-                        { icon: LayersPlus, text: "Spiel Vorschlagen", link: "/explore/suggest" },
+                        { icon: LayersPlus, text: "Spiel Vorschlagen", link: () => setShowGameSuggestionDialog(true) },
                         { icon: LayoutGrid, text: "Alle Spiele", link: "/explore" },
                     ]}
+                    centered={false}
+                />
+                <GameSuggestionDialog
+                    isOpen={showGameSuggestionDialog}
+                    onCancel={() => setShowGameSuggestionDialog(false)}
+                    onSubmit={(data) => {
+                        suggestLink(data);
+                        setShowGameSuggestionDialog(false);
+                    }}
                 />
                 <PopularLinks />
                 <SectionHeading
                     heading={"Weitere nützliche links"}
                     subheading={"Falls du tatsächlich mal etwas ''Produktives'' machen willst"}
+                    centered={false}
                 />
                 <SectionHeading
                     heading={"Wenn <a class='important-text'>nichts</a> mehr hilft..."}
                     subheading={"Dann hilft nur noch das"}
+                    centered={false}
+                />
+                <LinkCard
+                    href={"/exmatriculation#pagestart"}
+                    heading={"Der Exmatrikulations-Simulator V2"}
+                    description={
+                        "Du hast dein Studium satt? Keine Lust mehr auf Prüfungsstress, endlose Vorlesungen und den Kampf mit Moodle?\n" +
+                        "Dann probier jetzt den Exmatrikulations-Simulator!\n" +
+                        "\n" +
+                        "Lass alle Sorgen einfach den digitalen Abfluss runterspülen – Hausarbeiten, Anwesenheitslisten und unbeantwortete Mails an die Profs gleich mit.\n" +
+                        "Ein Klick, ein erleichterndes „Plopp“ – und schon bist du frei wie nie zuvor.\n" +
+                        "\n" +
+                        "Wage den Schritt, den du schon immer machen wolltest.\n" +
+                        "Fühl dich leichter, entspannter und offiziell unimmatrikuliert.\n" +
+                        "\n" +
+                        "Exmatrikulations-Simulator – weil manchmal der wichtigste Abschluss der ist, den man selbst zieht."
+                    }
+                    alingRight={false}
+                    previewImagePath={"/images/Exmatriculation-Simulator-Preview.png"}
                 />
             </div>
             <Footer />

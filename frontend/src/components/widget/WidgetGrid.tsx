@@ -87,7 +87,13 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                 return;
             }
 
-            const storedData: UserWidget[] | null = await dashboardService.getDashboardLayout();
+            let storedData: UserWidget[] | null;
+
+            try {
+                storedData = await dashboardService.getDashboardLayout();
+            } catch {
+                storedData = defaultLayout;
+            }
 
             if (storedData === null) {
                 setLayoutWidgets(defaultLayout);

@@ -1,7 +1,16 @@
 .explore-page {
     height: 100vh;
-    padding-top: var(--header-height);
     box-sizing: border-box;
     overflow: auto;
     width: 100%;
+    padding: 2rem;
+    padding-top: calc(2rem + var(--header-height));
+}
+
+.explore-page-games {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
+    gap: 1rem;
+    justify-content: center;
 }

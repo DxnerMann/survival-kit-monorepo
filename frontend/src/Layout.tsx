@@ -10,6 +10,7 @@ import IdeasPage from "./pages/ideas/IdeasPage.tsx";
 import ProfilePage from "./pages/profile/ProfilePage.tsx";
 import StatsPage from "./pages/stats/StatsPage.tsx";
 import ProtectedRoute from "./router/ProtectedRoute.tsx";
+import Exmatriculation from "./pages/exmatriculation-simulator/Exmatriculation.tsx";
 
 const HIDDEN_HEADER_ROUTES = ['/login']
 
@@ -28,6 +29,7 @@ const Layout = () => {
                     <Route path="/ideas" element={<IdeasPage />} />
                     <Route path="/profile" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute>} />
                     <Route path="/stats" element={<StatsPage />} />
+                    <Route path="/exmatriculation" element={<Exmatriculation />} />
                     <Route
                         path="/"
                         element={

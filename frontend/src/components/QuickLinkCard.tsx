@@ -27,7 +27,12 @@ const QuickLinkCard = (quickLink : QuickLink) => {
             <div className="quick-link-info">
                 <div className="quick-link-info-1">
                     <h2 className="quick-link-title">{quickLink.title}</h2>
-                    <h3 className="quick-link-description">{quickLink.description}</h3>
+                    <h3
+                        className="quick-link-description"
+                        title={quickLink.description}
+                    >
+                        {quickLink.description}
+                    </h3>
                 </div>
                 <h3 className="quick-link-clicked-this-month">{quickLink.clickedThisMonth + localClickUpdate} mal gespielt diesen Monat.</h3>
             </div>
