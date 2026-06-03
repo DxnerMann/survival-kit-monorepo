@@ -152,6 +152,30 @@ const DashboardPage = () => {
                     alingRight={false}
                     previewImagePath={"/images/Exmatriculation-Simulator-Preview.png"}
                 />
+                <SectionHeading
+                    heading={"Für alle Interesierten und Unterstützer"}
+                    centered={false}
+                />
+                <div className="dashboard-last-resort-links">
+                    <LinkCard
+                        href={"https://github.com/DxnerMann/survival-kit-monorepo"}
+                        heading={"GitHub Repository"}
+                        description={
+                            "Das Offizielle GitHub Repository des Survival-Kits für alle Interesierten"
+                        }
+                        alingRight={false}
+                        previewImagePath={"/images/github-icon.png"}
+                    />
+                    <LinkCard
+                        href={"/ideas"}
+                        heading={"Ideen einreichen"}
+                        description={
+                            "Der Ideen-Hub. Ein Tool um Ideen einzureichen, Bugs zu reporten oder generelles Feedback zu geben"
+                        }
+                        alingRight={false}
+                        previewImagePath={"/images/idea-hub-preview.png"}
+                    />
+                </div>
             </div>
             <Footer />
         </div>

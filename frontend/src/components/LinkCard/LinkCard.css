@@ -1,7 +1,7 @@
 .timewaste-card {
     width: 100%;
     aspect-ratio: 5/1;
-    border-radius: 3vw;
+    border-radius: var(--border-radius);
     background: var(--color-background-primary);
     color: var(--color-text-primary);
     margin-bottom: 1vw;
@@ -18,16 +18,16 @@
     height: 100%;
     aspect-ratio: 1/1;
     background: var(--color-text-secondary);
-    border-top-right-radius: 3vw;
-    border-bottom-right-radius: 3vw;
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
 }
 
 .timewaste-card-preview.left {
     height: 100%;
     aspect-ratio: 1/1;
     background: var(--color-text-secondary);
-    border-top-left-radius: 3vw;
-    border-bottom-left-radius: 3vw;
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
 }
 
 .timewaste-card-preview img {

@@ -10,7 +10,12 @@ interface SectionHeadingProps {
 
 const SectionHeading = ({ heading, subheading, centered, actions }: SectionHeadingProps) => {
     return (
-        <div className={"section-heading-wrapper"}>
+        <div
+            className={"section-heading-wrapper"}
+            style={{
+                justifyContent: centered ? "center" : "space-between"
+            }}
+        >
             <div className={"section-heading-left"}>
                 <h1
                     className={"section-heading-heading"}

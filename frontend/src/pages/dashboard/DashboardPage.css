@@ -45,3 +45,14 @@
     text-transform: uppercase;
     color: var(--color-text-secondary);
 }
+
+.dashboard-last-resort-links {
+    flex-direction: row;
+    width: 100%;
+    height: fit-content;
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, calc(100% / 2)));
+    gap: 1rem;
+    justify-content: center;
+}

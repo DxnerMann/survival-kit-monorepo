@@ -11,6 +11,8 @@ interface QuickLinkCardProps {
 const QuickLinkCard = ({quickLink, showClickedThisMonth} : QuickLinkCardProps) => {
     const [img, setImg] = useState<string | null>(null);
     const [localClickUpdate, setLocalClickUpdate] = useState(0);
+    // eslint-disable-next-line react-hooks/purity
+    const isNew = quickLink.addedAt && (Date.now() - new Date(quickLink.addedAt).getTime()) < 7 * 24 * 60 * 60 * 1000;
 
     useEffect(() => {
         getPreviewImage(quickLink.url).then(setImg);
@@ -24,6 +26,7 @@ const QuickLinkCard = ({quickLink, showClickedThisMonth} : QuickLinkCardProps) =
 
     return (
         <div className="quick-link-card" onClick={onClick}>
+            {isNew && <span className="quick-link-badge-new">NEW</span>}
             <div className="quick-link-preview-img">
                 {
                     img ? <img src={img} alt="preview" /> : <p>Loading…</p>
