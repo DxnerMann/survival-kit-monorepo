@@ -11,6 +11,7 @@ import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionD
 import {suggestLink} from "../../services/quickLinkService.tsx";
 import LinkCard from "../../components/LinkCard/LinkCard.tsx";
 import UsefullLinks from "../../components/UsefullLinks.tsx";
+import {snackbarService} from "../../services/snackBarService.tsx";
 
 const DashboardPage = () => {
 
@@ -108,6 +109,7 @@ const DashboardPage = () => {
                 <WidgetGrid editMode={editMode} closeEditMode={() => setEditMode(false)} />
                 <SectionHeading
                     heading={"Die <a class='important-text'>beliebtesten</a> Spiele"}
+                    subheading={"Weil ganz ehrlich, in der Vorlesung aufpassen? Nö!"}
                     actions={[
                         { icon: LayersPlus, text: "Spiel Vorschlagen", link: () => setShowGameSuggestionDialog(true) },
                         { icon: LayoutGrid, text: "Alle Spiele", link: "/explore" },
@@ -118,8 +120,13 @@ const DashboardPage = () => {
                     isOpen={showGameSuggestionDialog}
                     onCancel={() => setShowGameSuggestionDialog(false)}
                     onSubmit={(data) => {
-                        suggestLink(data);
-                        setShowGameSuggestionDialog(false);
+                        try {
+                            suggestLink(data);
+                            setShowGameSuggestionDialog(false);
+                            snackbarService.showSnackbar({ type: "success",   text: "Vorschlag abgesendet", showIcon: true });
+                        } catch {
+                            snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen.", showIcon: true });
+                        }
                     }}
                 />
                 <PopularLinks />

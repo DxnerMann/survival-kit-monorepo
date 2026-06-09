@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@tiptap/extension-heading": "^3.26.0",
+    "@tiptap/extension-link": "^3.26.0",
+    "@tiptap/extension-placeholder": "^3.26.0",
+    "@tiptap/pm": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0",
+    "@types/dompurify": "^3.0.5",
+    "dompurify": "^3.4.8"
+  }
+}

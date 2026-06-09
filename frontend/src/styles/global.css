@@ -4,7 +4,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'FreesentationVF', sans-serif;
+    font-family: 'Anticyclone', sans-serif;
     --header-height: 80px;
     --footer-height: 180px;
     --widget-header-height: 1rem;
@@ -21,7 +21,7 @@ body,
 
 body {
 
-    font-family: 'FreesentationVF', sans-serif;
+    font-family: 'Anticyclone', sans-serif;
 
     background-color: var(--color-background-primary);
     color: var(--color-text-primary);
@@ -70,8 +70,8 @@ a {
 }
 
 @font-face {
-    font-family: 'FreesentationVF';
-    src: url('/assets/fonts/FreesentationVF.ttf') format('truetype');
+    font-family: 'Anticyclone';
+    src: url('/fonts/Anticyclone.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;

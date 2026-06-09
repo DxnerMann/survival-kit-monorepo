@@ -1,7 +1,9 @@
 .ideas-page {
     height: 100vh;
-    padding-top: var(--header-height);
     box-sizing: border-box;
     overflow: auto;
     width: 100%;
+    padding: 2rem;
+    padding-top: calc(var(--header-height) + 2rem);
+
 }

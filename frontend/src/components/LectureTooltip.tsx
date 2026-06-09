@@ -27,7 +27,7 @@ const LectureTooltip = ({ lecture, x, y }: LectureTooltipProps) => (
 
         <div className="lc-tooltip__body">
             <Row icon={<Clock1 size={10}/>} label="Zeit"     value={`${lecture.startTime} – ${lecture.endTime}`} />
-            <Row icon={<User size={10} /> } label="Dozent"   value={lecture.lecturer || "—"} />
+            <Row icon={<User size={10} /> } label="Dozent*in"   value={lecture.lecturer || "—"} />
             <Row icon={<MapPin size={10} /> } label="Räume"    value={lecture.rooms.length ? lecture.rooms.join(", ") : "—"} />
             <Row icon={<Book size={10} /> } label="Kurse"    value={lecture.courses.length ? lecture.courses.join(", ") : "—"} />
         </div>

@@ -67,9 +67,9 @@ export default function GameSuggestionDialog({
                 }}
             >
                 <div className="form-group">
-                    <label htmlFor="titel">Titel</label>
+                    <label htmlFor="title">Titel</label>
                     <input
-                        id="titel"
+                        id="title"
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -77,11 +77,11 @@ export default function GameSuggestionDialog({
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="beschreibung">
+                    <label htmlFor="description">
                         Beschreibung
                     </label>
                     <textarea
-                        id="beschreibung"
+                        id="description"
                         rows={5}
                         value={description}
                         onChange={(e) =>
@@ -110,7 +110,7 @@ export default function GameSuggestionDialog({
                     />
 
                     <Button
-                        text={"Vorschlagen"}
+                        text={"Absenden"}
                         onClick={handleSubmit}
                         variant="primary"
                         type="submit"

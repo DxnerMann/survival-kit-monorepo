@@ -58,7 +58,7 @@
     display: grid;
     grid-template-columns: 18px 52px 1fr;
     align-items: baseline;
-    gap: 4px;
+    gap: 10px;
     font-size: 0.82rem;
 }
 

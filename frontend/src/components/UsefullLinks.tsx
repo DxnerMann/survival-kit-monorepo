@@ -75,6 +75,7 @@ const UsefullLinks = () => {
         <div className="usefull-links">
             {links.map((link) => (
                 <QuickLinkCard
+                    key={link.id}
                     quickLink={link}
                     showClickedThisMonth={false}
                 />

@@ -5,6 +5,7 @@ import type {QuickLink} from "../../models/QuickLink.tsx";
 import {approveLink, getQuickLinksFiltered} from "../../services/quickLinkService.tsx";
 import Button from "../../components/shared/Button.tsx";
 import {ThumbsDown, ThumbsUp} from "lucide-react";
+import {snackbarService} from "../../services/snackBarService.tsx";
 
 const AdminPage = () => {
 
@@ -62,6 +63,8 @@ const AdminPage = () => {
         });
 
         setSuggestedGames(prev => prev.filter(g => g.id !== game.id));
+        snackbarService.showSnackbar({ type: "success",   text: "Bestätigung gesendet", showIcon: true });
+
     };
 
     useEffect(() => {

@@ -17,6 +17,7 @@ const PopularLinks = () => {
         <div className="popular-links">
             {popularLinks.map((link) => (
                 <QuickLinkCard
+                    key={link.id}
                     quickLink={link}
                     showClickedThisMonth={true}
                 />

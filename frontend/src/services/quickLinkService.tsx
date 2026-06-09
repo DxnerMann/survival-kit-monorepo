@@ -8,15 +8,19 @@ export const onLinkClick = async (link: QuickLink) => {
 };
 
 export const getPreviewImage = async (url: string): Promise<string> => {
-    // 1. Try microlink for OG/meta image
+
+    // local Files (f.e. Loslassen.pdf)
+    if (!url.includes("http")) return "/images/dhbw-logo.png";
+
+    // 1. Try microlink for OG/meta image (proxy through weserv to avoid CORP block)
     try {
         const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
         const data = await res.json();
         const image = data?.data?.image?.url;
-        if (image) return image;
+        if (image) return `https://images.weserv.nl/?url=${encodeURIComponent(image)}`;
     } catch { /* fall through */ }
 
-    // 2. Try microlink screenshot
+    // 2. Try microlink screenshot (served from microlink's own CDN, no CORP issue)
     try {
         const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false`);
         const data = await res.json();

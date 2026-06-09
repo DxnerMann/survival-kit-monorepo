@@ -1,5 +1,6 @@
 import './SectionHeading.css';
 import type {Action} from "../../models/Action.tsx";
+import DOMPurify from "dompurify";
 
 interface SectionHeadingProps {
     heading: string;
@@ -19,14 +20,14 @@ const SectionHeading = ({ heading, subheading, centered, actions }: SectionHeadi
             <div className={"section-heading-left"}>
                 <h1
                     className={"section-heading-heading"}
-                    dangerouslySetInnerHTML={{ __html: heading }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(heading) }}
                     style={{
                         textAlign: centered ? "center" : "left"
                     }}
                 />
                 {subheading && <h4
                     className={"section-heading-subheading"}
-                    dangerouslySetInnerHTML={{ __html: subheading }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subheading) }}
                     style={{
                         textAlign: centered ? "center" : "left"
                     }}
