@@ -5,6 +5,7 @@ import LecturePlan from "../components/widget/lecture-plan/LecturePlan.tsx";
 import LectureTimer from "../components/widget/lecture-timer/LectureTimer.tsx";
 import Clock from "../components/widget/clock/Clock.tsx";
 import DigressionTimer from "../components/widget/digression-timer/DigressionTimer.tsx";
+import DailyCat from "../components/widget/cat/DailyCat.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -135,6 +136,15 @@ const getDefaultToolbox = () : UserWidget[] => {
             x: 0,
             y: 0,
             data: ""
+        },
+        {
+            id: "default-daily-cat",
+            type: "DAILY_CAT",
+            height: 2,
+            width: 2,
+            x: 0,
+            y: 0,
+            data: ""
         }
     ]
 }
@@ -149,6 +159,8 @@ const decideOnWidget = (widget : UserWidget, isPreview : boolean)=> {
             return <Clock title={"Uhr"} data={widget.data} id={widget.id} isPreview={isPreview} />
         case "DIGRESSION_TIMER":
             return <DigressionTimer title={"Schwurbeltimer"} data={widget.data} id={widget.id} isPreview={isPreview} />
+        case "DAILY_CAT":
+            return <DailyCat title={"Tägliche Katze"} data={widget.data} id={widget.id} isPreview={isPreview} />
     }
 }
 

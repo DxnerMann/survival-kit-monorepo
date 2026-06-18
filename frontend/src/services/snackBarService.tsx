@@ -30,7 +30,6 @@ function SnackbarToast({ type, text, showIcon = true, onDone }: SnackbarOptions 
     const colors = COLORS[type];
 
     useEffect(() => {
-        // Trigger enter animation
         requestAnimationFrame(() => setVisible(true));
 
         const hideTimer = setTimeout(() => setVisible(false), 2700);

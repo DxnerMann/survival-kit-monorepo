@@ -184,11 +184,10 @@
 }
 
 .digital-clock__time {
-    font-size: clamp(1rem, 15cqw, 5rem);
-    font-family: "Share Tech Mono", "Courier New", monospace;
+    font-size: clamp(0.8rem, 12cqw, 4.5rem);
+    font-family: "DigitalNumbers", serif;
     font-weight: 400;
     color: var(--color-primary-accent);
-    letter-spacing: 0.05em;
     line-height: 1;
     white-space: nowrap;
     max-width: 100%;
@@ -197,7 +196,6 @@
 
 .digital-clock__date {
     font-size: clamp(0.55rem, 4cqw, 1rem);
-    font-family: "Share Tech Mono", "Courier New", monospace;
     color: var(--color-text-secondary);
     letter-spacing: 0.06em;
     white-space: nowrap;

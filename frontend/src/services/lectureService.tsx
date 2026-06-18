@@ -183,7 +183,7 @@ const useCurrentAndNextLecture = (course: string | null) => {
 
                 const msUntilEnd = currentEnd.getTime() - now.getTime();
                 timeoutRef.current = setTimeout(() => refreshRef.current?.(), msUntilEnd);
-            } else if (next && next[0].day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : new Date().getDay() - 1]) {
+            } else if (next && next[0] !== undefined && next[0].day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : new Date().getDay() - 1]) {
                 const now = getNow()
                 const [hours, minutes] = next[0].startTime.split(":").map(Number);
                 const nextStart = new Date(now);

@@ -77,6 +77,38 @@ a {
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'FreesentationVF';
+    src: url('/fonts/FreesentationVF.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Midgame';
+    src: url('/fonts/Midgame.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SuperMindset';
+    src: url('/fonts/SuperMindset.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'DigitalNumbers';
+    src: url('/fonts/DigitalNumbers.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 .survival-kit-page {
     display: flex;
     flex-direction: column;

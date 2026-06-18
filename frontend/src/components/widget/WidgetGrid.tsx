@@ -13,14 +13,12 @@ import type {UserWidget} from "../../models/UserWidget.tsx";
 import {getUserRole} from "../../services/tokenService.tsx";
 import {dashboardService} from "../../services/dashboardService.tsx";
 
-const widgetConstraints: Record<
-    string,
-    { minW: number; minH: number; defaultW: number; defaultH: number }
-> = {
+const widgetConstraints: Record< string, { minW: number; minH: number; defaultW: number; defaultH: number }> = {
     LECTURE_PLAN: { minW: 3, minH: 4, defaultW: 5, defaultH: 4 },
     LECTURE_TIMER: { minW: 3, minH: 4, defaultW: 5, defaultH: 4  },
     CLOCK: { minW: 2, minH : 1, defaultW: 2, defaultH: 2},
     DIGRESSION_TIMER: {minW: 4, minH: 3, defaultW: 4, defaultH: 3},
+    DAILY_CAT: {minW: 2, minH: 2, defaultW: 2, defaultH: 2},
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
@@ -35,7 +33,6 @@ function getWidgetConstraints(type: string) {
 
 export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) {
     const ref = useRef<HTMLDivElement | null>(null);
-
     const [width, setWidth] = useState(1200);
     const [layout, setLayout] = useState<Layout>([]);
     const [layoutWidgets, setLayoutWidgets] = useState<UserWidget[]>([]);
@@ -125,7 +122,6 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     const handleSave = async () => {
         const updated: UserWidget[] = layout.map((l) => {
             const original = findWidget(l.i);
-
             return {
                 id: l.i,
                 x: l.x,
@@ -140,6 +136,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     };
 
     const handleDelete = useCallback((id: string) => {
+        console.log(id);
         if (isDeleteHoveredRef.current) {
             isDeletingRef.current = true;
             setLayout(prev => prev.filter(l => l.i !== id));
@@ -201,7 +198,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             <div className={`bottom-bar ${editMode ? 'visible' : ''}`}>
                 {widgetDraged !== "" && <div
                     className="delete-container"
-                    onMouseEnter={() => { isDeleteHoveredRef.current = true; }}
+                    onMouseEnter={() => { console.log("TEST"); isDeleteHoveredRef.current = true; }}
                     onMouseLeave={() => { isDeleteHoveredRef.current = false; }}
                 >
                     <h2>Entfernen</h2>

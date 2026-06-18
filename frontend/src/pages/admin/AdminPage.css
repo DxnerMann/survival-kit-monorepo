@@ -94,3 +94,48 @@
     color: var(--color-text-secondary);
 }
 
+.security-log-row {
+    display: grid;
+    grid-template-columns: 180px 90px 120px 1fr;
+    gap: 12px;
+
+    width: 100%;
+    padding-top: 10px;
+
+    border-bottom: 1px solid #333;
+    align-items: start;
+
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.security-log-time {
+    color: #aaa;
+    white-space: nowrap;
+}
+
+.security-log-type {
+    font-weight: bold;
+}
+
+.security-log-type.error {
+    color: #ff4d4d;
+}
+
+.security-log-type.warning {
+    color: #ffd43b;
+}
+
+.security-log-type.info {
+    color: #aaa;
+}
+
+.security-log-subtype {
+    color: #ccc;
+    white-space: nowrap;
+}
+
+.security-log-message {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}

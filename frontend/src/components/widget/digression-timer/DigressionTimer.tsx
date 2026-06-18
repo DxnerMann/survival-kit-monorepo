@@ -4,6 +4,7 @@ import {useEffect, useRef, useState} from "react";
 import type {WidgetProps} from "../../../models/WidgetProps.tsx";
 import Button from "../../shared/Button.tsx";
 import {createPortal} from "react-dom";
+import {formatTimeMs} from "../../../services/utils.tsx";
 
 interface DigressionTimerData {
     lecturerName: string,
@@ -159,13 +160,6 @@ const DigressionTimer = ({title, isPreview}: WidgetProps) => {
         else video.pause();
     };
 
-    const formatTime = (ms: number) => {
-        const minutes = Math.floor(ms / 60000);
-        const seconds = Math.floor((ms % 60000) / 1000);
-        const centiseconds = Math.floor((ms % 1000) / 10);
-        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
-    };
-
     if (isPreview) {
         return <>
             <div className="digression-widget-preview">
@@ -200,7 +194,7 @@ const DigressionTimer = ({title, isPreview}: WidgetProps) => {
                             onChange={(e) => handleTextChange(e.target.value)}
                             placeholder="<Caption>"
                         />
-                        <h3 className="digression-video-timer">{"SEIT " + formatTime(elapsed)}</h3>
+                        <h3 className="digression-video-timer">{"SEIT " + formatTimeMs(elapsed)}</h3>
                     </div>
                     <video
                         ref={videoRef}

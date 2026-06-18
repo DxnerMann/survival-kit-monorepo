@@ -84,6 +84,8 @@ const DashboardPage = () => {
         "Die Pause ist das eigentliche Studienziel.",
         "Manche suchen Erleuchtung. Ich suche die Steckdose.",
         "Fick dich Kollege!",
+        "Das O in DHBW steht für Organisation",
+        "Der Nipple Carrier hat zugeschlagen"
     ];
 
     // eslint-disable-next-line react-hooks/purity

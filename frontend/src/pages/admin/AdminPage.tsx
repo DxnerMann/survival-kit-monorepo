@@ -6,6 +6,9 @@ import {approveLink, getQuickLinksFiltered} from "../../services/quickLinkServic
 import Button from "../../components/shared/Button.tsx";
 import {ThumbsDown, ThumbsUp} from "lucide-react";
 import {snackbarService} from "../../services/snackBarService.tsx";
+import type {SecurityLog} from "../../models/SecurityLog.tsx";
+import {getLatestLogs} from "../../services/securityLogService.tsx";
+import {formatTimestamp} from "../../services/utils.tsx";
 
 const AdminPage = () => {
 
@@ -15,7 +18,10 @@ const AdminPage = () => {
         description: string;
     }>>({});
     const [continuation, setContinuation] = useState<string | null>(null);
+    const [continuationLogs, setContinuationLogs] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [loadingLogs, setLoadingLogs] = useState(false);
+    const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
 
     const tabs : string[] = [
         "GENERAL",
@@ -40,6 +46,26 @@ const AdminPage = () => {
 
         setContinuation(res.continuation);
         setLoading(false);
+    };
+
+    const refreshLogs = async () => {
+        if (loadingLogs) return;
+
+        setLoadingLogs(true);
+
+        const res = await getLatestLogs(
+            50,
+            continuationLogs
+        );
+
+        setSecurityLogs(prev =>
+            [...prev, ...res.data]
+        );
+
+        if (continuationLogs === null) {
+            setContinuationLogs(res.continuation);
+        }
+        setLoadingLogs(false);
     };
 
     const updateField = (id: string, field: "title" | "description", value: string) => {
@@ -87,6 +113,25 @@ const AdminPage = () => {
         };
 
         loadSuggestionsInit();
+
+        const loadLogsInit = async () => {
+            if (loadingLogs) return;
+
+            setLoadingLogs(true);
+
+            const res = await getLatestLogs(
+                50,
+                null
+            );
+
+            setSecurityLogs(res.data);
+
+            setContinuationLogs(res.continuation);
+            setLoadingLogs(false);
+        };
+
+        loadLogsInit();
+
     }, []);
 
     useEffect(() => {
@@ -113,9 +158,10 @@ const AdminPage = () => {
                     <div style={{
                         width: 100 / tabs.length + "%"
                     }}
+                         key={tab}
                          className={`tab-bar-tab ${currentTab === tab ? "active" : ""}`}
                          onClick={() => setCurentTab(tab)}>
-                        <h3 className="tab-bar-tab-name">{tab}</h3>
+                        <h3 className="tab-bar-tab-name">{tab === "GENERAL" ? "ALLGEMEIN" : "QUICKLINKS"}</h3>
                     </div>
                 )
             }
@@ -214,7 +260,37 @@ const AdminPage = () => {
 
     const General = () => {
         return <div className="tab-page">
-            <SectionHeading heading={"Allgemeine Einstellungen"} centered={false} />
+            <SectionHeading heading={"Logs"} centered={false} />
+            <div className="security-logs-window" >
+                {[...securityLogs].reverse().map((log) => (
+                    <div className="security-log-row" key={log.timestamp}>
+                        <div className="security-log-time">
+                            {formatTimestamp(log.timestamp)}
+                        </div>
+
+                        <div
+                            className={`security-log-type ${
+                                log.type === "ERROR"
+                                    ? "error"
+                                    : log.type === "WARNING"
+                                        ? "warning"
+                                        : "info"
+                            }`}
+                        >
+                            {log.type}
+                        </div>
+
+                        <div className="security-log-subtype">
+                            {log.subType}
+                        </div>
+
+                        <div className="security-log-message">
+                            {log.message}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <Button text="Aktualisieren" onClick={() => refreshLogs()} variant="primary" />
         </div>
     }
 
