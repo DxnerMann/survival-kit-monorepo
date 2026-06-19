@@ -3,6 +3,7 @@ package com.survivalkit.backend.adapter.web.profile;
 import com.survivalkit.backend.core.course.CoursePort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "Profile")
 @RestController
 @RequestMapping("api/v1/profile")
 public class ProfileController {

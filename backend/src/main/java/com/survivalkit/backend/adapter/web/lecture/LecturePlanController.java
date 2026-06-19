@@ -4,6 +4,7 @@ import com.survivalkit.backend.core.lecture.LecturePort;
 import com.survivalkit.backend.shared.Lecture;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "Lecture")
 @RestController
 @RequestMapping("/api/v1/lecture")
 public class LecturePlanController {

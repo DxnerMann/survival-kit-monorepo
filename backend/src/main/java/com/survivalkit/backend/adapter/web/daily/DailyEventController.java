@@ -3,6 +3,7 @@ package com.survivalkit.backend.adapter.web.daily;
 import com.survivalkit.backend.core.daily.DailyEventPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Daily")
 @RestController
 @RequestMapping("api/v1/daily")
 public class DailyEventController {

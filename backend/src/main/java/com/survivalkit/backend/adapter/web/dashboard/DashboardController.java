@@ -4,6 +4,7 @@ import com.survivalkit.backend.adapter.postgres.widget.UserWidgetModel;
 import com.survivalkit.backend.core.widget.WidgetQueryPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "Dashboard")
 @RestController
 @RequestMapping("api/v1/dashboard")
 public class DashboardController {

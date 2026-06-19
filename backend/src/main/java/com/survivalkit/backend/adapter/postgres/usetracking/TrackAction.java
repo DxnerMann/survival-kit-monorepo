@@ -1,11 +1,13 @@
 package com.survivalkit.backend.adapter.postgres.usetracking;
 
+import java.time.Instant;
+
 public record TrackAction(
         String id,
         Action type,
         String userIdIfUser,
         String courseIfUser,
-        float value
+        Instant timestamp
 ) {
     public enum Action {
         EXMATRICULATED,
