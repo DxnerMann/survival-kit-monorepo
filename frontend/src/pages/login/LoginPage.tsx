@@ -200,11 +200,15 @@ const LoginPage = () => {
                             onChange={(e) => setRepeatPassword(e.target.value)}
                         />
 
+                        <p className="switch-text">
+                            Mit der Registrierung akzeptieren Sie die <a className="important-text" target="_blank" href={"/privacypolicy"}>Datenschutzerklärung</a> und stimmen der Verarbeitung Ihrer Daten gemäß dieser zu.
+                        </p>
+
                         <button
                             onClick={handleRegister}
                             disabled={loading}
                         >
-                            Register
+                            Registrieren
                         </button>
 
                         <p className="switch-text">

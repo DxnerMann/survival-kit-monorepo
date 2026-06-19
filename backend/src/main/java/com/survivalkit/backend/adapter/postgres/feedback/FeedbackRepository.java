@@ -1,5 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.feedback;
 
+import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Page;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -17,9 +19,11 @@ import static com.survivalkit.backend.shared.Utils.toTimestamp;
 public class FeedbackRepository implements FeedbackPersistancePort {
 
     private final JdbcClient jdbcClient;
+    private final SecurityLog securityLog;
 
-    public FeedbackRepository(JdbcClient jdbcClient) {
+    public FeedbackRepository(JdbcClient jdbcClient, SecurityLog securityLog) {
         this.jdbcClient = jdbcClient;
+        this.securityLog = securityLog;
     }
 
     @Override
@@ -36,6 +40,8 @@ public class FeedbackRepository implements FeedbackPersistancePort {
                             .addValue("answer", feedback.answer())
                             .addValue("currentTime", toTimestamp(Instant.now())))
                 .update();
+        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("New Feedback saved for user %s with ID %s", feedback.authorUserId(), feedback.id()));
+
     }
 
     @Override

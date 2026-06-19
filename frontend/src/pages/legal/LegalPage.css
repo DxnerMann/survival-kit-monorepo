@@ -1,7 +1,10 @@
-.stats-page {
-    height: 100vh;
+.legal-page {
+    height: fit-content;
     padding: calc(var(--header-height) + 2rem) 2rem 2rem;
     box-sizing: border-box;
     overflow: auto;
     width: 100%;
+}
+.legal-section {
+    padding: 1rem;
 }

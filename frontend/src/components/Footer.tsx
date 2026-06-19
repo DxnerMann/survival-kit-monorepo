@@ -22,9 +22,9 @@ const Footer = () => {
             </div>
             <div className="footer-links">
                 <a href="https://moodle.dhbw.de/" target="_blank" rel="noopener noreferrer">DHBW Moodle</a>
-                <a href="https://dualis.dhbw.de/" target="_blank" rel="noopener noreferrer">Dualis</a>
-                <a href="https://www.sw-ka.de/de/hochschulgastronomie/speiseplan/mensa_erzberger/" target="_blank" rel="noopener noreferrer">Menüplan Mensa</a>
                 <a href="/files/Loslassen.pdf" download>Loslassen</a>
+                <a href="/imprint" rel="noopener noreferrer">Impressum</a>
+                <a href="/privacypolicy" rel="noopener noreferrer">Datenschutzerklärung</a>
             </div>
         </footer>
     );

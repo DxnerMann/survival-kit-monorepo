@@ -44,10 +44,10 @@ const UsefullLinks = () => {
             lastUpdated: ""
         },
         {
-            id: "let_go",
-            title: "Loslassen",
-            description: "Tue es!",
-            url: "/files/Loslassen.pdf",
+            id: "claude",
+            title: "Claude",
+            description: "Claude ist ein KI-Assistent von Anthropic, der beim Schreiben, Programmieren, Recherchieren und Beantworten von Fragen unterstützt.",
+            url: "https://claude.ai",
             addedAt: "",
             approvedByAdmin: true,
             clickedOverall: 0,
@@ -57,10 +57,10 @@ const UsefullLinks = () => {
             lastUpdated: ""
         },
         {
-            id: "claude",
-            title: "Claude",
-            description: "Claude ist ein KI-Assistent von Anthropic, der beim Schreiben, Programmieren, Recherchieren und Beantworten von Fragen unterstützt.",
-            url: "https://claude.ai",
+            id: "let_go",
+            title: "Loslassen",
+            description: "Tue es!",
+            url: "/files/Loslassen.pdf",
             addedAt: "",
             approvedByAdmin: true,
             clickedOverall: 0,

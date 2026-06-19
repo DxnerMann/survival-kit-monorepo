@@ -1,11 +1,13 @@
 package com.survivalkit.backend.adapter.web;
 
+import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.rapla.CourseExtractionFailedException;
 import com.survivalkit.backend.core.auth.exception.AccessDeniedException;
 import com.survivalkit.backend.core.auth.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
 import com.survivalkit.backend.core.course.CourseNotFoundException;
+import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.core.widget.NoWidgetsFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +19,15 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final SecurityLog securityLog;
+
+    public GlobalExceptionHandler(SecurityLog securityLog) {
+        this.securityLog = securityLog;
+    }
+
     @ExceptionHandler(UserUnauthorizedException.class)
     public ResponseEntity<ApiError> handleGeneric(UserUnauthorizedException ex) {
+        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiError(401, HttpStatus.UNAUTHORIZED.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -26,6 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleGeneric(AccessDeniedException ex) {
+        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(new ApiError(403, HttpStatus.FORBIDDEN.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -33,6 +43,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleGeneric(UserAlreadyExistsException ex) {
+        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -40,6 +51,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleGeneric(IllegalArgumentException ex) {
+        securityLog.logWarning(Log.SecurityLogSubType.API, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -47,6 +59,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiError> handleGeneric(InvalidCredentialsException ex) {
+        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -54,6 +67,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CourseNotFoundException.class)
     public ResponseEntity<ApiError> handleGeneric(CourseNotFoundException ex) {
+        securityLog.logError(Log.SecurityLogSubType.API, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -61,6 +75,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CourseExtractionFailedException.class)
     public ResponseEntity<ApiError> handleGeneric(CourseExtractionFailedException ex) {
+        securityLog.logError(Log.SecurityLogSubType.RAPLA, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -68,6 +83,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoWidgetsFoundException.class)
     public ResponseEntity<ApiError> handleGeneric(NoWidgetsFoundException ex) {
+        securityLog.logWarning(Log.SecurityLogSubType.API, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
@@ -76,6 +92,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
         ex.printStackTrace();
+        securityLog.logError(Log.SecurityLogSubType.UNCATEGORIZED, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiError(500, HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase().toUpperCase(),"An unexpected error occurred", Instant.now()));

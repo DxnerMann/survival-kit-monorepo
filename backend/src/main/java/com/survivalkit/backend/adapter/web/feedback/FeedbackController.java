@@ -1,5 +1,6 @@
 package com.survivalkit.backend.adapter.web.feedback;
 
+import com.survivalkit.backend.adapter.catasaservice.CatAASPort;
 import com.survivalkit.backend.adapter.postgres.feedback.Feedback;
 import com.survivalkit.backend.core.feedback.FeedbackPort;
 import com.survivalkit.backend.shared.Page;
@@ -20,9 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class FeedbackController {
 
     private final FeedbackPort feedbackPort;
+    private final CatAASPort catAASPort;
 
-    public FeedbackController(FeedbackPort feedbackPort) {
+    public FeedbackController(FeedbackPort feedbackPort, CatAASPort catAASPort) {
         this.feedbackPort = feedbackPort;
+        this.catAASPort = catAASPort;
     }
 
     @Role(RoleLevel.USER)
@@ -40,6 +43,7 @@ public class FeedbackController {
             @RequestParam(required = false) Integer pageSize,
             @RequestParam(required = false) String continuation
     ) {
+        catAASPort.getRandomCatImage(500, 500);
         return ResponseEntity.ok(feedbackPort.getFeedbackPaged(pageSize, continuation));
     }
 

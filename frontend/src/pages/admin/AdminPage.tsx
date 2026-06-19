@@ -9,6 +9,7 @@ import {snackbarService} from "../../services/snackBarService.tsx";
 import type {SecurityLog} from "../../models/SecurityLog.tsx";
 import {getLatestLogs} from "../../services/securityLogService.tsx";
 import {formatTimestamp} from "../../services/utils.tsx";
+import Footer from "../../components/Footer.tsx";
 
 const AdminPage = () => {
 
@@ -295,9 +296,12 @@ const AdminPage = () => {
     }
 
     const [currentTab, setCurentTab] = useState<string>("GENERAL")
-    return <div className="admin-page">
-        {TabBar()}
-        {TabContent()}
+    return <div className="survival-kit-page">
+            <div className="admin-page">
+                {TabBar()}
+                {TabContent()}
+            </div>
+            <Footer />
     </div>
 }
 

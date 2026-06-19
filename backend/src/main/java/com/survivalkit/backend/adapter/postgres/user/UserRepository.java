@@ -1,5 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.user;
 
+import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Utils;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -12,9 +14,11 @@ import java.util.Optional;
 public class UserRepository implements UserPersistancePort {
 
     private final JdbcClient jdbcClient;
+    private final SecurityLog securityLog;
 
-    public UserRepository(JdbcClient jdbcClient) {
+    public UserRepository(JdbcClient jdbcClient, SecurityLog securityLog) {
         this.jdbcClient = jdbcClient;
+        this.securityLog = securityLog;
     }
 
     @Override
@@ -32,6 +36,7 @@ public class UserRepository implements UserPersistancePort {
                         .addValue("course", user.course())
                         .addValue("currentTime", Utils.toTimestamp(Instant.now()))
                 ).update();
+        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User created with id %s", user.id()));
     }
 
     @Override
@@ -57,6 +62,7 @@ public class UserRepository implements UserPersistancePort {
                 .paramSource(new MapSqlParameterSource("id", userId)
                         .addValue("isVerified", verified)
                 ).update();
+        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User with id %s was verified", userId));
     }
 
     @Override
@@ -65,6 +71,7 @@ public class UserRepository implements UserPersistancePort {
                 .paramSource(new MapSqlParameterSource("id", userId)
                         .addValue("course", course)
                 ).update();
+        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User-Course changed for user with id %s", userId));
     }
 
     private enum Statements{

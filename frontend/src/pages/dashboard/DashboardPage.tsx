@@ -170,7 +170,7 @@ const DashboardPage = () => {
                         href={"https://github.com/DxnerMann/survival-kit-monorepo"}
                         heading={"GitHub Repository"}
                         description={
-                            "Das Offizielle GitHub Repository des Survival-Kits für alle Interesierten"
+                            "Das Offizielle GitHub Repository des Survival-Kits für alle Interesierten. Bei eigenen Ideen könnt ihr auch gerne einen Fork erstellen."
                         }
                         alingRight={false}
                         previewImagePath={"/images/github-icon.png"}

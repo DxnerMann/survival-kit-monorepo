@@ -10,6 +10,7 @@ import Button from "../../components/shared/Button.tsx";
 import type {Feedback, FeedbackType} from "../../models/Feedback.tsx";
 import {getUserRole} from "../../services/tokenService.tsx";
 import {getUsername} from "../../services/userService.tsx";
+import Footer from "../../components/Footer.tsx";
 
 const IdeasPage = () => {
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
@@ -85,34 +86,37 @@ const IdeasPage = () => {
         setFeedbacks(prev => [...prev, newFeedback]);
     }
 
-    return <div className="ideas-page">
-        <SectionHeading
-            heading={"Ideen und Feedback"}
-            centered={false}
-            subheading={"Ideen und Feedback, dass von anderen Benutzern eingereicht wurde"}
-            actions={getUserRole() !== "GUEST" ? [
-                { icon: MessageSquareText, text: "Beitrag schreiben", link: () => setShowFeedbackDialog(true) }
-            ] : []}
-        />
-        <FeedbackDialog
-            isOpen={showFeedbackDialog}
-            onCancel={() => setShowFeedbackDialog(false)}
-            onSubmit={(data) => {
-                try {
-                    onFeedbackSubmit(data.title, data.description, data.type);
-                    submitFeedback(data.title, data.description, data.type);
-                    setShowFeedbackDialog(false);
-                    snackbarService.showSnackbar({ type: "success",   text: "Beitrag abgesendet", showIcon: true });
-                } catch {
-                    snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen.", showIcon: true });
-                }
-            }}
-        />
-        {
-            feedbacks.map(feedback => <FeedbackItem title={feedback.title} description={feedback.description} author={feedback.authorUsername} type={feedback.type} date={formatDate(feedback.addedAt)} likes={feedback.likes} dislikes={feedback.dislikes} answer={feedback.answer} id={feedback.id} key={feedback.id} onDelete={(id) => onFeedbackDelete(id)} />)
-        }
-        { continuation !== null && <Button text="Mehr Laden" onClick={() => loadMore()} variant="primary" disabled={continuation === null} /> }
-        { feedbacks.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Beiträge</h4> }
+    return <div className="survival-kit-page">
+        <div className="ideas-page">
+            <SectionHeading
+                heading={"Ideen und Feedback"}
+                centered={false}
+                subheading={"Ideen und Feedback, dass von anderen Benutzern eingereicht wurde"}
+                actions={getUserRole() !== "GUEST" ? [
+                    { icon: MessageSquareText, text: "Beitrag schreiben", link: () => setShowFeedbackDialog(true) }
+                ] : []}
+            />
+            <FeedbackDialog
+                isOpen={showFeedbackDialog}
+                onCancel={() => setShowFeedbackDialog(false)}
+                onSubmit={(data) => {
+                    try {
+                        onFeedbackSubmit(data.title, data.description, data.type);
+                        submitFeedback(data.title, data.description, data.type);
+                        setShowFeedbackDialog(false);
+                        snackbarService.showSnackbar({ type: "success",   text: "Beitrag abgesendet", showIcon: true });
+                    } catch {
+                        snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen.", showIcon: true });
+                    }
+                }}
+            />
+            {
+                feedbacks.map(feedback => <FeedbackItem title={feedback.title} description={feedback.description} author={feedback.authorUsername} type={feedback.type} date={formatDate(feedback.addedAt)} likes={feedback.likes} dislikes={feedback.dislikes} answer={feedback.answer} id={feedback.id} key={feedback.id} onDelete={(id) => onFeedbackDelete(id)} />)
+            }
+            { continuation !== null && <Button text="Mehr Laden" onClick={() => loadMore()} variant="primary" disabled={continuation === null} /> }
+            { feedbacks.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Beiträge</h4> }
+        </div>
+        <Footer />
     </div>
 }
 
