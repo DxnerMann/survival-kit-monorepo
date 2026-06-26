@@ -59,7 +59,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:80",
-                "http://localhost"
+                "http://localhost",
+                "https://lecture-survival-kit.jannis-saur.de"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
