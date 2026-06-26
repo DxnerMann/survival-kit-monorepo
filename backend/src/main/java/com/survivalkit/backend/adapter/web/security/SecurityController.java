@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Security")
 @RestController
-@RequestMapping("api/v1/security")
+@RequestMapping("v1/security")
 public class SecurityController {
 
     private final SecurityLog securityLog;

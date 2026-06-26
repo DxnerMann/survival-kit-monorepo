@@ -40,8 +40,7 @@ public class EmailService implements EmailPort {
             helper.setSubject("Verifiziere deine Eimail");
             helper.setText(html, true);
             helper.addInline("icon", new ClassPathResource("static/icon.png"));
-            helper.setFrom("your@gmail.com", "Lecture Survival Kit");
-            mailSender.send(message);
+            helper.setFrom("auth@lecture-survival-kit.jannis-saur.de", "Lecture Survival Kit");            mailSender.send(message);
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send email", e);
         } catch (UnsupportedEncodingException e) {

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "UserTracking")
 @RestController
-@RequestMapping("/api/v1/track")
+@RequestMapping("v1/track")
 public class UserTrackingController {
 
     private final StatisticsPort statisticsPort;

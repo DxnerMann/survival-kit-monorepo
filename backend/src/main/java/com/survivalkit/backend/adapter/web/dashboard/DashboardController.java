@@ -16,7 +16,7 @@ import java.util.List;
 
 @Tag(name = "Dashboard")
 @RestController
-@RequestMapping("api/v1/dashboard")
+@RequestMapping("v1/dashboard")
 public class DashboardController {
 
     private final WidgetQueryPort widgetQueryPort;

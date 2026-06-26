@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Daily")
 @RestController
-@RequestMapping("api/v1/daily")
+@RequestMapping("v1/daily")
 public class DailyEventController {
 
     private final DailyEventPort dailyEventPort;

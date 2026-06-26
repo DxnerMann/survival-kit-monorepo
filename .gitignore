@@ -41,8 +41,3 @@ build/
 **/.env.*
 **/.env-local
 **/.env-local.*
-
-frontend/.env
-frontend/.env.*
-frontend/.env.development
-frontend/.env.development.*

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Feedback")
 @RestController
-@RequestMapping("api/v1/feedback")
+@RequestMapping("v1/feedback")
 public class FeedbackController {
 
     private final FeedbackPort feedbackPort;

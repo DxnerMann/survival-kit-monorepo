@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Statistics")
 @RestController
-@RequestMapping("/api/v1/stats")
+@RequestMapping("v1/stats")
 public class StatisticsController {
 
     private final StatisticsPort statisticsPort;
@@ -43,6 +43,7 @@ public class StatisticsController {
         return ResponseEntity.ok(statisticsPort.getCourseActions(course, action, continuation));
     }
 
+    @Role(RoleLevel.GUEST)
     @GetMapping("/globalAction")
     public ResponseEntity<Page<TrackAction>> getUserActions(
             @RequestParam TrackAction.Action action,
@@ -69,10 +70,12 @@ public class StatisticsController {
         return ResponseEntity.ok(statisticsPort.getActionSumForCourse(course, action));
     }
 
+    @Role(RoleLevel.GUEST)
     @GetMapping("/globalActionSum")
     public ResponseEntity<Integer> getGlobalActionSum(
             @RequestParam TrackAction.Action action
     ) {
         return ResponseEntity.ok(statisticsPort.getGolbalActionSum(action));
     }
+
 }

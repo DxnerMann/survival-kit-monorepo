@@ -1,0 +1,24 @@
+# =========================
+# DATABASE
+# =========================
+POSTGRES_NAME=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+
+# =========================
+# JWT
+# =========================
+JWT_SECRET=
+JWT_EXPIRATION=
+
+# =========================
+# MAIL
+# =========================
+MAIL_HOST=
+MAIL_PORT=
+MAIL_USERNAME=
+MAIL_PASSWORD=
+
+# =========================
+# SPRING
+# =========================

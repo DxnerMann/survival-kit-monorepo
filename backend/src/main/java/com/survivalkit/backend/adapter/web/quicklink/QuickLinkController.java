@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "QuickLink")
 @RestController
-@RequestMapping("api/v1/link")
+@RequestMapping("v1/link")
 public class QuickLinkController {
 
     private final QuickLinkPort quickLinkPort;

@@ -1,0 +1,55 @@
+services:
+  backend:
+    image: ghcr.io/dxnermann/survival-kit-backend:latest
+    container_name: survival-kit-backend
+    expose:
+      - "8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - POSTGRES_NAME=${POSTGRES_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+    depends_on:
+      - database
+    networks:
+      - web
+      - internal
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/dxnermann/survival-kit-frontend:latest
+    container_name: survival-kit-frontend
+    expose:
+      - "80"
+    networks:
+      - web
+    restart: unless-stopped
+
+  database:
+    image: postgres:16-alpine
+    container_name: survival-kit-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  web:
+    external: true
+    name: web
+  internal:
+    driver: bridge

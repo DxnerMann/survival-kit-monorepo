@@ -16,7 +16,7 @@ import java.util.List;
 
 @Tag(name = "Profile")
 @RestController
-@RequestMapping("api/v1/profile")
+@RequestMapping("v1/profile")
 public class ProfileController {
 
     private final CoursePort coursePort;

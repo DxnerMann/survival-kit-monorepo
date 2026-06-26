@@ -3,6 +3,8 @@ package com.survivalkit.backend.core.statistics;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.shared.Page;
 
+import java.util.Map;
+
 public interface StatisticsPort {
 
     void saveTrackAction(TrackAction.Action action, String userId, String course);

@@ -15,7 +15,7 @@ import java.util.List;
 
 @Tag(name = "Lecture")
 @RestController
-@RequestMapping("/api/v1/lecture")
+@RequestMapping("v1/lecture")
 public class LecturePlanController {
 
     private final LecturePort lecturePort;

@@ -1,5 +1,6 @@
 package com.survivalkit.backend.core.statistics;
 
+import com.survivalkit.backend.adapter.postgres.course.CoursePersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
 import com.survivalkit.backend.shared.Page;
@@ -7,14 +8,17 @@ import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Service
 public class StatisticsService implements StatisticsPort {
 
     private final UserTrackingPersistancePort userTrackingPersistancePort;
+    private final CoursePersistancePort coursePersistancePort;
 
-    public StatisticsService(UserTrackingPersistancePort userTrackingPersistancePort) {
+    public StatisticsService(UserTrackingPersistancePort userTrackingPersistancePort, CoursePersistancePort coursePersistancePort) {
         this.userTrackingPersistancePort = userTrackingPersistancePort;
+        this.coursePersistancePort = coursePersistancePort;
     }
 
     @Override
@@ -59,5 +63,4 @@ public class StatisticsService implements StatisticsPort {
     public int getGolbalActionSum(TrackAction.Action target) {
         return userTrackingPersistancePort.getGolbalActionSum(target).orElse(0);
     }
-
 }

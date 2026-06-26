@@ -15,7 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Tag(name = "Auth")
 @RestController
-@RequestMapping("api/v1/auth")
+@RequestMapping("v1/auth")
 public class AuthController {
 
     private final AuthPort authPort;

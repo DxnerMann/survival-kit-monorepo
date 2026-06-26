@@ -1,0 +1,26 @@
+.maintenance-page {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.maintenance-info-container {
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+    width: 50%;
+    height: fit-content;
+    padding: 2rem;
+}
+
+.maintenance-info-container h1 {
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+}
+
+.maintenance-info-container h2 {
+    color: var(--color-text-secondary);
+}
