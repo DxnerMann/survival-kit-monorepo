@@ -16,7 +16,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 2px solid var(--color-background-primary);
-    box-shadow: 0 1px 0 var(--color-background-primary);, 0 2px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 0 var(--color-background-primary), 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .header-logo {
