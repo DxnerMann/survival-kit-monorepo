@@ -134,7 +134,7 @@ jobs:
             MAIL_HOST=smtp-relay.brevo.com
             MAIL_PORT=587
             MAIL_USERNAME=${{ secrets.BREVO_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.BREVO_SMTP_KEY }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             EOF
 
       - name: Copy compose file to server
