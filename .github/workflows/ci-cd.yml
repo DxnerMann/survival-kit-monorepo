@@ -99,6 +99,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
+      - name: Set lowercase image names
+        run: |
+          echo "BACKEND_IMAGE=ghcr.io/$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')/survival-kit-backend" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=ghcr.io/$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')/survival-kit-frontend" >> $GITHUB_ENV
+
       - name: Build & push backend image
         uses: docker/build-push-action@v5
         with:
