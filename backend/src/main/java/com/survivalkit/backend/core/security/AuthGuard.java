@@ -122,7 +122,10 @@ public class AuthGuard extends OncePerRequestFilter {
 
     private RoleLevel resolveRequiredRole(HttpServletRequest request) {
         String path = request.getRequestURI();
-        if (SWAGGER_PATHS.stream().anyMatch(path::startsWith)) return RoleLevel.GUEST;
+        if (SWAGGER_PATHS.stream().anyMatch(path::startsWith))
+        {
+            return RoleLevel.ADMIN;
+        }
 
         try {
             var handlerExecutionChain = handlerMapping.getHandler(request);

@@ -13,8 +13,18 @@ const LinkCard = ({heading, previewImagePath, href, description, alingRight} : T
 
     const navigate = useNavigate();
 
+    const handleNavigate = () => {
+        const isExternal = href.startsWith("http://") || href.startsWith("https://");
+
+        if (isExternal) {
+            window.open(href, "_blank", "noopener,noreferrer");
+        } else {
+            navigate(href);
+        }
+    };
+
     return (
-        <div className="timewaste-card" onClick={() => navigate(href)} style={{
+        <div className="timewaste-card" onClick={() => handleNavigate()} style={{
             flexDirection: alingRight ? "row-reverse" : "row"
         }}>
             <div className={alingRight ? "timewaste-card-preview right" : "timewaste-card-preview left"}>

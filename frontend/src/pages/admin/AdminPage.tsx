@@ -4,12 +4,14 @@ import SectionHeading from "../../components/shared/SectionHeading.tsx";
 import type {QuickLink} from "../../models/QuickLink.tsx";
 import {approveLink, getQuickLinksFiltered} from "../../services/quickLinkService.tsx";
 import Button from "../../components/shared/Button.tsx";
-import {ThumbsDown, ThumbsUp} from "lucide-react";
+import {SquareTerminal, ThumbsDown, ThumbsUp} from "lucide-react";
 import {snackbarService} from "../../services/snackBarService.tsx";
 import type {SecurityLog} from "../../models/SecurityLog.tsx";
 import {getLatestLogs} from "../../services/securityLogService.tsx";
 import {formatTimestamp} from "../../services/utils.tsx";
 import Footer from "../../components/Footer.tsx";
+
+const SWAGGER_PATH = import.meta.env.VITE_API_BASE_URL + "/swagger-ui/index.html";
 
 const AdminPage = () => {
 
@@ -26,7 +28,8 @@ const AdminPage = () => {
 
     const tabs : string[] = [
         "GENERAL",
-        "QUICKLINKS"
+        "QUICKLINKS",
+        "SWAGGER"
     ];
 
     const loadMoreSuggestions = async () => {
@@ -162,7 +165,7 @@ const AdminPage = () => {
                          key={tab}
                          className={`tab-bar-tab ${currentTab === tab ? "active" : ""}`}
                          onClick={() => setCurentTab(tab)}>
-                        <h3 className="tab-bar-tab-name">{tab === "GENERAL" ? "ALLGEMEIN" : "QUICKLINKS"}</h3>
+                        <h3 className="tab-bar-tab-name">{tab === "GENERAL" ? "ALLGEMEIN" : tab === "QUICKLINKS" ? "QUICKLINKS" : "SWAGGER"}</h3>
                     </div>
                 )
             }
@@ -175,6 +178,8 @@ const AdminPage = () => {
                 return General();
             case "QUICKLINKS":
                 return QuickLinks();
+            case "SWAGGER":
+                return Swagger();
         }
     }
 
@@ -295,9 +300,21 @@ const AdminPage = () => {
         </div>
     }
 
+    const Swagger = () => {
+        return <div className="tab-page">
+            <SectionHeading heading={"Backend API"} centered={false} actions={[{ icon: SquareTerminal, text: "Swagger öffnen", link: SWAGGER_PATH }]} />
+            <div className="swagger-iframe">
+                <iframe
+                    src={SWAGGER_PATH}
+                >
+                </iframe>
+            </div>
+        </div>
+    }
+
     const [currentTab, setCurentTab] = useState<string>("GENERAL")
     return <div className="survival-kit-page">
-            <div className="admin-page">
+        <div className="admin-page">
                 {TabBar()}
                 {TabContent()}
             </div>
