@@ -1,1 +1,1 @@
-export type TrackAction = "EXMATRICULATED" | "GAME_PLAYED" | "GAME_SUGGESTED" | "IDEA_SUBMITTED" | "SURVIVAL_KIT_OPENED";
+export type TrackAction = "EXMATRICULATED";

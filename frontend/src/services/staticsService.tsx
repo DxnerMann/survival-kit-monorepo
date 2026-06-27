@@ -7,7 +7,7 @@ const API_URL = api.baseUrl;
 export const trackActivity = async (action : TrackAction) => {
     const token = authService.getToken();
 
-    const response = await fetch(`${API_URL}/track?action=${action}`, {
+    const response = await fetch(`${API_URL}/track/action?action=${action}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

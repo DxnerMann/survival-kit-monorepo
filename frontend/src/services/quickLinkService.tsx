@@ -1,5 +1,6 @@
 import type {QuickLink} from "../models/QuickLink.tsx";
 import {api} from "./api.tsx";
+import {authService} from "./authService.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -61,10 +62,13 @@ export const suggestLink = async (data: {
     description: string;
     url: string;
 }) => {
+    const token = authService.getToken();
+
     const response = await fetch(`${API_URL}/link`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify(data),
     });

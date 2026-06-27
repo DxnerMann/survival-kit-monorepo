@@ -14,6 +14,6 @@ public record TrackAction(
         GAME_PLAYED,
         GAME_SUGGESTED,
         IDEA_SUBMITTED,
-        SURVIVAL_KIT_OPENED // triggered through Controller
+        LOGGED_IN
     }
 }

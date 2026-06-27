@@ -2,6 +2,7 @@ package com.survivalkit.backend.core.auth;
 
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
+import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;
 import com.survivalkit.backend.config.SecurityContext;
@@ -10,6 +11,7 @@ import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
 import com.survivalkit.backend.core.email.EmailPort;
 import com.survivalkit.backend.core.security.TokenService;
+import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.jsonwebtoken.JwtException;
 import io.viascom.nanoid.NanoId;
@@ -25,12 +27,14 @@ public class AuthService implements AuthPort {
     private final BCryptPasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final EmailPort emailPort;
+    private final StatisticsPort statisticsPort;
 
-    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort) {
+    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort) {
         this.userPersistancePort = userPersistancePort;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.emailPort = emailPort;
+		this.statisticsPort = statisticsPort;
     }
 
     @Override
@@ -121,23 +125,24 @@ public class AuthService implements AuthPort {
 
     @Override
     public LoginResponse validate() {
-        var user = SecurityContext.current();
+        var authUser = SecurityContext.current();
 
-        if (user.isEmpty()) {
+        if (authUser.isEmpty()) {
             throw new IllegalStateException(
                     "No authenticated user in context. " +
                             "Ensure this is called within a secured request.");
         }
 
-        if (tokenService.validate(user.token()).isEmpty()) {
+        if (tokenService.validate(authUser.get().token()).isEmpty()) {
             throw new UserUnauthorizedException("Token is Invalid or Expired");
         }
+        var user = authUser.get();
 
         var existingUser = userPersistancePort.findByEmailOrUsername(user.email(), "");
         if (existingUser.isEmpty()) {
             throw new UserUnauthorizedException("User Does not exist");
         }
-
+        statisticsPort.saveTrackAction(TrackAction.Action.LOGGED_IN);
         return new LoginResponse(
                 tokenService.generateToken(user.userId(), user.role(), user.email(), user.username()),
                 user.username(),

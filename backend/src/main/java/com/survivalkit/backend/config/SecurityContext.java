@@ -15,7 +15,7 @@ public final class SecurityContext {
     }
 
     public static Optional<AuthenticatedUser> current() {
-		return Optional.of(HOLDER.get()).or(null);
+        return Optional.ofNullable(HOLDER.get());
     }
 
     public static void clear() {

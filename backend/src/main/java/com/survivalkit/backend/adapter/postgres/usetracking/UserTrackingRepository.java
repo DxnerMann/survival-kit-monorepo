@@ -27,7 +27,6 @@ public class UserTrackingRepository implements UserTrackingPersistancePort{
                 .paramSource(new MapSqlParameterSource("id", action.id())
                         .addValue("type", action.type().toString())
                         .addValue("userIdIfUser", action.userIdIfUser())
-                        .addValue("courseIfUser", action.courseIfUser())
                         .addValue("timestamp", toTimestamp(action.timestamp()))
                 ).update();
     }
@@ -124,8 +123,9 @@ public class UserTrackingRepository implements UserTrackingPersistancePort{
 
         // language=sql
         SAVE("""
-            INSERT INTO trackActions (id, type, userIdIfUser, courseIfUser, timestamp) 
+            INSERT INTO trackActions (id, type, userIdIfUser, timestamp) 
             VALUES (:id, :type, :userIdIfUser, :courseIfUser, :timestamp)
+            ON CONFLICT (timestamp) DO NOTHING
         """),
         // language=sql
         GET_USER_ACTIONS_7_DAYS("""
@@ -138,6 +138,7 @@ public class UserTrackingRepository implements UserTrackingPersistancePort{
             ORDER BY id
             LIMIT 50
         """),
+        //TODO: courseIfUser is deleted, make a join on user table for userCourse
         // language=sql
         GET_COURSE_ACTIONS_7_DAYS("""
             SELECT * 
@@ -166,6 +167,7 @@ public class UserTrackingRepository implements UserTrackingPersistancePort{
             WHERE userIdIfUser = :userId
                 AND type = :actionType
         """),
+        //TODO: courseIfUser is deleted, make a join on user table for userCourse
         // language=sql
         GET_COURSE_ACTION_SUM("""
             SELECT COUNT(userIdIfUser)

@@ -14,7 +14,7 @@ const Exmatriculation = () => {
 
     const handleSubmit = () => {
         setSubmitted(true);
-        trackActivity("GAME_PLAYED");
+        trackActivity("EXMATRICULATED");
     };
 
     useEffect(() => {

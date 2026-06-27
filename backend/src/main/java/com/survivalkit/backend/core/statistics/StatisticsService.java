@@ -28,22 +28,14 @@ public class StatisticsService implements StatisticsPort {
     @Override
     public void saveTrackAction(TrackAction.Action action) {
 
-        var authUser = SecurityContext.current();
-
-        var userId = authUser.map(AuthenticatedUser::userId).orElse(null);
-
-        String course = null;
-        if (userId != null) {
-            var user = userPersistancePort.getById(userId);
-            course = user.map(UserModel::course).orElse(null);
-        }
+        var userId = SecurityContext.current().map(AuthenticatedUser::userId).orElse(null);
 
         userTrackingPersistancePort.saveTrackAction(
                 new TrackAction(
                         NanoId.generate(25),
                         action,
                         userId,
-                        course,
+                        null,
                         Instant.now()
                 )
         );
