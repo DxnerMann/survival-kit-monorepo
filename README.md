@@ -123,3 +123,5 @@ Routing is handled by the external Nginx proxy:
 - [ ] Finish User Tracking
 - [ ] View / Promote Users as Admin in Adminpanel
 - [ ] Make Maintenance Mode Switchable as Admin, do only allow admins to view the site then.
+- [ ] Option to resend Authentication Mail
+- [ ] Profile Options (Change password, username, delete Account)

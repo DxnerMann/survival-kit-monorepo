@@ -82,10 +82,7 @@ public class AuthService implements AuthPort {
                 return new ModelAndView("verification-failed");
             }
 
-            var loginUrl = ServletUriComponentsBuilder
-                    .fromCurrentContextPath()
-                    .path("/login")
-                    .toUriString();
+            var loginUrl = "https://lecture-survival-kit.jannis-saur.de/login";
 
             if (user.get().isVerified()) {
                 var mav = new ModelAndView("already-verified");
