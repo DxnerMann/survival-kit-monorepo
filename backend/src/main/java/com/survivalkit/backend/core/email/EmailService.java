@@ -27,7 +27,7 @@ public class EmailService implements EmailPort {
         context.setVariable("name", name);
         context.setVariable("verifyUrl",
                 ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("api/v1/auth/verify")
+                .path("/v1/auth/verify")
                 .queryParam("token", token)
                 .toUriString());
 

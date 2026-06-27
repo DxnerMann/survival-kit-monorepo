@@ -116,10 +116,20 @@ Routing is handled by the external Nginx proxy:
 
 ---
 
-## Roadmap
+## ToDo's ~before Release
 
 - [ ] Rate Limiting on Several Places
 - [ ] Finish User Tracking
 - [ ] View / Promote Users as Admin in Adminpanel
 - [ ] Option to resend Authentication Mail
 - [ ] Profile Options (Change password, username, delete Account)
+- [ ] Random Word generator game
+- [ ] Integrate Free-Room-Finder from Kai
+- [ ] Daily Phrase Rework from v2
+- [ ] Statistics
+- [ ] Chat Rework from v2
+
+## Further Ideas
+
+- [ ] 5 Days at DHBW (FNAF) Game
+- 
