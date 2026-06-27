@@ -125,7 +125,7 @@ jobs:
           username: deploy
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cat > /home/deploy/apps/survival-kit/.env << EOF
+            cat > /home/deploy/apps/survival-kit/.env.production << EOF
             POSTGRES_NAME=${{ secrets.POSTGRES_NAME }}
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
