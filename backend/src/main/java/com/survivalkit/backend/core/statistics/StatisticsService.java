@@ -1,8 +1,12 @@
 package com.survivalkit.backend.core.statistics;
 
 import com.survivalkit.backend.adapter.postgres.course.CoursePersistancePort;
+import com.survivalkit.backend.adapter.postgres.user.UserModel;
+import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
+import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.core.auth.AuthenticatedUser;
 import com.survivalkit.backend.shared.Page;
 import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
@@ -14,15 +18,26 @@ import java.util.Map;
 public class StatisticsService implements StatisticsPort {
 
     private final UserTrackingPersistancePort userTrackingPersistancePort;
-    private final CoursePersistancePort coursePersistancePort;
+    private final UserPersistancePort userPersistancePort;
 
-    public StatisticsService(UserTrackingPersistancePort userTrackingPersistancePort, CoursePersistancePort coursePersistancePort) {
+    public StatisticsService(UserTrackingPersistancePort userTrackingPersistancePort, UserPersistancePort userPersistancePort) {
         this.userTrackingPersistancePort = userTrackingPersistancePort;
-        this.coursePersistancePort = coursePersistancePort;
+		this.userPersistancePort = userPersistancePort;
     }
 
     @Override
-    public void saveTrackAction(TrackAction.Action action, String userId, String course) {
+    public void saveTrackAction(TrackAction.Action action) {
+
+        var authUser = SecurityContext.current();
+
+        var userId = authUser.map(AuthenticatedUser::userId).orElse(null);
+
+        String course = null;
+        if (userId != null) {
+            var user = userPersistancePort.getById(userId);
+            course = user.map(UserModel::course).orElse(null);
+        }
+
         userTrackingPersistancePort.saveTrackAction(
                 new TrackAction(
                         NanoId.generate(25),

@@ -122,6 +122,13 @@ public class AuthService implements AuthPort {
     @Override
     public LoginResponse validate() {
         var user = SecurityContext.current();
+
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
         if (tokenService.validate(user.token()).isEmpty()) {
             throw new UserUnauthorizedException("Token is Invalid or Expired");
         }

@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface StatisticsPort {
 
-    void saveTrackAction(TrackAction.Action action, String userId, String course);
+    void saveTrackAction(TrackAction.Action action);
     Page<TrackAction> getUserActions(String userId, TrackAction.Action actionType, String continuation);
     Page<TrackAction> getCourseActions(String course, TrackAction.Action actionType, String continuation);
     Page<TrackAction> getGlobalActions(TrackAction.Action actionType, String continuation);

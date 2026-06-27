@@ -10,10 +10,10 @@ public record TrackAction(
         Instant timestamp
 ) {
     public enum Action {
-        EXMATRICULATED,
+        EXMATRICULATED, // triggered through Controller
         GAME_PLAYED,
         GAME_SUGGESTED,
         IDEA_SUBMITTED,
-        SURVIVAL_KIT_OPENED
+        SURVIVAL_KIT_OPENED // triggered through Controller
     }
 }

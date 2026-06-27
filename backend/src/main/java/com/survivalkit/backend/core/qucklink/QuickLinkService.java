@@ -94,13 +94,19 @@ public class QuickLinkService implements QuickLinkPort {
 
     @Override
     public void markAsFav(String quickLinkId, boolean fav) {
-        var userId = SecurityContext.current().userId();
+        var user = SecurityContext.current();
+
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
 
         if (fav) {
-            favouritePersistancePort.addFav(userId, quickLinkId);
+            favouritePersistancePort.addFav(user.get().userId(), quickLinkId);
             return;
         }
-        favouritePersistancePort.deleteFav(userId, quickLinkId);
+        favouritePersistancePort.deleteFav(user.get().userId(), quickLinkId);
 
     }
 
@@ -109,9 +115,15 @@ public class QuickLinkService implements QuickLinkPort {
         pageSize = pageSize == null ? 20 : pageSize;
         pageSize = pageSize > 50 ? 50 : pageSize;
 
-        var userId = SecurityContext.current().userId();
+        var user = SecurityContext.current();
 
-        var favIds = favouritePersistancePort.getFavouritesForUser(userId, continuation, pageSize);
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        var favIds = favouritePersistancePort.getFavouritesForUser(user.get().userId(), continuation, pageSize);
 
         if (favIds.data().isEmpty()) {
             return new Page<>(

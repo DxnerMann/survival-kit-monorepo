@@ -24,8 +24,16 @@ public class CourseService implements CoursePort {
     @Override
     public void setCourseForUser(String course, String raplaUrl) {
         if (!course.isEmpty()) {
-            var userId = SecurityContext.current().userId();
-            userPersistancePort.setUserCourse(userId, course);
+
+            var user = SecurityContext.current();
+
+            if (user.isEmpty()) {
+                throw new IllegalStateException(
+                        "No authenticated user in context. " +
+                                "Ensure this is called within a secured request.");
+            }
+
+            userPersistancePort.setUserCourse(user.get().userId(), course);
             return;
         }
         if (!raplaUrl.isEmpty()) {
@@ -45,8 +53,15 @@ public class CourseService implements CoursePort {
     @Override
     public String getUserCourseOrExtract(String raplaUrl) {
         if (raplaUrl == null || raplaUrl.isEmpty()) {
-            var userId = SecurityContext.current().userId();
-            var user = userPersistancePort.getById(userId);
+            var authUser = SecurityContext.current();
+
+            if (authUser.isEmpty()) {
+                throw new IllegalStateException(
+                        "No authenticated user in context. " +
+                                "Ensure this is called within a secured request.");
+            }
+
+            var user = userPersistancePort.getById(authUser.get().userId());
             if (user.isPresent()) {
                 return user.get().course();
             }
