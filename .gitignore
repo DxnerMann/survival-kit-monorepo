@@ -34,6 +34,9 @@ build/
 
 ### Secrets ###
 .env
-.env-local
 **/.env
 **/.env-local
+
+./package-lock.
+./package.json
+node_modules/

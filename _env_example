@@ -1,3 +1,5 @@
+# .env file is only for local development (On Production, the real values are inserted via GitHub Secrets)
+
 # =========================
 # DATABASE
 # =========================
@@ -18,7 +20,3 @@ MAIL_HOST=
 MAIL_PORT=
 MAIL_USERNAME=
 MAIL_PASSWORD=
-
-# =========================
-# SPRING
-# =========================
