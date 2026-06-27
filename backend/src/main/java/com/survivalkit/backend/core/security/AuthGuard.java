@@ -50,12 +50,7 @@ public class AuthGuard extends OncePerRequestFilter {
 
         var requiredRole = resolveRequiredRole(request);
 
-        if (requiredRole == RoleLevel.GUEST) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (isLocalProfile()) {
+        if (isLocalProfile() || requiredRole == RoleLevel.GUEST) {
             try {
                 var token = request.getHeader("Authorization")
                         .substring(BEARER_PREFIX.length()).trim();
@@ -63,16 +58,18 @@ public class AuthGuard extends OncePerRequestFilter {
                 SecurityContext.set(user);
 
             } catch (Exception e) {
-                SecurityContext.set(
-                        new AuthenticatedUser(
-                            "",
-                            "local-admin-id",
-                            "Admin",
-                            RoleLevel.ADMIN,
-                            "email",
-                            true
-                    )
-                );
+                if (isLocalProfile()) {
+                    SecurityContext.set(
+                            new AuthenticatedUser(
+                                    "",
+                                    "local-admin-id",
+                                    "Admin",
+                                    RoleLevel.ADMIN,
+                                    "email",
+                                    true
+                            )
+                    );
+                }
             }
             filterChain.doFilter(request, response);
             return;

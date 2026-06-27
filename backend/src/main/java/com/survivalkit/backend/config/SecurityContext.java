@@ -2,6 +2,8 @@ package com.survivalkit.backend.config;
 
 import com.survivalkit.backend.core.auth.AuthenticatedUser;
 
+import java.util.Optional;
+
 public final class SecurityContext {
 
     private static final ThreadLocal<AuthenticatedUser> HOLDER = new ThreadLocal<>();
@@ -12,14 +14,8 @@ public final class SecurityContext {
         HOLDER.set(user);
     }
 
-    public static AuthenticatedUser current() {
-        var user = HOLDER.get();
-        if (user == null) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-        return user;
+    public static Optional<AuthenticatedUser> current() {
+        return Optional.ofNullable(HOLDER.get());
     }
 
     public static void clear() {

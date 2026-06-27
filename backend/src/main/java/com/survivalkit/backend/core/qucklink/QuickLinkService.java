@@ -3,9 +3,11 @@ package com.survivalkit.backend.core.qucklink;
 import com.survivalkit.backend.adapter.postgres.favourites.FavouritePersistancePort;
 import com.survivalkit.backend.adapter.postgres.quicklink.QuickLink;
 import com.survivalkit.backend.adapter.postgres.quicklink.QuickLinkPersistancePort;
+import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkApprovementRequest;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkSuggestionRequest;
 import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.Page;
 import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
@@ -18,15 +20,18 @@ public class QuickLinkService implements QuickLinkPort {
 
     private final QuickLinkPersistancePort quickLinkPersistancePort;
     private final FavouritePersistancePort favouritePersistancePort;
+    private final StatisticsPort statisticsPort;
 
-    public QuickLinkService(QuickLinkPersistancePort quickLinkPersistancePort, FavouritePersistancePort favouritePersistancePort) {
+    public QuickLinkService(QuickLinkPersistancePort quickLinkPersistancePort, FavouritePersistancePort favouritePersistancePort, StatisticsPort statisticsPort) {
         this.quickLinkPersistancePort = quickLinkPersistancePort;
         this.favouritePersistancePort = favouritePersistancePort;
+        this.statisticsPort = statisticsPort;
     }
 
     @Override
     public void clickLink(String linkId) {
         quickLinkPersistancePort.incrementClickedLink(linkId);
+        statisticsPort.saveTrackAction(TrackAction.Action.GAME_PLAYED);
     }
 
     @Override
@@ -67,6 +72,7 @@ public class QuickLinkService implements QuickLinkPort {
                 Instant.now()
         );
         quickLinkPersistancePort.upsertquickLink(newLink);
+        statisticsPort.saveTrackAction(TrackAction.Action.GAME_SUGGESTED);
     }
 
     @Override
@@ -94,14 +100,19 @@ public class QuickLinkService implements QuickLinkPort {
 
     @Override
     public void markAsFav(String quickLinkId, boolean fav) {
-        var userId = SecurityContext.current().userId();
+        var user = SecurityContext.current();
+
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
 
         if (fav) {
-            favouritePersistancePort.addFav(userId, quickLinkId);
+            favouritePersistancePort.addFav(user.get().userId(), quickLinkId);
             return;
         }
-        favouritePersistancePort.deleteFav(userId, quickLinkId);
-
+        favouritePersistancePort.deleteFav(user.get().userId(), quickLinkId);
     }
 
     @Override
@@ -109,9 +120,15 @@ public class QuickLinkService implements QuickLinkPort {
         pageSize = pageSize == null ? 20 : pageSize;
         pageSize = pageSize > 50 ? 50 : pageSize;
 
-        var userId = SecurityContext.current().userId();
+        var user = SecurityContext.current();
 
-        var favIds = favouritePersistancePort.getFavouritesForUser(userId, continuation, pageSize);
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        var favIds = favouritePersistancePort.getFavouritesForUser(user.get().userId(), continuation, pageSize);
 
         if (favIds.data().isEmpty()) {
             return new Page<>(

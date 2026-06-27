@@ -2,6 +2,8 @@ package com.survivalkit.backend.adapter.web.usertracking;
 
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
+import com.survivalkit.backend.shared.Role;
+import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,13 +22,12 @@ public class UserTrackingController {
         this.statisticsPort = statisticsPort;
     }
 
+    @Role(RoleLevel.GUEST)
     @PostMapping("/action")
     public ResponseEntity<Void> trackAction(
-            @RequestParam TrackAction.Action action,
-            @RequestParam(required = false) String userId,
-            @RequestParam(required = false) String course
+            @RequestParam TrackAction.Action action
     ) {
-        statisticsPort.saveTrackAction(action, userId, course);
+        statisticsPort.saveTrackAction(action);
         return ResponseEntity.ok().build();
     }
 }

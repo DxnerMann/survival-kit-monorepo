@@ -27,7 +27,6 @@ public class UserTrackingRepository implements UserTrackingPersistancePort{
                 .paramSource(new MapSqlParameterSource("id", action.id())
                         .addValue("type", action.type().toString())
                         .addValue("userIdIfUser", action.userIdIfUser())
-                        .addValue("courseIfUser", action.courseIfUser())
                         .addValue("timestamp", toTimestamp(action.timestamp()))
                 ).update();
     }
@@ -120,64 +119,98 @@ public class UserTrackingRepository implements UserTrackingPersistancePort{
                 .optional();
     }
 
+    @Override
+    public void deleteOlderThanOneMonth() {
+        jdbcClient.sql(Statements.DELETE_OLDER_THAN_ONE_MONTH.sql).update();
+    }
+
     public enum Statements {
 
         // language=sql
         SAVE("""
-            INSERT INTO trackActions (id, type, userIdIfUser, courseIfUser, timestamp) 
-            VALUES (:id, :type, :userIdIfUser, :courseIfUser, :timestamp)
+            INSERT INTO trackActions (id, type, userIdIfUser, timestamp) 
+            VALUES (:id, :type, :userIdIfUser, :timestamp)
+            ON CONFLICT (timestamp) DO NOTHING
         """),
         // language=sql
         GET_USER_ACTIONS_7_DAYS("""
-            SELECT * 
-            FROM trackActions
-            WHERE userIdIfUser = :userId
-                AND type = :actionType
-                AND timestamp > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
-                AND (:continuation::TEXT IS NULL OR id > :continuation)
-            ORDER BY id
-            LIMIT 50
+            SELECT
+                ta.id,
+                ta.type,
+                ta.userIdIfUser,
+                u.course AS courseIfUser,
+                ta.timestamp
+            FROM trackActions ta
+            LEFT JOIN users u
+                ON u.id = ta.userIdIfUser
+            WHERE ta.userIdIfUser = :userId
+                AND ta.type = :actionType
+                AND ta.timestamp > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+                AND (:continuation::TEXT IS NULL OR ta.id > :continuation)
+            ORDER BY ta.id
+            LIMIT 50;
         """),
         // language=sql
         GET_COURSE_ACTIONS_7_DAYS("""
-            SELECT * 
-            FROM trackActions
-            WHERE courseIfUser = :course
-                AND type = :actionType
-                AND timestamp > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
-                AND (:continuation::TEXT IS NULL OR id > :continuation)
-            ORDER BY id
-            LIMIT 50
+            SELECT
+                ta.id,
+                ta.type,
+                ta.userIdIfUser,
+                u.course AS courseIfUser,
+                ta.timestamp
+            FROM trackActions ta
+            LEFT JOIN users u
+                ON u.id = ta.userIdIfUser
+            WHERE u.course = :course
+                AND ta.type = :actionType
+                AND ta.timestamp > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+                AND (:continuation::TEXT IS NULL OR ta.id > :continuation)
+            ORDER BY ta.id
+            LIMIT 50;
         """),
         // language=sql
         GET_GLOBAL_ACTIONS_7_DAYS("""
-            SELECT * 
-            FROM trackActions
-            WHERE type = :actionType
-                AND timestamp > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
-                AND (:continuation::TEXT IS NULL OR id > :continuation)
-            ORDER BY id
-            LIMIT 50
+            SELECT
+                ta.id,
+                ta.type,
+                ta.userIdIfUser,
+                u.course AS courseIfUser,
+                ta.timestamp
+            FROM trackActions ta
+            LEFT JOIN users u
+                ON u.id = ta.userIdIfUser
+            WHERE ta.type = :actionType
+                AND ta.timestamp > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+                AND (:continuation::TEXT IS NULL OR ta.id > :continuation)
+            ORDER BY ta.id
+            LIMIT 50;
         """),
         // language=sql
         GET_USER_ACTION_SUM("""
-            SELECT COUNT(userIdIfUser)
+            SELECT COUNT(*)
             FROM trackActions
             WHERE userIdIfUser = :userId
                 AND type = :actionType
         """),
         // language=sql
         GET_COURSE_ACTION_SUM("""
-            SELECT COUNT(userIdIfUser)
-            FROM trackActions
-            WHERE courseIfUser = :course
-                AND type = :actionType
+            SELECT COUNT(ta.userIdIfUser)
+            FROM trackActions ta
+            LEFT JOIN users u
+                ON u.id = ta.userIdIfUser
+            WHERE u.course = :course
+                AND ta.type = :actionType;
         """),
         // language=sql
         GET_GLOBAL_ACTION_SUM("""
             SELECT COUNT(*)
             FROM trackActions
             WHERE type = :actionType
+        """),
+        // language=sql
+        DELETE_OLDER_THAN_ONE_MONTH("""
+            DELETE FROM trackActions
+            WHERE timestamp < (now() AT TIME ZONE 'UTC') - INTERVAL '1 month'
         """);
 
         private String sql;

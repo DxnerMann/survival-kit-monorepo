@@ -18,18 +18,32 @@ public class WidgetQueryService implements WidgetQueryPort {
 
     @Override
     public List<UserWidgetModel> getAllWidgets() {
-        var userId = SecurityContext.current().userId();
-        var userWidgets = userWidgetPersistancePort.getAllForUser(userId);
+        var user = SecurityContext.current();
+
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        var userWidgets = userWidgetPersistancePort.getAllForUser(user.get().userId());
         if (userWidgets.isEmpty()) {
-            throw new NoWidgetsFoundException("No widgets found for user: " + userId);
+            throw new NoWidgetsFoundException("No widgets found for user: " + user.get().userId());
         }
         return userWidgets;
     }
 
     @Override
     public void saveAllWidgets(List<UserWidgetModel> widgetModels) {
-        var userId = SecurityContext.current().userId();
-        userWidgetPersistancePort.overrideAll(widgetModels, userId);
+        var user = SecurityContext.current();
+
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        userWidgetPersistancePort.overrideAll(widgetModels, user.get().userId());
     }
 
     @Override

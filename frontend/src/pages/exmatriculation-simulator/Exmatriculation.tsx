@@ -5,27 +5,16 @@ import { useLocation } from "react-router-dom";
 import Button from "../../components/shared/Button.tsx";
 import SectionHeading from "../../components/shared/SectionHeading.tsx";
 import Seperator from "../../components/shared/Seperator.tsx";
+import {trackActivity} from "../../services/staticsService.tsx";
 
 const Exmatriculation = () => {
     const [submitted, setSubmitted] = useState(false);
-    const [formData, setFormData] = useState<Record<string, string | boolean>>({});
     const navigate = useNavigate();
     const location = useLocation();
 
-    const handleChange = (key: string, value: string | boolean) => {
-        setFormData(prev => ({ ...prev, [key]: value }));
-    };
-
     const handleSubmit = () => {
-        console.log('FORMULARDATEN:', formData);
         setSubmitted(true);
-
-        const countFromLocalStorage = localStorage.getItem("stats_exmatriculation-count");
-        if (countFromLocalStorage) {
-            localStorage.setItem("stats_exmatriculation-count", (parseInt(countFromLocalStorage) + 1).toString());
-        } else {
-            localStorage.setItem("stats_exmatriculation-count", "1");
-        }
+        trackActivity("EXMATRICULATED");
     };
 
     useEffect(() => {
@@ -70,10 +59,10 @@ const Exmatriculation = () => {
                         <div className="info-row">
                             <div>
                                 <p>Duale Hochschule Baden-Württemberg Karlsruhe<br />
-                                    Studiengang: <input type="text" name="kopf_studiengang" onChange={e => handleChange("kopf_studiengang", e.target.value)} style={{ border: "1px solid #aaa", padding: "0.2rem", fontSize: "0.9rem" }} /></p>
+                                    Studiengang: <input type="text" name="kopf_studiengang" style={{ border: "1px solid #aaa", padding: "0.2rem", fontSize: "0.9rem" }} /></p>
                             </div>
                             <div className="eingang-box">
-                                <label>Eingang: <input type="text" name="eingang" onChange={e => handleChange("eingang", e.target.value)} /></label>
+                                <label>Eingang: <input type="text" name="eingang" /></label>
                             </div>
                         </div>
 
@@ -86,38 +75,38 @@ const Exmatriculation = () => {
                             <tbody>
                             <tr>
                                 <td className="label">Name / Vorname:</td>
-                                <td><input type="text" name="name" onChange={e => handleChange("name", e.target.value)} /></td>
+                                <td><input type="text" name="name" /></td>
                             </tr>
                             <tr>
                                 <td className="label">Geburtsdatum:</td>
-                                <td><input type="text" name="geburtsdatum" onChange={e => handleChange("geburtsdatum", e.target.value)} /></td>
+                                <td><input type="text" name="geburtsdatum" /></td>
                             </tr>
                             <tr>
                                 <td className="label">E-Mail:</td>
-                                <td><input type="email" name="email" onChange={e => handleChange("email", e.target.value)} /></td>
+                                <td><input type="email" name="email" /></td>
                             </tr>
                             <tr>
                                 <td className="label">Studiengang:</td>
-                                <td><input type="text" name="studiengang" onChange={e => handleChange("studiengang", e.target.value)} /></td>
+                                <td><input type="text" name="studiengang" /></td>
                             </tr>
                             <tr>
                                 <td className="label">Kurs:</td>
-                                <td><input type="text" name="kurs" onChange={e => handleChange("kurs", e.target.value)} /></td>
+                                <td><input type="text" name="kurs" /></td>
                             </tr>
                             <tr>
                                 <td className="label">Matrikelnummer:</td>
-                                <td><input type="text" name="matrikelnummer" onChange={e => handleChange("matrikelnummer", e.target.value)} /></td>
+                                <td><input type="text" name="matrikelnummer" /></td>
                             </tr>
                             <tr>
                                 <td colSpan={2} className="grey">Anschrift, an die der Bescheid verschickt werden soll:</td>
                             </tr>
                             <tr>
                                 <td className="label">Straße / Hausnummer:</td>
-                                <td><input type="text" name="adresse" onChange={e => handleChange("adresse", e.target.value)} /></td>
+                                <td><input type="text" name="adresse" /></td>
                             </tr>
                             <tr>
                                 <td className="label">PLZ / Ort:</td>
-                                <td><input type="text" name="plz_ort" onChange={e => handleChange("plz_ort", e.target.value)} /></td>
+                                <td><input type="text" name="plz_ort" /></td>
                             </tr>
                             </tbody>
                         </table>
@@ -128,7 +117,7 @@ const Exmatriculation = () => {
                             <tbody>
                             <tr>
                                 <td className="checkbox-col">
-                                    <input type="checkbox" name="cb_semester" onChange={e => handleChange("cb_semester", e.target.checked)} />
+                                    <input type="checkbox" name="cb_semester" />
                                 </td>
                                 <td>zum Ende des laufenden Semesters</td>
                                 <td rowSpan={2} className="info-text">
@@ -137,7 +126,7 @@ const Exmatriculation = () => {
                             </tr>
                             <tr>
                                 <td className="checkbox-col">
-                                    <input type="checkbox" name="cb_sofort" onChange={e => handleChange("cb_sofort", e.target.checked)} />
+                                    <input type="checkbox" name="cb_sofort" />
                                 </td>
                                 <td>mit sofortiger Wirkung.</td>
                             </tr>
@@ -149,26 +138,26 @@ const Exmatriculation = () => {
                         <table className="checkbox-table full">
                             <tbody>
                             <tr>
-                                <td className="checkbox-col"><input type="checkbox" name="cb_abbruch" onChange={e => handleChange("cb_abbruch", e.target.checked)} /></td>
+                                <td className="checkbox-col"><input type="checkbox" name="cb_abbruch" /></td>
                                 <td>Abbruch des Studiums</td>
                             </tr>
                             <tr>
-                                <td className="checkbox-col"><input type="checkbox" name="cb_ausbildung" onChange={e => handleChange("cb_ausbildung", e.target.checked)} /></td>
+                                <td className="checkbox-col"><input type="checkbox" name="cb_ausbildung" /></td>
                                 <td>Ende des Ausbildungsverhältnisses …</td>
                             </tr>
                             <tr>
-                                <td className="checkbox-col"><input type="checkbox" name="cb_wechsel" onChange={e => handleChange("cb_wechsel", e.target.checked)} /></td>
+                                <td className="checkbox-col"><input type="checkbox" name="cb_wechsel" /></td>
                                 <td>Hochschulwechsel</td>
                             </tr>
                             <tr>
-                                <td className="checkbox-col"><input type="checkbox" name="cb_arbeit" onChange={e => handleChange("cb_arbeit", e.target.checked)} /></td>
+                                <td className="checkbox-col"><input type="checkbox" name="cb_arbeit" /></td>
                                 <td>Arbeitsaufnahme</td>
                             </tr>
                             <tr>
-                                <td className="checkbox-col"><input type="checkbox" name="cb_sonstiger" onChange={e => handleChange("cb_sonstiger", e.target.checked)} /></td>
+                                <td className="checkbox-col"><input type="checkbox" name="cb_sonstiger" /></td>
                                 <td>
                                     sonstiger <strong>besonderer Grund:</strong><br />
-                                    <input type="text" name="sonstiger_grund" onChange={e => handleChange("sonstiger_grund", e.target.value)} />
+                                    <input type="text" name="sonstiger_grund" />
                                 </td>
                             </tr>
                             </tbody>
@@ -217,14 +206,14 @@ const Exmatriculation = () => {
                         </p>
 
                         <label>
-                            <input type="checkbox" name="cb_entlassung_alle" onChange={e => handleChange("cb_entlassung_alle", e.target.checked)} />
+                            <input type="checkbox" name="cb_entlassung_alle" />
                             allen Prüfungsrechtsverhältnissen
                         </label>
                         <label>
-                            <input type="checkbox" name="cb_entlassung_folgende" onChange={e => handleChange("cb_entlassung_folgende", e.target.checked)} />
+                            <input type="checkbox" name="cb_entlassung_folgende" />
                             folgenden Prüfungsrechtsverhältnissen:
                         </label>
-                        <textarea name="pruefungsverhaeltnisse1" onChange={e => handleChange("pruefungsverhaeltnisse1", e.target.value)} />
+                        <textarea name="pruefungsverhaeltnisse1" />
 
                         <h3>2. Verzicht nach dem tatsächlichen Prüfungsbeginn</h3>
                         <p>
@@ -232,14 +221,14 @@ const Exmatriculation = () => {
                         </p>
                         <p>Ich verzichte auf die Beendigung</p>
                         <label>
-                            <input type="checkbox" name="cb_verzicht_alle" onChange={e => handleChange("cb_verzicht_alle", e.target.checked)} />
+                            <input type="checkbox" name="cb_verzicht_alle" />
                             aller Prüfungsverfahren
                         </label>
                         <label>
-                            <input type="checkbox" name="cb_verzicht_folgende" onChange={e => handleChange("cb_verzicht_folgende", e.target.checked)} />
+                            <input type="checkbox" name="cb_verzicht_folgende" />
                             folgender Prüfungsverfahren:
                         </label>
-                        <textarea name="pruefungsverhaeltnisse2" onChange={e => handleChange("pruefungsverhaeltnisse2", e.target.value)} />
+                        <textarea name="pruefungsverhaeltnisse2" />
 
                         <h3>3. Erbringung der Prüfungsleistung</h3>
                         <p>
@@ -247,10 +236,10 @@ const Exmatriculation = () => {
                         </p>
 
                         <label>
-                            <input type="checkbox" name="cb_erbringung" onChange={e => handleChange("cb_erbringung", e.target.checked)} />
+                            <input type="checkbox" name="cb_erbringung" />
                             Ich werde folgende Prüfungen zu Ende führen:
                         </label>
-                        <textarea name="pruefungen" onChange={e => handleChange("pruefungen", e.target.value)} />
+                        <textarea name="pruefungen" />
 
                         <p>
                             Ich versichere die Vollständigkeit und Richtigkeit meiner in diesem Antrag gemachten Angaben.<br />
@@ -258,8 +247,8 @@ const Exmatriculation = () => {
                         </p>
 
                         <div className="form-grid">
-                            <label>Ort, Datum: <input type="text" name="ort_datum" onChange={e => handleChange("ort_datum", e.target.value)} /></label>
-                            <label>Unterschrift Antragsteller/in: <input type="text" name="unterschrift" onChange={e => handleChange("unterschrift", e.target.value)} /></label>
+                            <label>Ort, Datum: <input type="text" name="ort_datum" /></label>
+                            <label>Unterschrift Antragsteller/in: <input type="text" /></label>
                         </div>
 
                         <p className="footer-hinweis">

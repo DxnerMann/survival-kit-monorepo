@@ -136,7 +136,6 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     };
 
     const handleDelete = useCallback((id: string) => {
-        console.log(id);
         if (isDeleteHoveredRef.current) {
             isDeletingRef.current = true;
             setLayout(prev => prev.filter(l => l.i !== id));
@@ -198,7 +197,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             <div className={`bottom-bar ${editMode ? 'visible' : ''}`}>
                 {widgetDraged !== "" && <div
                     className="delete-container"
-                    onMouseEnter={() => { console.log("TEST"); isDeleteHoveredRef.current = true; }}
+                    onMouseEnter={() => { isDeleteHoveredRef.current = true; }}
                     onMouseLeave={() => { isDeleteHoveredRef.current = false; }}
                 >
                     <h2>Entfernen</h2>

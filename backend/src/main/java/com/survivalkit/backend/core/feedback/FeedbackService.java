@@ -2,7 +2,9 @@ package com.survivalkit.backend.core.feedback;
 
 import com.survivalkit.backend.adapter.postgres.feedback.Feedback;
 import com.survivalkit.backend.adapter.postgres.feedback.FeedbackPersistancePort;
+import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.Page;
 import io.viascom.nanoid.NanoId;
 import org.springframework.data.relational.core.sql.In;
@@ -14,9 +16,11 @@ import java.time.Instant;
 public class FeedbackService implements FeedbackPort {
 
     private final FeedbackPersistancePort feedbackPersistancePort;
+    private final StatisticsPort statisticsPort;
 
-    public FeedbackService(FeedbackPersistancePort feedbackPersistancePort) {
+    public FeedbackService(FeedbackPersistancePort feedbackPersistancePort, StatisticsPort statisticsPort) {
         this.feedbackPersistancePort = feedbackPersistancePort;
+		this.statisticsPort = statisticsPort;
     }
 
     @Override
@@ -24,12 +28,18 @@ public class FeedbackService implements FeedbackPort {
 
         var user = SecurityContext.current();
 
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
         var newFeedback = new Feedback(
             NanoId.generate(25),
                 title,
                 description,
-                user.username(),
-                user.userId(),
+                user.get().username(),
+                user.get().userId(),
                 type,
                 0,
                 0,
@@ -38,6 +48,7 @@ public class FeedbackService implements FeedbackPort {
                 Instant.now()
         );
         feedbackPersistancePort.saveFeedback(newFeedback);
+        statisticsPort.saveTrackAction(TrackAction.Action.IDEA_SUBMITTED);
     }
 
     @Override
@@ -53,8 +64,14 @@ public class FeedbackService implements FeedbackPort {
 
         var user = SecurityContext.current();
 
-        if (feedbackPersistancePort.canVote(feedbackId, user.userId())) {
-            feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.userId());
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        if (feedbackPersistancePort.canVote(feedbackId, user.get().userId())) {
+            feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.get().userId());
         }
     }
 
@@ -71,6 +88,13 @@ public class FeedbackService implements FeedbackPort {
     @Override
     public boolean hasVoted(String id) {
         var user = SecurityContext.current();
-        return !feedbackPersistancePort.canVote(id, user.userId());
+
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        return !feedbackPersistancePort.canVote(id, user.get().userId());
     }
 }
