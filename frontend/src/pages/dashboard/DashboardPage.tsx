@@ -104,7 +104,7 @@ const DashboardPage = () => {
                     }
                     subheading={welcomePhrase}
                     actions={[
-                        ...(!editMode ? [{ icon: Pencil, text: "Layout anpassen", link: () => setEditMode(true) }] : []),
+                        ...(!editMode && getUserRole() !== "GUEST" ? [{ icon: Pencil, text: "Layout anpassen", link: () => setEditMode(true) }] : []),
                     ]}
                     centered={false}
                 />

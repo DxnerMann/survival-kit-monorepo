@@ -5,3 +5,24 @@
     overflow: auto;
     width: 100%;
 }
+
+.stats-page-action-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.stats-page-header {
+    margin-bottom: -2rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.stats-page-no-filter-info {
+    width: 100%;
+    text-align: center;
+    color: var(--color-text-primary);
+    margin: 2rem;
+}
