@@ -125,16 +125,16 @@ jobs:
           username: deploy
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cat > /home/deploy/apps/survival-kit/.env.production << EOF
+            cat > /home/deploy/apps/survival-kit/.env << EOF
             POSTGRES_NAME=${{ secrets.POSTGRES_NAME }}
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
-            MAIL_HOST=smtp-relay.brevo.com
-            MAIL_PORT=587
+            MAIL_HOST=${{ secrets.MAIL_HOST }}
+            MAIL_PORT=${{ secrets.MAIL_PORT }}
             MAIL_USERNAME=${{ secrets.BREVO_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            MAIL_PASSWORD=${{ secrets.BREVO_SMPT_KEY }}
             EOF
 
       - name: Copy compose file to server

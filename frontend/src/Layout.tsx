@@ -16,7 +16,7 @@ import Imprint from "./pages/legal/Imprint.tsx";
 import MaintananceInfoPage from "./pages/maintanance/MaintananceInfoPage.tsx";
 
 const HIDDEN_HEADER_ROUTES = ['/login']
-const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE;
+const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
 
 const Layout = () => {
     const { pathname } = useLocation()
