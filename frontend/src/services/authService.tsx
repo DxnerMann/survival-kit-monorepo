@@ -6,6 +6,7 @@ import type {LoginResponse} from '../models/LoginResponse.tsx'
 import type {RegisterRequest} from '../models/RegisterRequest.tsx'
 import {api} from "./api.tsx";
 import {setUserContext} from "./userService.tsx";
+import {trackActivity} from "./staticsService.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -27,7 +28,6 @@ const removeToken = () => {
 }
 
 const handleApiError = async (response: Response): Promise<never> => {
-    console.log(response.status);
     if (response.status === 500) {
         throw new Error(
             'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut.'
@@ -110,6 +110,7 @@ const validate = async (): Promise<boolean> => {
         const data: LoginResponse = await response.json();
         saveToken(data.token);
         setUserContext(data);
+        trackActivity("SURVIVAL_KIT_OPENED");
         return true;
     } catch {
         removeToken()
