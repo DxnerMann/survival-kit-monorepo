@@ -13,4 +13,5 @@ public interface UserTrackingPersistancePort {
     Optional<Integer> getActionSumForUser(String userId, TrackAction.Action target);
     Optional<Integer> getActionSumForCourse(String course, TrackAction.Action target);
     Optional<Integer> getGolbalActionSum(TrackAction.Action target);
+    void deleteOlderThanOneMonth();
 }
