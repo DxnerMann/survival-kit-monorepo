@@ -8,10 +8,10 @@ import java.util.Map;
 public interface StatisticsPort {
 
     void saveTrackAction(TrackAction.Action action);
-    Page<TrackAction> getUserActions(String userId, TrackAction.Action actionType, String continuation);
-    Page<TrackAction> getCourseActions(String course, TrackAction.Action actionType, String continuation);
+    Page<TrackAction> getUserActions(TrackAction.Action actionType, String continuation);
+    Page<TrackAction> getCourseActions(TrackAction.Action actionType, String continuation);
     Page<TrackAction> getGlobalActions(TrackAction.Action actionType, String continuation);
-    int getActionSumForUser(String userId, TrackAction.Action target);
-    int getActionSumForCourse(String course, TrackAction.Action target);
+    int getActionSumForUser(TrackAction.Action target);
+    int getActionSumForCourse(TrackAction.Action target);
     int getGolbalActionSum(TrackAction.Action target);
 }

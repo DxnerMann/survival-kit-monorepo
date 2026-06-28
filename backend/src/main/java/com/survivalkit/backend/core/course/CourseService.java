@@ -51,27 +51,9 @@ public class CourseService implements CoursePort {
     }
 
     @Override
-    public String getUserCourseOrExtract(String raplaUrl) {
-        if (raplaUrl == null || raplaUrl.isEmpty()) {
-            var authUser = SecurityContext.current();
-
-            if (authUser.isEmpty()) {
-                throw new IllegalStateException(
-                        "No authenticated user in context. " +
-                                "Ensure this is called within a secured request.");
-            }
-
-            var user = userPersistancePort.getById(authUser.get().userId());
-            if (user.isPresent()) {
-                return user.get().course();
-            }
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        } else {
-            var extractedCourse = raplaApiPort.extractCourse(raplaApiPort.formatToBaseUrl(raplaUrl));
-            coursePersistancePort.save(extractedCourse, raplaApiPort.formatToBaseUrl(raplaUrl));
-            return extractedCourse;
-        }
+    public String extract(String raplaUrl) {
+        var extractedCourse = raplaApiPort.extractCourse(raplaApiPort.formatToBaseUrl(raplaUrl));
+        coursePersistancePort.save(extractedCourse, raplaApiPort.formatToBaseUrl(raplaUrl));
+        return extractedCourse;
     }
 }

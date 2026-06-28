@@ -1,5 +1,6 @@
 import type {LoginResponse} from "../models/LoginResponse.tsx";
 import {getUsernameFromToken} from "./tokenService.tsx";
+import type {ProfileSettings} from "../models/ProfileSettings.tsx";
 
 let user : LoginResponse;
 
@@ -16,4 +17,12 @@ export function getUsername() : string {
         return "";
     }
     return user.username;
+}
+
+export async function fetchProfileSettings() : Promise<ProfileSettings> {
+    //TODO
+}
+
+export async function setUserCourse() : Promise<void> {
+    // TODO setUserCourse
 }
