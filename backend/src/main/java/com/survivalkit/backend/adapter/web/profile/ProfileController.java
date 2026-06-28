@@ -31,13 +31,19 @@ public class ProfileController {
         return ResponseEntity.ok(coursePort.getAvailableCourses());
     }
 
+    // TODO: Rework: Timer Course should be independent from user Course. Move to other controller?
+
     @Role(RoleLevel.GUEST)
     @GetMapping("course")
-    public ResponseEntity<String> getUserCourseOrExtract(
-            @RequestParam (required = false) String raplaUrl
+    public ResponseEntity<String> extractCourse(
+            @RequestParam String raplaUrl
     ) {
-        return ResponseEntity.ok(coursePort.getUserCourseOrExtract(raplaUrl));
+        return ResponseEntity.ok(coursePort.extract(raplaUrl));
     }
+
+    /* TODO: When accessed by lecturePlan: Do only set when userCourse == null
+    *   Do not access from lecturePlan => use Widget Data endpoint for updating userCourse if null
+    */
 
     @Role(RoleLevel.USER)
     @PostMapping("course")

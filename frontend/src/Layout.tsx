@@ -33,7 +33,7 @@ const Layout = () => {
                 <Route path="/chat" element={<ProtectedRoute> <ChatPage /> </ProtectedRoute>} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/ideas" element={<IdeasPage />} />
-                <Route path="/profile" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute>} />
+                <Route path="/account" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute>} />
                 <Route path="/stats" element={<StatsPage />} />
                 <Route path="/exmatriculation" element={<Exmatriculation />} />
                 <Route path="/imprint" element={<Imprint />} />

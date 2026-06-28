@@ -24,28 +24,26 @@ public class StatisticsController {
     }
 
     @Role(RoleLevel.USER)
-    @GetMapping("/userAction")
+    @GetMapping("/userActions")
     public ResponseEntity<Page<TrackAction>> getUserActions(
-            @RequestParam String userId,
             @RequestParam TrackAction.Action action,
             @RequestParam(required = false) String continuation
             ) {
-        return ResponseEntity.ok(statisticsPort.getUserActions(userId, action, continuation));
+        return ResponseEntity.ok(statisticsPort.getUserActions(action, continuation));
     }
 
     @Role(RoleLevel.USER)
-    @GetMapping("/courseAction")
+    @GetMapping("/courseActions")
     public ResponseEntity<Page<TrackAction>> getCourseActions(
-            @RequestParam String course,
             @RequestParam TrackAction.Action action,
             @RequestParam(required = false) String continuation
     ) {
-        return ResponseEntity.ok(statisticsPort.getCourseActions(course, action, continuation));
+        return ResponseEntity.ok(statisticsPort.getCourseActions(action, continuation));
     }
 
     @Role(RoleLevel.GUEST)
-    @GetMapping("/globalAction")
-    public ResponseEntity<Page<TrackAction>> getUserActions(
+    @GetMapping("/globalActions")
+    public ResponseEntity<Page<TrackAction>> getGlobalActions(
             @RequestParam TrackAction.Action action,
             @RequestParam(required = false) String continuation
     ) {
@@ -55,19 +53,17 @@ public class StatisticsController {
     @Role(RoleLevel.USER)
     @GetMapping("/userActionSum")
     public ResponseEntity<Integer> getUserActionSum(
-            @RequestParam String userId,
             @RequestParam TrackAction.Action action
     ) {
-        return ResponseEntity.ok(statisticsPort.getActionSumForUser(userId, action));
+        return ResponseEntity.ok(statisticsPort.getActionSumForUser(action));
     }
 
     @Role(RoleLevel.USER)
     @GetMapping("/courseActionSum")
     public ResponseEntity<Integer> getCourseActionSum(
-            @RequestParam String course,
             @RequestParam TrackAction.Action action
     ) {
-        return ResponseEntity.ok(statisticsPort.getActionSumForCourse(course, action));
+        return ResponseEntity.ok(statisticsPort.getActionSumForCourse(action));
     }
 
     @Role(RoleLevel.GUEST)

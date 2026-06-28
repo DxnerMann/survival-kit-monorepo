@@ -108,11 +108,13 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     }
 
     async function onLinkChnaged(link: string) {
-        const course = await lectureService.getCourseOrExtract(link);
+        // TODO Check if lik is a valid link
+        const course = await lectureService.extractCourse(link);
         updateData({course: course});
         setSelectedCourse(course);
         setTimerCourse(course);
     }
+
     function onFilterChanged(newHiddenLectures: string[]) {
         updateData({ hiddenLectures: newHiddenLectures });
         setHiddenLectures(newHiddenLectures);

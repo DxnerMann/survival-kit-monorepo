@@ -17,6 +17,9 @@
     --color-text-secondary: #4b5460;
 
     --color-error: #ef4444;
+    --color-warning: #f48a00;
+    --color-info: #686868;
+    --color-success: #33a523;
 
     --color-border: #d1d5db;
     --color-shadow: rgba(0, 0, 0, 0.08);
@@ -37,6 +40,9 @@
     --color-text-secondary: #bec5d1;
 
     --color-error: #ef4444;
+    --color-warning: #f48a00;
+    --color-info: #686868;
+    --color-success: #33a523;
 
     --color-border: #374151;
     --color-shadow: rgba(0, 0, 0, 0.35);
