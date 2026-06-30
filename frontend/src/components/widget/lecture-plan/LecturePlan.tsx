@@ -54,7 +54,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 }
             }
         } catch {
-            return defaultData;
+            throw new Error("Failed to fetch Dashboard Layout");
         }
     });
     const [selectedCourse, setSelectedCourse] = useState(decodedData.course);
@@ -79,7 +79,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 );
                 return !isHidden;
             }));        })();
-    }, [decodedData.course, decodedData.hiddenLectures, selectedCourse, weekOffset]);
+    }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset]);
 
     useEffect(() => {
         async function load() {
@@ -108,7 +108,13 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     }
 
     async function onLinkChnaged(link: string) {
-        // TODO Check if lik is a valid link
+        try {
+            if (new URL(link).protocol !== 'https:') {
+                return false
+            }
+        } catch {
+            return false;
+        }
         const course = await lectureService.extractCourse(link);
         updateData({course: course});
         setSelectedCourse(course);

@@ -7,7 +7,7 @@ import Info from "../../components/shared/Info.tsx";
 import CourseSelection from "../../components/shared/CourseSelection.tsx";
 import type {ProfileSettings} from "../../models/ProfileSettings.tsx";
 import {getUserRole} from "../../services/tokenService.tsx";
-import {fetchProfileSettings} from "../../services/userService.tsx";
+import {fetchProfileSettings, setUserCourse} from "../../services/userService.tsx";
 import {api} from "../../services/api.tsx";
 import {lectureService} from "../../services/lectureService.tsx";
 
@@ -34,13 +34,19 @@ const ProfilePage = () => {
         "DANGER_ZONE"
     ];
 
-    function onCourseChanged(course: string) {
+    async function onCourseChanged(course: string) {
         setSelectedCourse(course);
-        //TODO update in backend
+        await setUserCourse(course);
     }
 
-    async function onLinkChnaged(link: string) {
-        // TODO Check if lik is a valid link
+    async function onLinkChanged(link: string) {
+        try {
+            if (new URL(link).protocol !== 'https:') {
+                return false
+            }
+        } catch {
+            return false;
+        }
         const course = await lectureService.extractCourse(link);
         setSelectedCourse(course);
     }
@@ -96,7 +102,7 @@ const ProfilePage = () => {
             </div>
             <Info text={"Dein voller name, sowie deine Email-Adresse sind nur für dich einsehbar. Dein Benutzername, sowie dein Profilbild werden ggf. Öffentlich angezeit!"} type={"INFO"} />
             <h2 className="profile-page-subheading">Kurs</h2>
-            <CourseSelection selectedCourse={selectedCourse} onCourseChanged={onCourseChanged} onLinkChanged={onLinkChnaged} />
+            <CourseSelection selectedCourse={selectedCourse} onCourseChanged={onCourseChanged} onLinkChanged={onLinkChanged} />
             <h2 className="profile-page-subheading">Benutzername</h2>
             <h2 className="profile-page-subheading">Email</h2>
             <Info text={"Deine bissherige Login Email-Adresse wird dadurch ersetzt."} type={"INFO"} />

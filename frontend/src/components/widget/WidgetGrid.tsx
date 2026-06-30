@@ -41,6 +41,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     const isDeleteHoveredRef = useRef(false);
     const layoutRef = useRef(layout);
     const isDeletingRef = useRef(false);
+    const hasLoaded = useRef(false);
 
     const toolbox = useMemo(() => {
         const layoutTypes = new Set(
@@ -72,6 +73,9 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     }, []);
 
     useEffect(() => {
+        if (hasLoaded.current) return;
+        hasLoaded.current = true;
+
         const load = async () => {
             const isGuest = getUserRole() === 'GUEST';
             const defaultLayout = dashboardService.getDefaultLayout();
@@ -91,25 +95,17 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             } catch {
                 storedData = defaultLayout;
             }
+            const storedTypes = new Set(storedData.map(w => w.type));
 
-            if (storedData === null) {
-                setLayoutWidgets(defaultLayout);
-                setToolboxPool(defaultToolbox);
-                setLayout(toGridLayout(defaultLayout));
-            } else {
-                const storedTypes = new Set(storedData.map(w => w.type));
-
-                const seen = new Set<string>();
-                const pool = [...defaultToolbox, ...defaultLayout].filter(w => {
-                    if (storedTypes.has(w.type) || seen.has(w.type)) return false;
-                    seen.add(w.type);
-                    return true;
-                });
-
-                setLayoutWidgets(storedData);
-                setToolboxPool(pool);
-                setLayout(toGridLayout(storedData));
-            }
+            const seen = new Set<string>();
+            const pool = [...defaultToolbox, ...defaultLayout].filter(w => {
+                if (storedTypes.has(w.type) || seen.has(w.type)) return false;
+                seen.add(w.type);
+                return true;
+            });
+            setLayoutWidgets(storedData);
+            setToolboxPool(pool);
+            setLayout(toGridLayout(storedData));
         };
 
         load();

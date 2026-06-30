@@ -31,7 +31,10 @@ public class UserWidgetRepository implements UserWidgetPersistancePort {
                 .paramSource(new MapSqlParameterSource("userId", userId))
                 .update();
 
-        userWidgets.forEach(widget -> {
+        userWidgets
+                .stream()
+                .filter(userWidgetModel -> !userWidgetModel.type()
+                .equals( UserWidgetModel.WidgetType.EMPTY)).forEach(widget -> {
             jdbcClient.sql(Statements.INSERT.sql)
                     .paramSource(new MapSqlParameterSource("id", NanoId.generate(25))
                             .addValue("userId", userId)

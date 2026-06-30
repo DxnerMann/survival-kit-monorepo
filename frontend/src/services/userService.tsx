@@ -23,6 +23,6 @@ export async function fetchProfileSettings() : Promise<ProfileSettings> {
     //TODO
 }
 
-export async function setUserCourse() : Promise<void> {
+export async function setUserCourse(course: string) : Promise<void> {
     // TODO setUserCourse
 }

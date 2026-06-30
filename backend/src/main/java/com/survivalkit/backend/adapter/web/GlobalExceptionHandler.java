@@ -8,7 +8,6 @@ import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
 import com.survivalkit.backend.core.course.CourseNotFoundException;
 import com.survivalkit.backend.core.security.SecurityLog;
-import com.survivalkit.backend.core.widget.NoWidgetsFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -79,14 +78,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(NoWidgetsFoundException.class)
-    public ResponseEntity<ApiError> handleGeneric(NoWidgetsFoundException ex) {
-        securityLog.logWarning(Log.SecurityLogSubType.API, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
     }
 
     @ExceptionHandler(Exception.class)

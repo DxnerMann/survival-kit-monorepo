@@ -1,5 +1,6 @@
 package com.survivalkit.backend.adapter.web.lecture;
 
+import com.survivalkit.backend.core.course.CoursePort;
 import com.survivalkit.backend.core.lecture.LecturePort;
 import com.survivalkit.backend.shared.Lecture;
 import com.survivalkit.backend.shared.Role;
@@ -19,9 +20,11 @@ import java.util.List;
 public class LecturePlanController {
 
     private final LecturePort lecturePort;
+    private final CoursePort coursePort;
 
-    public LecturePlanController(LecturePort lecturePort) {
+    public LecturePlanController(LecturePort lecturePort, CoursePort coursePort) {
         this.lecturePort = lecturePort;
+		this.coursePort = coursePort;
     }
 
     @Role(RoleLevel.GUEST)
@@ -40,5 +43,13 @@ public class LecturePlanController {
             @RequestParam String course
     ) {
         return ResponseEntity.ok(lecturePort.getLectureNamesForSemester(course));
+    }
+
+    @Role(RoleLevel.GUEST)
+    @GetMapping("course")
+    public ResponseEntity<String> extractCourse(
+            @RequestParam String raplaUrl
+    ) {
+        return ResponseEntity.ok(coursePort.extract(raplaUrl));
     }
 }
