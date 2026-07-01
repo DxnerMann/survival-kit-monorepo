@@ -3,6 +3,7 @@ import {getUsernameFromToken} from "./tokenService.tsx";
 import type {ProfileSettings} from "../models/ProfileSettings.tsx";
 import {authService} from "./authService.tsx";
 import {api} from "./api.tsx";
+import type {ApiError} from "../models/ApiError.tsx";
 
 let user : LoginResponse;
 const API_URL = api.baseUrl;
@@ -44,7 +45,7 @@ export async function fetchProfileSettings() : Promise<ProfileSettings> {
 export async function setUserCourse(course: string) : Promise<void> {
     const token = authService.getToken();
 
-    const response = await fetch(`${API_URL}/course?course=${course}`, {
+    const response = await fetch(`${API_URL}/profile/course?course=${course}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -73,5 +74,41 @@ export async function uploadProfileImage(file: File | Blob, isGif: boolean): Pro
 
     if (!response.ok) {
         throw new Error(`Upload failed with status ${response.status}`);
+    }
+}
+
+export async function updateUsernameAndColor(data : {
+    color?: string;
+    username?: string;
+}) {
+    const token = authService.getToken();
+
+    const params = new URLSearchParams();
+
+    if (data.color) params.append("color", data.color);
+    if (data.username) params.append("username", data.username);
+
+    const response = await fetch(`${API_URL}/profile?${params}`, {
+        method: "PUT",
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+
+    if (response.status === 422) {
+        const apiError: ApiError = await response.json();
+        const daysLeft = apiError.message.match(/\d+/)?.[0];
+        console.log(apiError.message)
+
+        if (daysLeft) {
+            throw new Error(
+                `Du kannst deinen Benutzernamen erst in ${daysLeft} Tagen wieder ändern.`
+            );
+        }
+        throw new Error("Fehler beim ändern des Benutzernamens");
+    }
+
+    if (response.status === 400) {
+        throw new Error(`Fehler beim ändern der Profilfarbe`);
     }
 }

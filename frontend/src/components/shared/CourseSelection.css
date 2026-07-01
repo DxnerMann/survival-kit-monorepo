@@ -19,7 +19,7 @@
     padding: 9px 12px;
     background: var(--color-background-primary);
     border: 1.5px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     cursor: pointer;
     text-align: left;
     color: var(--color-text-primary);

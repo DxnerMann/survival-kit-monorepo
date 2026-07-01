@@ -23,6 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.time.Instant;
 
 @Service
 public class AuthService implements AuthPort {
@@ -79,7 +80,8 @@ public class AuthService implements AuthPort {
                        false,
                        null,
                        String.format("#%06X", new SecureRandom().nextInt(0xFFFFFF + 1)),
-                       userPort.getDefaultProfilePicture()
+                       userPort.getDefaultProfilePicture(),
+                       Instant.now()
                )
         );
     }

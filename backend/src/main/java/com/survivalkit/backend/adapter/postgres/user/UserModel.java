@@ -2,6 +2,8 @@ package com.survivalkit.backend.adapter.postgres.user;
 
 import com.survivalkit.backend.shared.RoleLevel;
 
+import java.time.Instant;
+
 public record UserModel(
         String id,
         String firstname,
@@ -14,8 +16,8 @@ public record UserModel(
         Boolean isVerified,
         String course,
         String color,
-        ImgWrapper img
-
+        ImgWrapper img,
+		Instant lastUpdated
 ) {
 
 }

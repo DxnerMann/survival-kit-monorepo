@@ -71,11 +71,23 @@ public class ProfileController {
                 .body(response.resource());
     }
 
+    @Role(RoleLevel.USER)
+    @PutMapping()
+    public ResponseEntity<Void> updateUsername(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String color
+    ) {
+        if (username != null) {
+            userPort.updateUsername(username);
+        }
+        if (color != null) {
+            userPort.updateColor(color);
+        }
+        return ResponseEntity.ok().build();
+    }
+
     /*
     * TODO:
-    *  - Get Profile Picture via Endpoint
-    *       - Default Pb if not present
-    *  - Set Profile Picture Endpoint
     *  - Change Username via Endpoint
     *       - Add lastUpdated timestamp to make changing possible only every 30 days
     *  - Change Email Endpoint

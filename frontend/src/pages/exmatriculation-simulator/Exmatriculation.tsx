@@ -4,7 +4,6 @@ import {useNavigate} from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import Button from "../../components/shared/Button.tsx";
 import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import Seperator from "../../components/shared/Seperator.tsx";
 import {trackActivity} from "../../services/staticsService.tsx";
 
 const Exmatriculation = () => {
@@ -30,7 +29,6 @@ const Exmatriculation = () => {
         return (
             <div className="exmat-simulator page-content">
                 <SectionHeading heading={"Erfolgreich eingereicht."} subheading={"Ihr Antrag wird bearbeitet. Leider ist das angestellte Fachpersonal der DHBW zurzeit mit Wichtigeren dingen beschäftigt, weswegen ein gewisser Kollege den Antrag bearbeiten wird. Leider Streikt dieser gerade wegen einer Lohnerhöhung.<br><br><a class='important-text'> Sie werden innerhalb der nächsten 5 Jahren Exmatrikuliert.</a>"} centered={true} />
-                <Seperator width={"0"} height={"2rem"} />
                 <Button text={"Zurück zur Startseite"} onClick={() => navigate("/")} variant={"primary"} />
             </div>
         );

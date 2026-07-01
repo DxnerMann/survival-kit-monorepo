@@ -22,6 +22,10 @@ const getToken = (): string | undefined => {
     return Cookies.get(TOKEN_KEY)
 }
 
+export const validatePassword = (pw: string) => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/.test(pw)
+}
+
 const removeToken = () => {
     Cookies.remove(TOKEN_KEY)
 }

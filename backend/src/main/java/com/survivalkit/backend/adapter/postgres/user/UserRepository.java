@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.Optional;
 
+import static com.survivalkit.backend.shared.Utils.toInstant;
+
 @Repository
 public class UserRepository implements UserPersistancePort {
 
@@ -104,6 +106,14 @@ public class UserRepository implements UserPersistancePort {
                 .query(ImgWrapper.class).optional();
     }
 
+    @Override
+    public void updateProfileColor(String userId, String color) {
+        jdbcClient.sql(Statements.UPDATE_COLOR.sql)
+                .paramSource(new MapSqlParameterSource("color", color)
+                        .addValue("id", userId)
+                ).update();
+    }
+
     private static final RowMapper<UserModel> USER_ROW_MAPPER = (rs, rowNum) -> {
         byte[] imgBytes = rs.getBytes("img");
         String imgTypeRaw = rs.getString("imgType");
@@ -124,7 +134,8 @@ public class UserRepository implements UserPersistancePort {
                 rs.getBoolean("isVerified"),
                 rs.getString("course"),
                 rs.getString("color"),
-                img
+                img,
+                toInstant(rs.getTimestamp("lastUpdated"))
         );
     };
 
@@ -185,6 +196,12 @@ public class UserRepository implements UserPersistancePort {
         GET_IMG(
         """
                 SELECT img, imgType FROM users WHERE id = :id;
+            """
+        ),
+        // language=sql
+        UPDATE_COLOR(
+        """
+                UPDATE users SET color = :color WHERE id = :id 
             """
         );
 

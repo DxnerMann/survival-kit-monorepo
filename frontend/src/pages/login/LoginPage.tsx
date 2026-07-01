@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { authService } from '../../services/authService'
+import {authService, validatePassword} from '../../services/authService'
 
 import ThemeToggle from '../../components/ThemeToggle'
 
@@ -22,10 +22,6 @@ const LoginPage = () => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [repeatPassword, setRepeatPassword] = useState('')
-
-    const validatePassword = (pw: string) => {
-        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/.test(pw)
-    }
 
     const handleLogin = async () => {
         try {

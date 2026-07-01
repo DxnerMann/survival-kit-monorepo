@@ -1,19 +1,23 @@
 package com.survivalkit.backend.core.user;
 
 import com.survivalkit.backend.adapter.postgres.user.ImgWrapper;
+import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.web.profile.ProfileImageResponse;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.core.user.exception.UsernameChangeToSoonException;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
+import com.survivalkit.backend.shared.RoleLevel;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class UserService implements UserPort {
@@ -115,5 +119,63 @@ public class UserService implements UserPort {
         } catch (IOException e) {
             throw new RuntimeException("Failed to read default profile picture", e);
         }
+    }
+
+    @Override
+    public void updateUsername(String newUsername) {
+        var authUser = SecurityContext.current();
+
+        if (authUser.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        var user = userPersistancePort.getById(authUser.get().userId());
+
+        if (user.isEmpty()) {
+            throw new UserNotFoundException(authUser.get().userId());
+        }
+        var oldUser = user.get();
+        var lastUpdated = oldUser.lastUpdated();
+        var nextAllowed = lastUpdated.plus(30, ChronoUnit.DAYS);
+
+        var daysLeft = ChronoUnit.DAYS.between(Instant.now(), nextAllowed);
+
+        if (daysLeft > 0) {
+            throw new UsernameChangeToSoonException(daysLeft);
+        }
+        userPersistancePort.save(
+            new UserModel(
+                oldUser.id(),
+                oldUser.firstname(),
+                oldUser.lastname(),
+                    newUsername,
+                oldUser.email(),
+                oldUser.password(),
+                oldUser.role(),
+                oldUser.verificationToken(),
+                oldUser.isVerified(),
+                oldUser.course(),
+                oldUser.color(),
+                oldUser.img(),
+                oldUser.lastUpdated()
+            )
+        );
+    }
+
+    @Override
+    public void updateColor(String newColor) {
+        var user = SecurityContext.current();
+
+        if (user.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+        if (!newColor.matches("^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$")) {
+            throw new IllegalArgumentException("Invalid hex color: " + newColor);
+        }
+        userPersistancePort.updateProfileColor(user.get().userId(), newColor);
     }
 }

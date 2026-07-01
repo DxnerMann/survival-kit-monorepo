@@ -97,9 +97,9 @@ const CourseSelection = ({ selectedCourse, onCourseChanged, onLinkChanged }: Cou
                             ref={searchRef}
                             className="course-selection__search"
                             type="text"
-                            placeholder="Kurs suchen…"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
+                            placeholder="    Kurs suchen…"
+                            value={`    ${search}`}
+                            onChange={e => setSearch(e.target.value.trim())}
                             autoComplete="off"
                         />
                         {search && (

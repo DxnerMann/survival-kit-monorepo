@@ -13,4 +13,6 @@ public interface UserPort {
     void updateProfilePicture(MultipartFile file);
     ProfileImageResponse getProfilePicture(String userId);
     ImgWrapper getDefaultProfilePicture();
+    void updateUsername(String newUsername);
+    void updateColor(String newColor);
 }

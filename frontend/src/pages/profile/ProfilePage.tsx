@@ -7,12 +7,20 @@ import Info from "../../components/shared/Info.tsx";
 import CourseSelection from "../../components/shared/CourseSelection.tsx";
 import type {ProfileSettings} from "../../models/ProfileSettings.tsx";
 import {getUserRole} from "../../services/tokenService.tsx";
-import {fetchProfileSettings, setUserCourse, uploadProfileImage} from "../../services/userService.tsx";
+import {
+    fetchProfileSettings,
+    setUserCourse,
+    updateUsernameAndColor,
+    uploadProfileImage
+} from "../../services/userService.tsx";
 import {api} from "../../services/api.tsx";
 import {lectureService} from "../../services/lectureService.tsx";
 import ProfilePictureDialog from "../../components/shared/dialog/ProfilePictureDialog.tsx";
 import ColorPicker from "../../components/shared/ColorPicker.tsx";
 import Button from "../../components/shared/Button.tsx";
+import Separator from "../../components/shared/Seperator.tsx";
+import {validatePassword} from "../../services/authService.tsx";
+import {snackbarService} from "../../services/snackBarService.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -23,6 +31,10 @@ const ProfilePage = () => {
     const [isPictureDialogOpen, setIsPictureDialogOpen] = useState(false);
     const [avatarVersion, setAvatarVersion] = useState(0);
     const [profileColor, setProfileColor] = useState("");
+    const [username, setUsername] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -31,6 +43,7 @@ const ProfilePage = () => {
             setprofileSettings(profileSettings);
             setSelectedCourse(profileSettings.course);
             setProfileColor(profileSettings.color);
+            setUsername(profileSettings.username);
         }
         fetchData();
     }, []);
@@ -46,12 +59,43 @@ const ProfilePage = () => {
         setAvatarVersion((v) => v + 1);
     };
 
-    const handleProfileColorChange = (value: string) => {
-        setProfileColor(value);
-    }
+    const handleSave = async () => {
+        setError("");
+        const colorChanged =
+            profileSettings !== undefined && profileColor !== profileSettings.color;
+        const usernameChanged =
+            profileSettings !== undefined && username !== profileSettings.username;
 
-    const handleProfileColorSave = () => {
-        // TODO: SAVE
+        try {
+            const updates: {
+                color?: string;
+                username?: string;
+            } = {};
+
+            if (colorChanged) {
+                updates.color = profileColor;
+            }
+
+            if (usernameChanged) {
+                updates.username = username;
+            }
+
+            if (colorChanged || usernameChanged) {
+                await updateUsernameAndColor(updates);
+                setprofileSettings({
+                    username: username,
+                    color: profileSettings.color,
+                    course: profileSettings.course,
+                    firstname: profileSettings.firstname,
+                    lastname: profileSettings.lastname,
+                    userId: profileSettings.userId,
+                    email: profileSettings.email,
+                    role: profileSettings.role
+                })
+            }
+        } catch (error) {
+            if (error instanceof Error) setError(error.message);
+        }
     }
 
     async function onCourseChanged(course: string) {
@@ -71,6 +115,21 @@ const ProfilePage = () => {
         setSelectedCourse(course);
     }
 
+    const handlePasswordChange = async () => {
+        if (!validatePassword(newPassword)) {
+            setError('Passwort erfüllt die Anforderungen nicht')
+            return
+        }
+
+        if (newPassword !== newPasswordRepeat) {
+            setError('Passwörter stimmen nicht überein')
+            return
+        }
+
+        // TODO: Change Password
+        snackbarService.showSnackbar({ type: "success",   text: "Passwort erfolgreich geändert", showIcon: true });
+    }
+
     const TabBar = () => {
         return <div className="profile-page-sidebar">
             {
@@ -78,7 +137,10 @@ const ProfilePage = () => {
                     <div
                         key={tab}
                         className={`profile-page-sidebar-tab ${currentTab === tab ? "active" : ""}`}
-                        onClick={() => setCurentTab(tab)}>
+                        onClick={() => {
+                            setCurentTab(tab);
+                            setError("");
+                        }}>
                         {
                             tab === "PROFILE_SETTINGS" ? <SettingsIcon size={20} /> : tab === "SECURITY" ? < LockKeyhole size={20} /> : < Skull size={20} />
                         }
@@ -106,15 +168,9 @@ const ProfilePage = () => {
             return;
         }
 
-        /*
-        * TODO:
-        *  - Profile Picture Zoom / Fullscreen
-        */
-
-        console.log(profileSettings.color);
-
-        return <><div className="profile-page-content">
-            <SectionHeading heading={"Profileinstellungen"} centered={false} />
+        return <>
+            <div className="profile-page-content">
+                <SectionHeading heading={"Profileinstellungen"} centered={false} />
                 <div className="profile-settings-info-wrapper">
                     <div
                         className="profile-settings-img-wrapper"
@@ -132,31 +188,45 @@ const ProfilePage = () => {
                     </div>
                     <div className="profile-settings-info">
                         <h2 className="profile-settings-full-name">{`${profileSettings.firstname} ${profileSettings.lastname}`}</h2>
-                        <h3 className="profile-settings-username">{`@${profileSettings.username}`}</h3>
+                        <h3
+                            className="profile-settings-username"
+                            style={{ color: `${profileColor}` }}
+                        >{`@${profileSettings.username}`}</h3>
                         <h3 className="profile-settings-email">{profileSettings.email}</h3>
                         <h3 className="profile-settings-course">{selectedCourse}</h3>
                         <h3 className="profile-settings-role">{getUserRole() === "USER" ? "Benutzer" : getUserRole() === "ADMIN" ? "Admininstrator" : "Gast"}</h3>
                     </div>
                 </div>
-                <Info text={"Dein voller name, sowie deine Email-Adresse sind nur für dich einsehbar. Dein Benutzername, sowie dein Profilbild werden ggf. Öffentlich angezeit!"} type={"INFO"} />
-                <h2 className="profile-page-subheading">Kurs</h2>
-                <CourseSelection selectedCourse={selectedCourse} onCourseChanged={onCourseChanged} onLinkChanged={onLinkChanged} />
-                <h2 className="profile-page-subheading">Benutzername</h2>
-                <h2 className="profile-page-subheading">Email</h2>
-                <Info text={"Deine bissherige Login Email-Adresse wird dadurch ersetzt."} type={"INFO"} />
-            <h2 className="profile-page-subheading">Profilfarbe</h2>
-            <div className="profile-settings-color-picker-wrapper">
-                <ColorPicker startValue={profileColor} onChange={(value) => handleProfileColorChange(value)} />
-                <Button text="Farbe Speichern" onClick={() => handleProfileColorSave()} />
-            </div>
-
+                <Info text={"Dein voller name, sowie deine Email-Adresse sind nur für dich einsehbar. Dein Benutzername, sowie dein Profilbild werden ggf. Öffentlich angezeit!"} type={"SUCCESS"} />
+                <br />
+                <Separator width={"100%"} height={"2px"} variant="secondary" />
+                <div className="profile-page-settings-section">
+                    <h2 className="profile-page-subheading">Kurs wechseln</h2>
+                    <CourseSelection selectedCourse={selectedCourse} onCourseChanged={onCourseChanged} onLinkChanged={onLinkChanged} />
+                </div>
+                <Separator width={"100%"} height={"2px"} variant="secondary" />
+                <div className="profile-page-settings-section">
+                    <h2 className="profile-page-subheading">Benutzername anpassen</h2>
+                    <input type="text" value={username} onChange={(event) => setUsername(event.target.value)} />
+                </div>
+                <Separator width={"100%"} height={"2px"} variant="secondary" />
+                <div className="profile-page-settings-section">
+                    <h2 className="profile-page-subheading">Profilfarbe ändern</h2>
+                    <div className="profile-settings-color-picker-wrapper">
+                        <ColorPicker startValue={profileColor} onChange={(value) => setProfileColor(value)} />
+                    </div>
+                </div>
+                <div className="error-text">
+                    <a>{error}</a>
+                </div>
+                < Button text={"Speichern"} onClick={() => handleSave()} />
             </div>
             <ProfilePictureDialog
                 isOpen={isPictureDialogOpen}
                 onClose={() => setIsPictureDialogOpen(false)}
                 onUpload={handleProfilePictureUpload}
             />
-            </>
+        </>
     }
 
     const Security = () => {
@@ -172,6 +242,23 @@ const ProfilePage = () => {
 
         return <div className="profile-page-content">
             <SectionHeading heading={"Sicherheit"} centered={false} />
+            <div className="profile-page-settings-section-security">
+                <h2 className="profile-page-subheading">Passwort ändern</h2>
+                <input placeholder="neues Passwort" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+                <input placeholder="Passwort wiederholen" type="password" value={newPasswordRepeat} onChange={(event) => setNewPasswordRepeat(event.target.value)} />
+                <div className="error-text">
+                    <a>{error}</a>
+                </div>
+                <Button text="Passwort ändern" onClick={() => handlePasswordChange()} />
+                <Info text={"Du kannst dich anschließend nurnoch mit deinem neuen Passwort anmelden"} type={"WARNING"} />
+            </div>
+            <br />
+            <Separator width={"100%"} height={"2px"} variant="secondary" />
+            <div className="profile-page-settings-section-security">
+                <h2 className="profile-page-subheading">Email-Adresse ändern</h2>
+                <Button text="Email-Adresse ändern" onClick={() => {/* TODO */}} />
+                <Info text={"Deine bissherige Login Email-Adresse wird dadurch ersetzt."} type={"WARNING"} />
+            </div>
         </div>
     }
 
@@ -188,8 +275,11 @@ const ProfilePage = () => {
 
         return <div className="profile-page-content">
             <SectionHeading heading={"Danger Zone"} centered={false} />
-            <h2 className="profile-page-subheading"><a className="important-text">Konto Löschen</a></h2>
-            <Info text={"Die Löschung deines Kontos mit all deinen Daten ist unwiederuflich."} type={"ERROR"} />
+            <div className="profile-page-settings-section-danger">
+                <h2 className="profile-page-subheading"><a className="important-text">Konto Löschen</a></h2>
+                <Button text="Konto Löschen" onClick={() => {/* TODO */}} />
+                <Info text={"Die Löschung deines Kontos mit all deinen Daten ist unwiederuflich."} type={"ERROR"} />
+            </div>
         </div>
     }
 

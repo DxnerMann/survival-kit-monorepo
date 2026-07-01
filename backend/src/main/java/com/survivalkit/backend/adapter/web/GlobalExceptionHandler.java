@@ -2,11 +2,7 @@ package com.survivalkit.backend.adapter.web;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.rapla.CourseExtractionFailedException;
-import com.survivalkit.backend.core.user.exception.AccessDeniedException;
-import com.survivalkit.backend.core.user.exception.InvalidCredentialsException;
-import com.survivalkit.backend.core.user.exception.UserAlreadyExistsException;
-import com.survivalkit.backend.core.user.exception.UserNotFoundException;
-import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
+import com.survivalkit.backend.core.user.exception.*;
 import com.survivalkit.backend.core.course.CourseNotFoundException;
 import com.survivalkit.backend.core.security.SecurityLog;
 import org.springframework.http.HttpStatus;
@@ -87,6 +83,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
+    }
+
+    @ExceptionHandler(UsernameChangeToSoonException.class)
+    public ResponseEntity<ApiError> handleGeneric(UsernameChangeToSoonException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(new ApiError(422, HttpStatus.UNPROCESSABLE_CONTENT.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
     }
 
     @ExceptionHandler(Exception.class)
