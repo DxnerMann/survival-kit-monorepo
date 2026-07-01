@@ -56,3 +56,22 @@ export async function setUserCourse(course: string) : Promise<void> {
         throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
     }
 }
+
+export async function uploadProfileImage(file: File | Blob, isGif: boolean): Promise<void> {
+    const token = authService.getToken();
+    const formData = new FormData();
+    const filename = isGif ? "avatar.gif" : "avatar.png";
+    formData.append("file", file, filename);
+
+    const response = await fetch(`${API_URL}/profile/img`, {
+        method: "PUT",
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}`);
+    }
+}

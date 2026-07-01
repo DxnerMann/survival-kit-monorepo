@@ -12,4 +12,6 @@ public interface UserPersistancePort {
     void setVerified(String userId, boolean verified);
     void setUserCourse(String userId, String course);
     Optional<UserProfile> getUserProfile(String userId);
+    void updateProfilePicture(ImgWrapper wrapper, String userId);
+    Optional<ImgWrapper> getProfilePicture(String userId);
 }

@@ -1,5 +1,6 @@
 package com.survivalkit.backend.core.user;
 
+import com.survivalkit.backend.adapter.postgres.user.ImgWrapper;
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
@@ -15,9 +16,13 @@ import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.jsonwebtoken.JwtException;
 import io.viascom.nanoid.NanoId;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.io.IOException;
+import java.security.SecureRandom;
 
 @Service
 public class AuthService implements AuthPort {
@@ -27,13 +32,15 @@ public class AuthService implements AuthPort {
     private final TokenService tokenService;
     private final EmailPort emailPort;
     private final StatisticsPort statisticsPort;
+    private final UserPort userPort;
 
-    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort) {
+    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort) {
         this.userPersistancePort = userPersistancePort;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.emailPort = emailPort;
 		this.statisticsPort = statisticsPort;
+        this.userPort = userPort;
     }
 
     @Override
@@ -70,7 +77,9 @@ public class AuthService implements AuthPort {
                        RoleLevel.USER,
                        token,
                        false,
-                       null
+                       null,
+                       String.format("#%06X", new SecureRandom().nextInt(0xFFFFFF + 1)),
+                       userPort.getDefaultProfilePicture()
                )
         );
     }

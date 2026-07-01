@@ -9,6 +9,7 @@ public record UserProfile(
         RoleLevel role,
         String email,
         String username,
+        String color,
         String userId
 ) {
 }

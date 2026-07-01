@@ -5,5 +5,6 @@ export type ProfileSettings = {
     role: string,
     email: string,
     username: string,
+    color: string,
     userId: string
 }

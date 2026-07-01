@@ -64,6 +64,44 @@
     height: 10rem;
     background: var(--color-text-primary);
     border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.profile-settings-img-wrapper img {
+    height: 100%;
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    display: block;
+    transition: filter 0.2s ease;
+}
+
+.profile-settings-img-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    background: var(--color-transparent-primary);
+    pointer-events: none;
+}
+
+.profile-settings-img-upload-icon {
+    width: 50%;
+    height: 50%;
+    color: var(--color-text-primary);
+}
+
+.profile-settings-img-wrapper:hover .profile-settings-img {
+    filter: blur(2px) brightness(0.9);
+}
+
+.profile-settings-img-wrapper:hover .profile-settings-img-overlay {
+    opacity: 1;
 }
 
 .profile-settings-info {
@@ -93,4 +131,11 @@
 
 .profile-settings-role {
     color: var(--color-text-secondary);
+}
+
+.profile-settings-color-picker-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    align-items: center;
 }
