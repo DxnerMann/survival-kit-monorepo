@@ -9,9 +9,9 @@ A pastime tool for students at DHBW Karlsruhe — built to survive the long lect
 ```
 survival-kit-monorepo
 ├── backend/
+├     ├── docker-compose.yml    # Local Development
 ├── frontend/
-├── docker-compose.yml        # Production
-├── docker-compose.dev.yml    # Local development
+├── docker-compose.yml          # Production
 └── .github/workflows/
     └── ci-cd.yml
 ```
@@ -79,7 +79,7 @@ Mail sent during local development is visible at [http://localhost:8025](http://
 
 ### Environment Variables
 
-Use a `.env-local` file for local development. For necessary values take a look at the `_env_example`
+Use a `.env` file for local development. For necessary values take a look at the `_env_example`
 
 ---
 
@@ -119,17 +119,16 @@ Routing is handled by the external Nginx proxy:
 ## ToDo's ~before Release
 
 - [ ] Rate Limiting on Several Places
-- [ ] Finish User Tracking
 - [ ] View / Promote Users as Admin in Adminpanel
 - [ ] Option to resend Authentication Mail
 - [ ] Profile Options (Change password, username, delete Account)
 - [ ] Random Word generator game
 - [ ] Integrate Free-Room-Finder from Kai
 - [ ] Daily Phrase Rework from v2
-- [ ] Statistics
-- [ ] Chat Rework from v2
+- [ ] Daily-Course-Chat Rework from v2 (Encrypted?, RichText, Images, GIFs, Videos?, Files)
+- [ ] Rework Logging and Exception Handling
 
 ## Further Ideas
 
 - [ ] 5 Days at DHBW (FNAF) Game
-- 
+- [ ] Private Chat with Users (Encrypted?)
