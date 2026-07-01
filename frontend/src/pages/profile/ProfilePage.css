@@ -79,7 +79,7 @@
 }
 
 .profile-settings-username {
-    color: var(--color-text-secondary);
+    color: var(--color-primary-accent);
 }
 
 .profile-settings-email {

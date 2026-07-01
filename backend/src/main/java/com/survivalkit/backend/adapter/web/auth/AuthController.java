@@ -1,6 +1,6 @@
 package com.survivalkit.backend.adapter.web.auth;
 
-import com.survivalkit.backend.core.auth.AuthPort;
+import com.survivalkit.backend.core.user.AuthPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,4 +52,10 @@ public class AuthController {
     public ResponseEntity<LoginResponse> validate() {
         return ResponseEntity.ok(authPort.validate());
     }
+
+    /*
+     * TODO:
+     *  - Change password Endpoint
+     *  - Delete Account Endpoint (delete every data from every table for specific user) / change username to unknown user for feedback...
+     */
 }

@@ -22,30 +22,6 @@ public class CourseService implements CoursePort {
     }
 
     @Override
-    public void setCourseForUser(String course, String raplaUrl) {
-        if (!course.isEmpty()) {
-
-            var user = SecurityContext.current();
-
-            if (user.isEmpty()) {
-                throw new IllegalStateException(
-                        "No authenticated user in context. " +
-                                "Ensure this is called within a secured request.");
-            }
-
-            userPersistancePort.setUserCourse(user.get().userId(), course);
-            return;
-        }
-        if (!raplaUrl.isEmpty()) {
-            var extractedCourse = raplaApiPort.extractCourse(raplaApiPort.formatToBaseUrl(raplaUrl));
-            coursePersistancePort.save(extractedCourse, raplaApiPort.formatToBaseUrl(raplaUrl));
-            userPersistancePort.setUserCourse(extractedCourse, course);
-            return;
-        }
-        throw new IllegalArgumentException("course and raplaUrl cannot be both empty");
-    }
-
-    @Override
     public List<String> getAvailableCourses() {
         return coursePersistancePort.getAvailableCourses();
     }

@@ -1,4 +1,4 @@
-package com.survivalkit.backend.core.auth;
+package com.survivalkit.backend.core.user;
 
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
@@ -6,9 +6,9 @@ import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;
 import com.survivalkit.backend.config.SecurityContext;
-import com.survivalkit.backend.core.auth.exception.InvalidCredentialsException;
-import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
-import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
+import com.survivalkit.backend.core.user.exception.InvalidCredentialsException;
+import com.survivalkit.backend.core.user.exception.UserAlreadyExistsException;
+import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
 import com.survivalkit.backend.core.email.EmailPort;
 import com.survivalkit.backend.core.security.TokenService;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
@@ -18,7 +18,6 @@ import io.viascom.nanoid.NanoId;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Service
 public class AuthService implements AuthPort {

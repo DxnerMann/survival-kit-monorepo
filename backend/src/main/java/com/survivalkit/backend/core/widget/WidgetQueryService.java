@@ -70,8 +70,6 @@ public class WidgetQueryService implements WidgetQueryPort {
         userWidgetPersistancePort.overrideAll(widgetModels, user.get().userId());
     }
 
-    // TODO: Also update userCourse if null and course has changed.
-
     @Override
     public void updateWidgetData(String id, String data) {
 

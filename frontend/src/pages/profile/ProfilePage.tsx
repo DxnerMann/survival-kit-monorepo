@@ -86,6 +86,12 @@ const ProfilePage = () => {
             return;
         }
 
+        /*
+        * TODO:
+        *  - Profile Picture Zoom / Fullscreen
+        *  - Add Profile Accent Color Functionality
+        */
+
         return <div className="profile-page-content">
             <SectionHeading heading={"Profileinstellungen"} centered={false} />
             <div className="profile-settings-info-wrapper">
@@ -94,7 +100,7 @@ const ProfilePage = () => {
                 </div>
                 <div className="profile-settings-info">
                     <h2 className="profile-settings-full-name">{`${profileSettings.firstname} ${profileSettings.lastname}`}</h2>
-                    <h3 className="profile-settings-username">`@${profileSettings.username}`</h3>
+                    <h3 className="profile-settings-username">{`@${profileSettings.username}`}</h3>
                     <h3 className="profile-settings-email">{profileSettings.email}</h3>
                     <h3 className="profile-settings-course">{selectedCourse}</h3>
                     <h3 className="profile-settings-role">{getUserRole() === "USER" ? "Benutzer" : getUserRole() === "ADMIN" ? "Admininstrator" : "Gast"}</h3>
@@ -115,6 +121,11 @@ const ProfilePage = () => {
             return;
         }
 
+        /*
+        * TODO:
+        *  - Add Change Password Functionality
+        */
+
         return <div className="profile-page-content">
             <SectionHeading heading={"Sicherheit"} centered={false} />
         </div>
@@ -125,6 +136,11 @@ const ProfilePage = () => {
         if (profileSettings === undefined) {
             return;
         }
+
+        /*
+        * TODO:
+        *  - Add Delete Account Functionality
+        */
 
         return <div className="profile-page-content">
             <SectionHeading heading={"Danger Zone"} centered={false} />

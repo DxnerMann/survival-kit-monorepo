@@ -1,6 +1,6 @@
 package com.survivalkit.backend.config;
 
-import com.survivalkit.backend.core.auth.AuthenticatedUser;
+import com.survivalkit.backend.core.user.AuthenticatedUser;
 
 import java.util.Optional;
 

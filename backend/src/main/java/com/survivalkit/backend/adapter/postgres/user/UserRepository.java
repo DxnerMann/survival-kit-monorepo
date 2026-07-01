@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.user;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Utils;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -74,6 +75,14 @@ public class UserRepository implements UserPersistancePort {
         securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User-Course changed for user with id %s", userId));
     }
 
+    @Override
+    public Optional<UserProfile> getUserProfile(String userId) {
+        return jdbcClient.sql(Statements.USER_PROFILE.sql)
+                .paramSource(new MapSqlParameterSource("id", userId))
+                .query(UserProfile.class)
+                .optional();
+    }
+
     private enum Statements{
         // language=sql
         UPSERT(
@@ -114,6 +123,12 @@ public class UserRepository implements UserPersistancePort {
                 """
                         UPDATE users SET course = :course WHERE id = :id;
                     """
+        ),
+        // language=sql
+        USER_PROFILE(
+        """
+                SELECT firstname, lastname, course, role, email, username, id as userId FROM users WHERE id = :id;
+            """
         );
 
         private String sql;

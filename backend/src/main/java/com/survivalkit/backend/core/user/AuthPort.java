@@ -1,4 +1,4 @@
-package com.survivalkit.backend.core.auth;
+package com.survivalkit.backend.core.user;
 
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;

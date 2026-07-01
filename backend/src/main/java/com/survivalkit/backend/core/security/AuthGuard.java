@@ -1,9 +1,9 @@
 package com.survivalkit.backend.core.security;
 
 import com.survivalkit.backend.config.SecurityContext;
-import com.survivalkit.backend.core.auth.AuthenticatedUser;
-import com.survivalkit.backend.core.auth.exception.AccessDeniedException;
-import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
+import com.survivalkit.backend.core.user.AuthenticatedUser;
+import com.survivalkit.backend.core.user.exception.AccessDeniedException;
+import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import jakarta.servlet.FilterChain;

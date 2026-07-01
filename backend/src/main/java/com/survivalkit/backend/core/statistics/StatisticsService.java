@@ -1,19 +1,15 @@
 package com.survivalkit.backend.core.statistics;
 
-import com.survivalkit.backend.adapter.postgres.course.CoursePersistancePort;
-import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
 import com.survivalkit.backend.config.SecurityContext;
-import com.survivalkit.backend.core.auth.AuthenticatedUser;
-import com.survivalkit.backend.core.course.CourseNotFoundException;
+import com.survivalkit.backend.core.user.AuthenticatedUser;
 import com.survivalkit.backend.shared.Page;
 import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Map;
 
 @Service
 public class StatisticsService implements StatisticsPort {

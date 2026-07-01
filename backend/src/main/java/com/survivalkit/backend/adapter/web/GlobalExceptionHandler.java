@@ -2,10 +2,11 @@ package com.survivalkit.backend.adapter.web;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.rapla.CourseExtractionFailedException;
-import com.survivalkit.backend.core.auth.exception.AccessDeniedException;
-import com.survivalkit.backend.core.auth.exception.InvalidCredentialsException;
-import com.survivalkit.backend.core.auth.exception.UserAlreadyExistsException;
-import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
+import com.survivalkit.backend.core.user.exception.AccessDeniedException;
+import com.survivalkit.backend.core.user.exception.InvalidCredentialsException;
+import com.survivalkit.backend.core.user.exception.UserAlreadyExistsException;
+import com.survivalkit.backend.core.user.exception.UserNotFoundException;
+import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
 import com.survivalkit.backend.core.course.CourseNotFoundException;
 import com.survivalkit.backend.core.security.SecurityLog;
 import org.springframework.http.HttpStatus;
@@ -78,6 +79,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiError> handleGeneric(UserNotFoundException ex) {
+        securityLog.logError(Log.SecurityLogSubType.API, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
     }
 
     @ExceptionHandler(Exception.class)

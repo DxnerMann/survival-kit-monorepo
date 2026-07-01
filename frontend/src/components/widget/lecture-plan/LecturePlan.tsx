@@ -37,6 +37,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [inSettings, setInSettings] = useState(false);
     const [weekOffset, setWeekOffset] = useState(0);
     const [lectures, setLectures] = useState<Lecture[]>([]);
+    const [error, setError] = useState<string>("");
 
     const [decodedData, setDecodedData] = useState<LecturePlanData>(() => {
         try {
@@ -54,7 +55,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 }
             }
         } catch {
-            throw new Error("Failed to fetch Dashboard Layout");
+            throw new Error("Failed to fetch Lecture-Plan Data");
         }
     });
     const [selectedCourse, setSelectedCourse] = useState(decodedData.course);
@@ -72,13 +73,19 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
             return;
         }
         (async () => {
-            const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
-            setLectures(data.filter(lecture => {
-                const isHidden = decodedData.hiddenLectures.some(hiddenText =>
-                    lecture.title.trim().includes(hiddenText.trim())
-                );
-                return !isHidden;
-            }));        })();
+            try {
+                const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
+                setLectures(data.filter(lecture => {
+                    const isHidden = decodedData.hiddenLectures.some(hiddenText =>
+                        lecture.title.trim().includes(hiddenText.trim())
+                    );
+                    return !isHidden;
+                }));
+            } catch (error) {
+                console.error(error);
+                setError("Fehler beim Laden des Vorlesungsplans.");
+            }
+        })();
     }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset]);
 
     useEffect(() => {
@@ -223,12 +230,17 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                     </div>
                     : <div className="widget-content">
                         {
-                            decodedData.course === ""
+                            error !== "" && <div className="error">
+                                {error}
+                            </div>
+                        }
+                        {
+                            error === "" && decodedData.course === ""
                                 ? <div className="no-course-set-info">
                                     Du hast noch keinen Kurs angegeben, der angezeigt werden soll.
                                     <a className="important-text" onClick={() => setInSettings(true)}>Einstellungen</a>
                                 </div>
-                                : <>
+                                : error === "" && <>
                                     <h4 className="lecture-plan-heading">{decodedData.course}</h4>
                                     <LectureCalendar
                                         key={`${weekOffset}`}

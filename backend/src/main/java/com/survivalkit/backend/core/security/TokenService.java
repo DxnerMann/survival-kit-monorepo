@@ -1,7 +1,7 @@
 package com.survivalkit.backend.core.security;
 
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
-import com.survivalkit.backend.core.auth.AuthenticatedUser;
+import com.survivalkit.backend.core.user.AuthenticatedUser;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
