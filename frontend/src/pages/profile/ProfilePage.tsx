@@ -25,7 +25,7 @@ import {snackbarService} from "../../services/snackBarService.tsx";
 const API_URL = api.baseUrl;
 
 const ProfilePage = () => {
-    const [currentTab, setCurentTab] = useState<string>("PROFILE_SETTINGS")
+    const [currentTab, setCurrentTab] = useState<string>("PROFILE_SETTINGS")
     const [profileSettings, setprofileSettings] = useState<ProfileSettings>();
     const [selectedCourse, setSelectedCourse] = useState("");
     const [isPictureDialogOpen, setIsPictureDialogOpen] = useState(false);
@@ -138,7 +138,7 @@ const ProfilePage = () => {
                         key={tab}
                         className={`profile-page-sidebar-tab ${currentTab === tab ? "active" : ""}`}
                         onClick={() => {
-                            setCurentTab(tab);
+                            setCurrentTab(tab);
                             setError("");
                         }}>
                         {
