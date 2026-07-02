@@ -114,6 +114,14 @@ public class UserRepository implements UserPersistancePort {
                 ).update();
     }
 
+    @Override
+    public void updatePassword(String userId, String newPassword) {
+        jdbcClient.sql(Statements.UPDATE_PASSWORD.sql)
+                .paramSource(new MapSqlParameterSource("password", newPassword)
+                        .addValue("id", userId)
+                ).update();
+    }
+
     private static final RowMapper<UserModel> USER_ROW_MAPPER = (rs, rowNum) -> {
         byte[] imgBytes = rs.getBytes("img");
         String imgTypeRaw = rs.getString("imgType");
@@ -203,6 +211,12 @@ public class UserRepository implements UserPersistancePort {
         """
                 UPDATE users SET color = :color WHERE id = :id 
             """
+        ),
+        // language=sql
+        UPDATE_PASSWORD(
+                """
+                        UPDATE users SET password = :password WHERE id = :id 
+                    """
         );
 
         private String sql;

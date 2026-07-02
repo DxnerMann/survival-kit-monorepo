@@ -15,4 +15,5 @@ public interface UserPersistancePort {
     void updateProfilePicture(ImgWrapper wrapper, String userId);
     Optional<ImgWrapper> getProfilePicture(String userId);
     void updateProfileColor(String userId, String color);
+    void updatePassword(String userId, String newPassword);
 }

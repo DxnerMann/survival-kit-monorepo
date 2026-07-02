@@ -140,8 +140,8 @@ const DashboardPage = () => {
                 />
                 <UsefullLinks />
                 <SectionHeading
-                    heading={"Wenn <a class='important-text'>nichts</a> mehr hilft..."}
-                    subheading={"Dann hilft nur noch die Exmatrikulation, oder ein Minigame..."}
+                    heading={"Survival-Kit <a class='important-text'>Klassiker</a> und <a class='important-text'>Tools</a>"}
+                    subheading={"Manchmal hilft nur noch die Exmatrikulation, oder ein Minigame für die Vorlesung."}
                     centered={false}
                 />
                 <Minigames />

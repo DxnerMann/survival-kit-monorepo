@@ -19,8 +19,9 @@ import ProfilePictureDialog from "../../components/shared/dialog/ProfilePictureD
 import ColorPicker from "../../components/shared/ColorPicker.tsx";
 import Button from "../../components/shared/Button.tsx";
 import Separator from "../../components/shared/Seperator.tsx";
-import {validatePassword} from "../../services/authService.tsx";
+import {authService, validatePassword} from "../../services/authService.tsx";
 import {snackbarService} from "../../services/snackBarService.tsx";
+import {useNavigate} from "react-router-dom";
 
 const API_URL = api.baseUrl;
 
@@ -33,8 +34,9 @@ const ProfilePage = () => {
     const [profileColor, setProfileColor] = useState("");
     const [username, setUsername] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [oldPassword, setOldPassword] = useState("");
     const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
-    const [error, setError] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,7 +62,6 @@ const ProfilePage = () => {
     };
 
     const handleSave = async () => {
-        setError("");
         const colorChanged =
             profileSettings !== undefined && profileColor !== profileSettings.color;
         const usernameChanged =
@@ -94,8 +95,12 @@ const ProfilePage = () => {
                 })
             }
         } catch (error) {
-            if (error instanceof Error) setError(error.message);
+            if (error instanceof Error) snackbarService.showSnackbar({type: "error", text: error.message, showIcon: true });
         }
+    }
+
+    const handleLogout = async () => {
+        await authService.logout(() => navigate("/login"))
     }
 
     async function onCourseChanged(course: string) {
@@ -117,17 +122,24 @@ const ProfilePage = () => {
 
     const handlePasswordChange = async () => {
         if (!validatePassword(newPassword)) {
-            setError('Passwort erfüllt die Anforderungen nicht')
+            snackbarService.showSnackbar({type: "error", text:"Passwort erfüllt die Anforderungen nicht", showIcon: true });
             return
         }
 
         if (newPassword !== newPasswordRepeat) {
-            setError('Passwörter stimmen nicht überein')
+            snackbarService.showSnackbar({type: "error", text:"Passwörter stimmen nicht überein", showIcon: true });
             return
         }
 
-        // TODO: Change Password
-        snackbarService.showSnackbar({ type: "success",   text: "Passwort erfolgreich geändert", showIcon: true });
+        try {
+            await authService.changePassword(oldPassword, newPassword);
+            snackbarService.showSnackbar({ type: "success",   text: "Passwort erfolgreich geändert", showIcon: true });
+        } catch (e) {
+            if (e instanceof Error) {
+                snackbarService.showSnackbar({ type: "error",   text: e.message, showIcon: true });
+            }
+        }
+
     }
 
     const TabBar = () => {
@@ -139,7 +151,6 @@ const ProfilePage = () => {
                         className={`profile-page-sidebar-tab ${currentTab === tab ? "active" : ""}`}
                         onClick={() => {
                             setCurrentTab(tab);
-                            setError("");
                         }}>
                         {
                             tab === "PROFILE_SETTINGS" ? <SettingsIcon size={20} /> : tab === "SECURITY" ? < LockKeyhole size={20} /> : < Skull size={20} />
@@ -216,9 +227,6 @@ const ProfilePage = () => {
                         <ColorPicker startValue={profileColor} onChange={(value) => setProfileColor(value)} />
                     </div>
                 </div>
-                <div className="error-text">
-                    <a>{error}</a>
-                </div>
                 < Button text={"Speichern"} onClick={() => handleSave()} />
             </div>
             <ProfilePictureDialog
@@ -244,11 +252,9 @@ const ProfilePage = () => {
             <SectionHeading heading={"Sicherheit"} centered={false} />
             <div className="profile-page-settings-section-security">
                 <h2 className="profile-page-subheading">Passwort ändern</h2>
+                <input placeholder="altes Passwort" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} />
                 <input placeholder="neues Passwort" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
                 <input placeholder="Passwort wiederholen" type="password" value={newPasswordRepeat} onChange={(event) => setNewPasswordRepeat(event.target.value)} />
-                <div className="error-text">
-                    <a>{error}</a>
-                </div>
                 <Button text="Passwort ändern" onClick={() => handlePasswordChange()} />
                 <Info text={"Du kannst dich anschließend nurnoch mit deinem neuen Passwort anmelden"} type={"WARNING"} />
             </div>
@@ -258,6 +264,12 @@ const ProfilePage = () => {
                 <h2 className="profile-page-subheading">Email-Adresse ändern</h2>
                 <Button text="Email-Adresse ändern" onClick={() => {/* TODO */}} />
                 <Info text={"Deine bissherige Login Email-Adresse wird dadurch ersetzt."} type={"WARNING"} />
+            </div>
+            <br />
+            <Separator width={"100%"} height={"2px"} variant="secondary" />
+            <div className="profile-page-settings-section-security">
+                <h2 className="profile-page-subheading">Abmelden</h2>
+                <Button text="Abmelden" onClick={() => handleLogout()} />
             </div>
         </div>
     }

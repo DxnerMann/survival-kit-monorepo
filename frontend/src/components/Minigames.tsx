@@ -4,7 +4,7 @@ import LinkCard from "./LinkCard/LinkCard.tsx";
 const Minigames = () => {
     return <div className="minigames-container">
         <LinkCard
-            href={"/exmatriculation#pagestart"}
+            href={"/exmatriculation"}
             heading={"Der Exmatrikulations-Simulator V2"}
             description={
                 "Du hast dein Studium satt? Keine Lust mehr auf Prüfungsstress, endlose Vorlesungen und den Kampf mit Moodle?\n" +

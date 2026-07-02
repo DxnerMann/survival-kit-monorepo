@@ -1,6 +1,5 @@
 package com.survivalkit.backend.core.user;
 
-import com.survivalkit.backend.adapter.postgres.user.ImgWrapper;
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
@@ -16,12 +15,10 @@ import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.jsonwebtoken.JwtException;
 import io.viascom.nanoid.NanoId;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Instant;
 
@@ -47,7 +44,7 @@ public class AuthService implements AuthPort {
     @Override
     public void register(RegisterRequest request) {
 
-        if (!isEmailValid(request.email()) || !isPasswordValid(request.password())) {
+        if (!isEmailValid(request.email()) || isPasswordInvalid(request.password())) {
             throw new InvalidCredentialsException("Password or Email are not Valid");
         }
 
@@ -118,13 +115,14 @@ public class AuthService implements AuthPort {
     @Override
     public LoginResponse login(String email, String password) {
         var user = userPersistancePort.findByEmailOrUsername(email, "");
-        if (user.isEmpty() || !isPasswordCorrect(password, user.get().password())) {
+        if (user.isEmpty() || isPasswordIncorrect(password, user.get().password())) {
             throw new InvalidCredentialsException("Invalid Email or Password");
         }
         var existingUser = user.get();
         if (!existingUser.isVerified()) {
             throw new UserUnauthorizedException("User is not yet Verified");
         }
+
         return new LoginResponse(
                 tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
                 existingUser.username(),
@@ -161,16 +159,61 @@ public class AuthService implements AuthPort {
         );
     }
 
+    @Override
+    public LoginResponse changePassword(String oldPassword, String newPassword) {
+        var authUser = SecurityContext.current();
+
+        if (authUser.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        var user = userPersistancePort.getById(authUser.get().userId());
+        if (user.isEmpty() || isPasswordIncorrect(oldPassword, user.get().password())) {
+            throw new InvalidCredentialsException("Invalid Password");
+        }
+
+        var existingUser = user.get();
+
+        if (!existingUser.isVerified()) {
+            throw new UserUnauthorizedException("User is not yet Verified");
+        }
+        if (isPasswordInvalid(newPassword)) {
+            throw new InvalidCredentialsException("Password is not Valid");
+        }
+        userPersistancePort.updatePassword(existingUser.id(), hashPassword(newPassword));
+        return new LoginResponse(
+                tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
+                existingUser.username(),
+                existingUser.firstname(),
+                existingUser.lastname()
+        );
+    }
+
+    @Override
+    public void logout() {
+        var authUser = SecurityContext.current();
+
+        if (authUser.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        tokenService.revoke(authUser.get().token());
+    }
+
     private String hashPassword(String password) {
         return passwordEncoder.encode(password);
     }
 
-    private boolean isPasswordCorrect(String plainPassword, String hashedPassword) {
-        return passwordEncoder.matches(plainPassword, hashedPassword);
+    private boolean isPasswordIncorrect(String plainPassword, String hashedPassword) {
+        return !passwordEncoder.matches(plainPassword, hashedPassword);
     }
 
-    private static boolean isPasswordValid(String password) {
-        if (password == null) return false;
+    private static boolean isPasswordInvalid(String password) {
+        if (password == null) return true;
 
         boolean hasMinLength   = password.length() >= 8;
         boolean hasUppercase   = password.chars().anyMatch(Character::isUpperCase);
@@ -179,7 +222,7 @@ public class AuthService implements AuthPort {
         boolean hasSpecial     = password.chars().anyMatch(c -> "!@#$%^&*()-_=+[]{}|;:',.<>?/`~".indexOf(c) >= 0);
         boolean hasNoSpaces    = !password.contains(" ");
 
-        return hasMinLength && hasUppercase && hasLowercase && hasDigit && hasSpecial && hasNoSpaces;
+        return !hasMinLength || !hasUppercase || !hasLowercase || !hasDigit || !hasSpecial || !hasNoSpaces;
     }
 
     private static boolean isEmailValid(String email) {

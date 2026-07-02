@@ -5,6 +5,7 @@ import {authService, validatePassword} from '../../services/authService'
 import ThemeToggle from '../../components/ThemeToggle'
 
 import './LoginPage.css'
+import {snackbarService} from "../../services/snackBarService.tsx";
 
 type Mode = 'login' | 'register' | 'verify';
 
@@ -13,9 +14,6 @@ const LoginPage = () => {
 
     const [mode, setMode] = useState<Mode>('login')
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-
-
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [email, setEmail] = useState('')
@@ -26,8 +24,6 @@ const LoginPage = () => {
     const handleLogin = async () => {
         try {
             setLoading(true)
-            setError(null)
-
             await authService.login({
                 email: email,
                 password,
@@ -37,9 +33,9 @@ const LoginPage = () => {
             navigate('/')
         } catch (e) {
             if (e instanceof Error) {
-                setError(e.message);
+                snackbarService.showSnackbar({ type: "error",   text: e.message, showIcon: true });
             } else {
-                setError("Unbekannter Fehler");
+                snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen. Versuche es später erneut", showIcon: true });
                 console.error(e);
             }
         } finally {
@@ -50,25 +46,24 @@ const LoginPage = () => {
     const handleRegister = async () => {
         try {
             setLoading(true)
-            setError(null)
-
             if (firstName.length > 30 || lastName.length > 30 || username.length > 30) {
-                setError('Max 30 Zeichen erlaubt')
+                snackbarService.showSnackbar({type: "error", text:"XXX", showIcon: true });
+                snackbarService.showSnackbar({ type: "error",   text: "Es sind Max 30 Zeichen lange Namen erlaubt", showIcon: true });
                 return
             }
 
             if (lastName.includes(' ')) {
-                setError('Nachname darf keine Leerzeichen enthalten')
+                snackbarService.showSnackbar({type: "error", text:"Nachname darf keine Leerzeichen enthalten", showIcon: true });
                 return
             }
 
             if (!validatePassword(password)) {
-                setError('Passwort erfüllt die Anforderungen nicht')
+                snackbarService.showSnackbar({type: "error", text:"Dein Passwort erfüllt die Anforderungen nicht", showIcon: true });
                 return
             }
 
             if (password !== repeatPassword) {
-                setError('Passwörter stimmen nicht überein')
+                snackbarService.showSnackbar({type: "error", text:"Passwörter stimmen nicht überein", showIcon: true });
                 return
             }
 
@@ -83,11 +78,9 @@ const LoginPage = () => {
             setMode('verify');
         } catch (e) {
             if (e instanceof Error) {
-                setError(e.message);
-                console.error(e);
+                snackbarService.showSnackbar({type: "error", text:e.message, showIcon: true });
             } else {
-                setError("Unbekannter Fehler");
-                console.error(e);
+                snackbarService.showSnackbar({type: "error", text:"Unbekannter Fehler", showIcon: true });
             }
         } finally {
             setLoading(false)
@@ -118,11 +111,6 @@ const LoginPage = () => {
                 <h1>
                     {mode === 'login' ? 'Login' : 'Register'}
                 </h1>
-
-                {error && (
-                    <p className="error centerd-text">{error}</p>
-                )}
-
                 {mode === 'login' ? (
                     <>
                         <input

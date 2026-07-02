@@ -9,4 +9,6 @@ public interface AuthPort {
     ModelAndView verify(String token);
     LoginResponse login(String email, String password);
     LoginResponse validate();
+    LoginResponse changePassword(String oldPassword, String newPassword);
+    void logout();
 }

@@ -12,6 +12,7 @@ import type {Lecture} from "../../../models/Lecture.tsx";
 import LectureCalendar from "../../LectureCalendar.tsx";
 import ColorPicker from "../../shared/ColorPicker.tsx";
 import SelectionDropdown from "../../shared/SelectionDropdown.tsx";
+import {snackbarService} from "../../../services/snackBarService.tsx";
 
 interface LecturePlanData {
     lectureColor: string,
@@ -37,7 +38,6 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [inSettings, setInSettings] = useState(false);
     const [weekOffset, setWeekOffset] = useState(0);
     const [lectures, setLectures] = useState<Lecture[]>([]);
-    const [error, setError] = useState<string>("");
 
     const [decodedData, setDecodedData] = useState<LecturePlanData>(() => {
         try {
@@ -83,7 +83,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 }));
             } catch (error) {
                 console.error(error);
-                setError("Fehler beim Laden des Vorlesungsplans.");
+                snackbarService.showSnackbar({type: "error", text:"Fehler beim Laden des Vorlesungsplans.", showIcon: true });
             }
         })();
     }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset]);
@@ -230,17 +230,12 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                     </div>
                     : <div className="widget-content">
                         {
-                            error !== "" && <div className="error">
-                                {error}
-                            </div>
-                        }
-                        {
-                            error === "" && decodedData.course === ""
+                            decodedData.course === ""
                                 ? <div className="no-course-set-info">
                                     Du hast noch keinen Kurs angegeben, der angezeigt werden soll.
                                     <a className="important-text" onClick={() => setInSettings(true)}>Einstellungen</a>
                                 </div>
-                                : error === "" && <>
+                                :  <>
                                     <h4 className="lecture-plan-heading">{decodedData.course}</h4>
                                     <LectureCalendar
                                         key={`${weekOffset}`}

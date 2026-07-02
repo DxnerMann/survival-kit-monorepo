@@ -10,7 +10,7 @@
 .explore-page-games {
     margin-top: 1rem;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 240px));
+    grid-template-columns: repeat(auto-fill, minmax(max(240px, (100% - 4 * 1rem) / 5), 1fr));
     gap: 1rem;
     justify-content: center;
 }

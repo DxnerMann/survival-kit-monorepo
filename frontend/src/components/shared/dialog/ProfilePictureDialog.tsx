@@ -5,6 +5,7 @@ import type { Area, Point } from "react-easy-crop";
 import Dialog from "./Dialog";
 import Button from "../Button.tsx";
 import { getCroppedImageBlob } from "../../../services/cropImageUtil.tsx";
+import {snackbarService} from "../../../services/snackBarService.tsx";
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE_MB = 8;
@@ -28,7 +29,6 @@ export default function ProfilePictureDialog({
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-    const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -47,7 +47,6 @@ export default function ProfilePictureDialog({
         setCrop({ x: 0, y: 0 });
         setZoom(1);
         setCroppedAreaPixels(null);
-        setError(null);
         setIsSubmitting(false);
         setIsDraggingOver(false);
     }, []);
@@ -61,16 +60,15 @@ export default function ProfilePictureDialog({
         if (!selected) return;
 
         if (!ALLOWED_TYPES.includes(selected.type)) {
-            setError("Bitte wähle ein PNG-, JPG/JPEG- oder GIF-Bild aus.");
+            snackbarService.showSnackbar({ type: "error", text: "Bitte wähle ein PNG-, JPG/JPEG- oder GIF-Bild aus", showIcon: true });
             return;
         }
 
         if (selected.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-            setError(`Die Datei darf maximal ${MAX_FILE_SIZE_MB} MB groß sein.`);
+            snackbarService.showSnackbar({ type: "error", text: `Die Datei darf maximal ${MAX_FILE_SIZE_MB} MB groß sein.`, showIcon: true });
             return;
         }
 
-        setError(null);
         setFile(selected);
         setIsGif(selected.type === "image/gif");
         setImageSrc(URL.createObjectURL(selected));
@@ -111,7 +109,6 @@ export default function ProfilePictureDialog({
         if (!file || !imageSrc) return;
 
         setIsSubmitting(true);
-        setError(null);
 
         try {
             if (isGif) {
@@ -124,7 +121,7 @@ export default function ProfilePictureDialog({
             resetState();
             onClose();
         } catch {
-            setError("Upload fehlgeschlagen. Bitte versuche es erneut.");
+            snackbarService.showSnackbar({ type: "error", text: "Upload fehlgeschlagen. Bitte versuche es erneut.", showIcon: true });
         } finally {
             setIsSubmitting(false);
         }
@@ -184,8 +181,6 @@ export default function ProfilePictureDialog({
                         </p>
                     </div>
                 )}
-
-                {error && <p className="profile-picture-error">{error}</p>}
 
                 {imageSrc && (
                     <div className="dialog-actions">

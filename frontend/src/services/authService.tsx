@@ -120,6 +120,37 @@ const validate = async (): Promise<boolean> => {
     }
 }
 
+const changePassword = async (
+    oldPassword : string,
+    newPassword: string,
+): Promise<void> => {
+    const token = authService.getToken();
+    const params = new URLSearchParams({ oldPassword, newPassword });
+    const response = await fetch(`${API_URL}/auth/password?${params.toString()}`, {
+        method: 'PUT',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+
+    if (!response.ok) {
+        await handleApiError(response)
+    }
+}
+
+const logout = async (callback : () => void) => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+    Cookies.remove(TOKEN_KEY);
+    callback();
+};
+
 export const authService = {
     login,
     register,
@@ -127,4 +158,6 @@ export const authService = {
     saveToken,
     getToken,
     removeToken,
+    changePassword,
+    logout
 }
