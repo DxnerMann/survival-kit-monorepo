@@ -12,6 +12,7 @@ import {suggestLink} from "../../services/quickLinkService.tsx";
 import LinkCard from "../../components/LinkCard/LinkCard.tsx";
 import UsefullLinks from "../../components/UsefullLinks.tsx";
 import {snackbarService} from "../../services/snackBarService.tsx";
+import Minigames from "../../components/Minigames.tsx";
 
 const DashboardPage = () => {
 
@@ -140,27 +141,10 @@ const DashboardPage = () => {
                 <UsefullLinks />
                 <SectionHeading
                     heading={"Wenn <a class='important-text'>nichts</a> mehr hilft..."}
-                    subheading={"Dann hilft nur noch das"}
+                    subheading={"Dann hilft nur noch die Exmatrikulation, oder ein Minigame..."}
                     centered={false}
                 />
-                <LinkCard
-                    href={"/exmatriculation#pagestart"}
-                    heading={"Der Exmatrikulations-Simulator V2"}
-                    description={
-                        "Du hast dein Studium satt? Keine Lust mehr auf Prüfungsstress, endlose Vorlesungen und den Kampf mit Moodle?\n" +
-                        "Dann probier jetzt den Exmatrikulations-Simulator!\n" +
-                        "\n" +
-                        "Lass alle Sorgen einfach den digitalen Abfluss runterspülen – Hausarbeiten, Anwesenheitslisten und unbeantwortete Mails an die Profs gleich mit.\n" +
-                        "Ein Klick, ein erleichterndes „Plopp“ – und schon bist du frei wie nie zuvor.\n" +
-                        "\n" +
-                        "Wage den Schritt, den du schon immer machen wolltest.\n" +
-                        "Fühl dich leichter, entspannter und offiziell unimmatrikuliert.\n" +
-                        "\n" +
-                        "Exmatrikulations-Simulator – weil manchmal der wichtigste Abschluss der ist, den man selbst zieht."
-                    }
-                    alingRight={false}
-                    previewImagePath={"/images/Exmatriculation-Simulator-Preview.png"}
-                />
+                <Minigames />
                 <SectionHeading
                     heading={"Für alle Interesierten und Unterstützer"}
                     centered={false}

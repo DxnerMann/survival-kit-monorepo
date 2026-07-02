@@ -14,3 +14,10 @@
     gap: 1rem;
     justify-content: center;
 }
+
+.explore-page-games-load-more-button-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding-bottom: 2rem;
+}
