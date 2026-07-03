@@ -34,6 +34,8 @@ A React + TypeScript single-page application built with Vite.
 ![FullCalendar](https://img.shields.io/badge/FullCalendar-6-4285F4)
 ![DOMPurify](https://img.shields.io/badge/DOMPurify-3-brightgreen)
 ![React Grid Layout](https://img.shields.io/badge/React_Grid_Layout-2-orange)
+![react-easy-crop](https://img.shields.io/badge/react--easy--crop-6.0.2-000000)
+![Recharts](https://img.shields.io/badge/Recharts-3.9.0-22B5BF)
 
 ---
 
@@ -52,6 +54,7 @@ A Spring Boot REST API with JWT authentication, email verification, and PostgreS
 ![Thymeleaf](https://img.shields.io/badge/Thymeleaf-3-005F0F?logo=thymeleaf)
 ![SpringDoc](https://img.shields.io/badge/SpringDoc_OpenAPI-3-85EA2D)
 ![Testcontainers](https://img.shields.io/badge/Testcontainers-1.21-3AB5E6)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
 
 ---
 
@@ -101,11 +104,12 @@ The deploy job:
 
 ### Production Services
 
-| Container | Description |
-|---|---|
-| `survival-kit-backend` | Spring Boot API on port 8080 |
+| Container | Description                                   |
+|---|-----------------------------------------------|
+| `survival-kit-backend` | Spring Boot API on port 8080                  |
 | `survival-kit-frontend` | Static React build served by Nginx on port 80 |
-| `survival-kit-postgres` | PostgreSQL 16 database |
+| `survival-kit-postgres` | PostgreSQL 16 database                        |
+| `survival-kit-redis` | In-memory store for revoked JWT session tokens |
 
 Routing is handled by the external Nginx proxy:
 
@@ -115,13 +119,12 @@ Routing is handled by the external Nginx proxy:
 | `api.lecture-survival-kit.jannis-saur.de` | Backend |
 
 ---
-
 ## ToDo's ~before Release
 
 - [ ] Rate Limiting on Several Places
 - [ ] View / Promote Users as Admin in Adminpanel
 - [ ] Option to resend Authentication Mail
-- [ ] Profile Options (Change password, username, delete Account)
+- [ ] Profile Options (Change email, delete Account)
 - [ ] Random Word generator game
 - [ ] Integrate Free-Room-Finder from Kai
 - [ ] Daily Phrase Rework from v2

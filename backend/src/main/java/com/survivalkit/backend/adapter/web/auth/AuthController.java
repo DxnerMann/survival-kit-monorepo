@@ -71,6 +71,12 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @Role(RoleLevel.USER)
+    @PostMapping("delete")
+    public ResponseEntity<Void> deleteAccount() {
+        return ResponseEntity.ok().build();
+    }
+
     /*
      * TODO:
      *  - Delete Account Endpoint (delete every data from every table for specific user) / change username to unknown user for feedback...

@@ -1,8 +1,13 @@
 package com.survivalkit.backend.core.user;
 
+import com.survivalkit.backend.adapter.postgres.feedback.FeedbackPersistancePort;
+import com.survivalkit.backend.adapter.postgres.quicklink.QuickLinkPersistancePort;
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
+import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
+import com.survivalkit.backend.adapter.postgres.widget.UserWidgetPersistancePort;
+import com.survivalkit.backend.adapter.postgres.widget.UserWidgetRepository;
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;
 import com.survivalkit.backend.config.SecurityContext;
@@ -17,6 +22,7 @@ import io.jsonwebtoken.JwtException;
 import io.viascom.nanoid.NanoId;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.security.SecureRandom;
@@ -31,14 +37,22 @@ public class AuthService implements AuthPort {
     private final EmailPort emailPort;
     private final StatisticsPort statisticsPort;
     private final UserPort userPort;
+    private final UserWidgetPersistancePort userWidgetPersistancePort;
+    private final UserTrackingPersistancePort userTrackingPersistancePort;
+    private final QuickLinkPersistancePort quickLinkPersistancePort;
+    private final FeedbackPersistancePort feedbackPersistancePort;
 
-    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort) {
+    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort) {
         this.userPersistancePort = userPersistancePort;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.emailPort = emailPort;
 		this.statisticsPort = statisticsPort;
         this.userPort = userPort;
+        this.userWidgetPersistancePort = userWidgetPersistancePort;
+        this.userTrackingPersistancePort = userTrackingPersistancePort;
+        this.quickLinkPersistancePort = quickLinkPersistancePort;
+        this.feedbackPersistancePort = feedbackPersistancePort;
     }
 
     @Override
@@ -202,6 +216,32 @@ public class AuthService implements AuthPort {
         }
 
         tokenService.revoke(authUser.get().token());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAccount() {
+        var authUser = SecurityContext.current();
+
+        if (authUser.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        var userId = authUser.get().userId();
+
+        /*
+        * TODO
+        *   - DELETE FAVOURITES FOR USER
+        *   - DELETE WIDGETS FOR USER
+        *   - DELETE TRACKACTIONS FOR USER
+        *   - DELETE FEEDBACKVOTES FOR USER
+        *   - CHANGE USERNAME FROM FEEDBACK FOR USER TO UNKNOWN / PREFIX USER_ID WITH DELETED STRING
+        *   - DELETE USER FROM USERS TABLE
+         */
+
+        logout();
     }
 
     private String hashPassword(String password) {
