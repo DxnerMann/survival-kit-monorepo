@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.survivalkit.backend.shared.Utils.toInstant;
@@ -122,6 +123,26 @@ public class UserRepository implements UserPersistancePort {
                 ).update();
     }
 
+    @Override
+    public void deleteUser(String userId) {
+        jdbcClient.sql(Statements.DELETE.sql)
+                .paramSource(new MapSqlParameterSource("id", userId))
+                .update();
+    }
+
+    @Override
+    public boolean isLastAdmin(String userId) {
+        var admins = jdbcClient.sql(Statements.GET_ADMINS.sql).query(UserModel.class).list();
+
+        if (admins.size() > 1) {
+            return false;
+        }
+        if (admins.getFirst() != null && admins.getFirst().id().equals(userId)) {
+            return true;
+        }
+        return false;
+    }
+
     private static final RowMapper<UserModel> USER_ROW_MAPPER = (rs, rowNum) -> {
         byte[] imgBytes = rs.getBytes("img");
         String imgTypeRaw = rs.getString("imgType");
@@ -214,9 +235,21 @@ public class UserRepository implements UserPersistancePort {
         ),
         // language=sql
         UPDATE_PASSWORD(
-                """
-                        UPDATE users SET password = :password WHERE id = :id 
-                    """
+        """
+                UPDATE users SET password = :password WHERE id = :id 
+            """
+        ),
+        // language=sql
+        DELETE(
+        """
+                DELETE FROM users WHERE id = :id 
+            """
+        ),
+        // language=sql
+        GET_ADMINS(
+        """
+                SELECT * FROM users WHERE role = 'ADMIN' 
+            """
         );
 
         private String sql;

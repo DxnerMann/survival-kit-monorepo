@@ -41,6 +41,13 @@ public class FavouriteRepository implements FavouritePersistancePort {
     }
 
     @Override
+    public void deleteAll(String userId) {
+        jdbcClient.sql(Statements.DELETE_ALL.sql)
+                .paramSource(new MapSqlParameterSource("userId", userId)
+                ).update();
+    }
+
+    @Override
     public Page<String> getFavouritesForUser(String userId, String continuation, int pageSize) {
         var quicklinkIds = jdbcClient.sql(Statements.GET_FOR_USER.sql)
                 .paramSource(new MapSqlParameterSource("userId", userId)
@@ -65,7 +72,7 @@ public class FavouriteRepository implements FavouritePersistancePort {
         // language=sql
         SET_FAV(
                 """
-                    INSERT INTO favourites (userId, quickLinkId) VALUES (:userId, :quickLinkId)
+                    INSERT INTO favourites (userId, quickLinkId) VALUES (:userId, :quickLinkId) ON CONFLICT (userId, quickLinkId) DO NOTHING
                     """
         ),
         // language=sql
@@ -84,6 +91,12 @@ public class FavouriteRepository implements FavouritePersistancePort {
                     ORDER BY quickLinkId
                     LIMIT :pageSize
                     """
+        ),
+        // language=sql
+        DELETE_ALL(
+        """
+                DELETE FROM favourites WHERE userId = :userId
+            """
         );
 
         private String sql;

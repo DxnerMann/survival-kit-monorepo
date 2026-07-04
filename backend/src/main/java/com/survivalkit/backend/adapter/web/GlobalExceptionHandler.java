@@ -61,6 +61,14 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
     }
 
+    @ExceptionHandler(CannotDeleteLastAdminException.class)
+    public ResponseEntity<ApiError> handleGeneric(CannotDeleteLastAdminException ex) {
+        securityLog.logWarning(Log.SecurityLogSubType.API, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
+    }
+
     @ExceptionHandler(CourseNotFoundException.class)
     public ResponseEntity<ApiError> handleGeneric(CourseNotFoundException ex) {
         securityLog.logError(Log.SecurityLogSubType.API, ex.getMessage());

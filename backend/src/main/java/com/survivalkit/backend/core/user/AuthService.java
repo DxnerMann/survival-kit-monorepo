@@ -1,5 +1,6 @@
 package com.survivalkit.backend.core.user;
 
+import com.survivalkit.backend.adapter.postgres.favourites.FavouritePersistancePort;
 import com.survivalkit.backend.adapter.postgres.feedback.FeedbackPersistancePort;
 import com.survivalkit.backend.adapter.postgres.quicklink.QuickLinkPersistancePort;
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
@@ -7,10 +8,10 @@ import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetPersistancePort;
-import com.survivalkit.backend.adapter.postgres.widget.UserWidgetRepository;
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;
 import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.core.user.exception.CannotDeleteLastAdminException;
 import com.survivalkit.backend.core.user.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.user.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 public class AuthService implements AuthPort {
@@ -41,8 +43,9 @@ public class AuthService implements AuthPort {
     private final UserTrackingPersistancePort userTrackingPersistancePort;
     private final QuickLinkPersistancePort quickLinkPersistancePort;
     private final FeedbackPersistancePort feedbackPersistancePort;
+    private final FavouritePersistancePort favouritePersistancePort;
 
-    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort) {
+    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort, FavouritePersistancePort favouritePersistancePort) {
         this.userPersistancePort = userPersistancePort;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
@@ -53,6 +56,7 @@ public class AuthService implements AuthPort {
         this.userTrackingPersistancePort = userTrackingPersistancePort;
         this.quickLinkPersistancePort = quickLinkPersistancePort;
         this.feedbackPersistancePort = feedbackPersistancePort;
+        this.favouritePersistancePort = favouritePersistancePort;
     }
 
     @Override
@@ -231,15 +235,15 @@ public class AuthService implements AuthPort {
 
         var userId = authUser.get().userId();
 
-        /*
-        * TODO
-        *   - DELETE FAVOURITES FOR USER
-        *   - DELETE WIDGETS FOR USER
-        *   - DELETE TRACKACTIONS FOR USER
-        *   - DELETE FEEDBACKVOTES FOR USER
-        *   - CHANGE USERNAME FROM FEEDBACK FOR USER TO UNKNOWN / PREFIX USER_ID WITH DELETED STRING
-        *   - DELETE USER FROM USERS TABLE
-         */
+        if (userPersistancePort.isLastAdmin(userId)) {
+            throw new CannotDeleteLastAdminException("Unable to delete the last Admin.");
+        }
+
+        favouritePersistancePort.deleteAll(userId);
+        userWidgetPersistancePort.overrideAll(List.of(), userId);
+        feedbackPersistancePort.deleteAllVotes(userId);
+        feedbackPersistancePort.deleteUser(userId);
+        userPersistancePort.deleteUser(userId);
 
         logout();
     }

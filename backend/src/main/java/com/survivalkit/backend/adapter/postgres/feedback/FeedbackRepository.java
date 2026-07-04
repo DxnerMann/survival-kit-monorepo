@@ -90,6 +90,13 @@ public class FeedbackRepository implements FeedbackPersistancePort {
     }
 
     @Override
+    public void deleteAllVotes(String userId) {
+        jdbcClient.sql(Statements.DELETE_ALL_VOTES.sql)
+                .paramSource(new MapSqlParameterSource("userId", userId))
+                .update();
+    }
+
+    @Override
     public void answerFeedback(String id, String answer) {
         jdbcClient.sql(Statements.ANSWER.sql)
                 .paramSource(new MapSqlParameterSource("id", id)
@@ -106,6 +113,13 @@ public class FeedbackRepository implements FeedbackPersistancePort {
                 .list();
 
         return !userVotes.contains(feedbackId);
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        jdbcClient.sql(Statements.USER_DELETE.sql)
+                .paramSource(new MapSqlParameterSource("userId", userId))
+                .update();
     }
 
     enum Statements {
@@ -142,10 +156,19 @@ public class FeedbackRepository implements FeedbackPersistancePort {
         """),
 
         // language=sql
+        USER_DELETE("""
+            UPDATE feedback SET authorusername = 'Unbekannter Benutzer', authoruserid = 'deleted_' + authoruserid WHERE authoruserid = :userId
+        """),
+
+        // language=sql
         DELETE_VOTES("""
             DELETE FROM feedbackVotes WHERE feedbackId = :id
         """),
 
+        // language=sql
+        DELETE_ALL_VOTES("""
+            DELETE FROM feedbackVotes WHERE userId = :userId
+        """),
         // language=sql
         ANSWER("""
             UPDATE feedback SET answer = :answer, lastUpdated = :currentTime WHERE id = :id

@@ -6,4 +6,5 @@ public interface FavouritePersistancePort {
 
     void addFav(String userId, String quickLinkId);
     void deleteFav(String userId, String quickLinkId);
+    void deleteAll(String userId);
     Page<String> getFavouritesForUser(String userId, String continuation, int pageSize);}
