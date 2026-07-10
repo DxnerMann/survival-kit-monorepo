@@ -135,6 +135,7 @@ jobs:
             MAIL_PORT=${{ secrets.MAIL_PORT }}
             MAIL_USERNAME=${{ secrets.BREVO_USERNAME }}
             MAIL_PASSWORD=${{ secrets.BREVO_SMPT_KEY }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             EOF
 
       - name: Copy compose file to server
