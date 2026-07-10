@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -40,7 +41,7 @@ public class GlobalExceptionHandler {
                     errorCode.getMessage(),
                     Instant.now()
             );
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | NoSuchElementException ex) {
             error = new ApiError(
                     ErrorCode.UNKNOWN.getHttpStatus().value(),
                     ErrorCode.UNKNOWN.getCode(),
