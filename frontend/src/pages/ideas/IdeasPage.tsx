@@ -5,7 +5,6 @@ import {useEffect, useState} from "react";
 import {MessageSquareText} from "lucide-react";
 import FeedbackDialog from "../../components/shared/dialog/FeedbackDialog.tsx";
 import {getFeedback, submitFeedback} from "../../services/feedbackService.tsx";
-import {snackbarService} from "../../services/snackBarService.tsx";
 import Button from "../../components/shared/Button.tsx";
 import type {Feedback, FeedbackType} from "../../models/Feedback.tsx";
 import {getUserRole} from "../../services/tokenService.tsx";
@@ -35,6 +34,30 @@ const IdeasPage = () => {
         setContinuation(res.continuation);
         setLoading(false);
     };
+
+    const onFeedbackSubmit = async (data : {title: string, description: string, type: FeedbackType}) => {
+        try {
+            await submitFeedback(data.title, data.description, data.type);
+            const newFeedback : Feedback = {
+                id: "local-id",
+                title: data.title,
+                description: data.description,
+                type: data.type,
+                likes: 0,
+                dislikes: 0,
+                answer: "",
+                addedAt: formatDate(Date.now().toString()),
+                authorUsername: getUsername(),
+                authorUserId: "local-user-id",
+                lastUpdated: formatDate(Date.now().toString())
+            }
+
+            setFeedbacks(prev => [...prev, newFeedback]);
+            setShowFeedbackDialog(false);
+        } finally {
+            setShowFeedbackDialog(false);
+        }
+    }
 
     useEffect(() => {
 
@@ -68,23 +91,6 @@ const IdeasPage = () => {
         setFeedbacks(prev => prev.filter(f => f.id !== id));
     };
 
-    const onFeedbackSubmit = (title: string, description: string, type: FeedbackType) => {
-        const newFeedback : Feedback = {
-            id: "local-id",
-            title: title,
-            description: description,
-            type: type,
-            likes: 0,
-            dislikes: 0,
-            answer: "",
-            addedAt: formatDate(Date.now().toString()),
-            authorUsername: getUsername(),
-            authorUserId: "local-user-id",
-            lastUpdated: formatDate(Date.now().toString())
-        }
-
-        setFeedbacks(prev => [...prev, newFeedback]);
-    }
 
     return <div className="survival-kit-page">
         <div className="ideas-page">
@@ -100,14 +106,7 @@ const IdeasPage = () => {
                 isOpen={showFeedbackDialog}
                 onCancel={() => setShowFeedbackDialog(false)}
                 onSubmit={(data) => {
-                    try {
-                        onFeedbackSubmit(data.title, data.description, data.type);
-                        submitFeedback(data.title, data.description, data.type);
-                        setShowFeedbackDialog(false);
-                        snackbarService.showSnackbar({ type: "success",   text: "Beitrag abgesendet", showIcon: true });
-                    } catch {
-                        snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen.", showIcon: true });
-                    }
+                    onFeedbackSubmit(data);
                 }}
             />
             {

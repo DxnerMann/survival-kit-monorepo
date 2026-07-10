@@ -32,13 +32,6 @@ const LoginPage = () => {
 
             localStorage.removeItem('guest')
             navigate('/')
-        } catch (e) {
-            if (e instanceof Error) {
-                snackbarService.showSnackbar({ type: "error",   text: e.message, showIcon: true });
-            } else {
-                snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen. Versuche es später erneut", showIcon: true });
-                console.error(e);
-            }
         } finally {
             setLoading(false)
         }
@@ -48,7 +41,6 @@ const LoginPage = () => {
         try {
             setLoading(true)
             if (firstName.length > 30 || lastName.length > 30 || username.length > 30) {
-                snackbarService.showSnackbar({type: "error", text:"XXX", showIcon: true });
                 snackbarService.showSnackbar({ type: "error",   text: "Es sind Max 30 Zeichen lange Namen erlaubt", showIcon: true });
                 return
             }
@@ -82,12 +74,6 @@ const LoginPage = () => {
             })
 
             setMode('verify');
-        } catch (e) {
-            if (e instanceof Error) {
-                snackbarService.showSnackbar({type: "error", text:e.message, showIcon: true });
-            } else {
-                snackbarService.showSnackbar({type: "error", text:"Unbekannter Fehler", showIcon: true });
-            }
         } finally {
             setLoading(false)
         }

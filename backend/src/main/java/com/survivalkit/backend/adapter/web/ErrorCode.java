@@ -2,6 +2,11 @@ package com.survivalkit.backend.adapter.web;
 
 import org.springframework.http.HttpStatus;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
 public enum ErrorCode {
 
     // UNKNOWN (00x)
@@ -84,5 +89,16 @@ public enum ErrorCode {
         QUICKLINK,
         LECTURE,
         WIDGET
+    }
+
+    private static final Map<String, ErrorCode> BY_CODE = Arrays.stream(values())
+            .collect(Collectors.toMap(ErrorCode::getCode, e -> e));
+
+    public static ErrorCode fromCode(String code) {
+        ErrorCode result = BY_CODE.get(code);
+        if (result == null) {
+            throw new NoSuchElementException("No ErrorCode found for code: " + code);
+        }
+        return result;
     }
 }

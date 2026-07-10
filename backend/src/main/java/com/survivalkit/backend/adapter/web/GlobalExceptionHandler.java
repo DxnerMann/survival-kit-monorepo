@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     private ApiError resolveError(Exception exception) {
         ApiError error = null;
         try {
-            var errorCode = ErrorCode.valueOf(exception.getMessage());
+            var errorCode = ErrorCode.fromCode(exception.getMessage());
             error = new ApiError(
                     errorCode.getHttpStatus().value(),
                     errorCode.getCode(),

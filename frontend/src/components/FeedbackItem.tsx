@@ -28,6 +28,29 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [feedbackAnswer, setFeedbackAnswer] = useState(answer);
 
+
+    const onFeedbackAnswerSubmit = async (data: {answer: string}) => {
+        try {
+            setFeedbackAnswer(data.answer);
+            answerFeedback(id, data.answer);
+            setShowFeedbackAnswerDialog(false);
+            snackbarService.showSnackbar({ type: "success",   text: "Antwort gesendet", showIcon: true });
+        } finally {
+            setShowFeedbackAnswerDialog(false);
+        }
+    }
+
+    const onFeedbackDelete = async () => {
+        try {
+            onDelete(id);
+            await deleteFeedback(id);
+            setShowDeleteDialog(false);
+            snackbarService.showSnackbar({ type: "success",   text: "Beitrag gelöscht", showIcon: true });
+        } finally {
+            setShowDeleteDialog(false);
+        }
+    }
+
     const getTypeLabel = (type : FeedbackType) => {
 
         let color : string = "#777777";
@@ -143,14 +166,7 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                     isOpen={showFeedbackAnswerDialog}
                     onCancel={() => setShowFeedbackAnswerDialog(false)}
                     onSubmit={(data) => {
-                        try {
-                            setFeedbackAnswer(data.answer);
-                            answerFeedback(id, data.answer);
-                            setShowFeedbackAnswerDialog(false);
-                            snackbarService.showSnackbar({ type: "success",   text: "Antwort gesendet", showIcon: true });
-                        } catch {
-                            snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen.", showIcon: true });
-                        }
+                        onFeedbackAnswerSubmit(data);
                     }}
                     previousAnswer={answer}
                 />
@@ -158,14 +174,7 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                     isOpen={showDeleteDialog}
                     onCancel={() => setShowDeleteDialog(false)}
                     onSubmit={() => {
-                        try {
-                            onDelete(id);
-                            deleteFeedback(id);
-                            setShowDeleteDialog(false);
-                            snackbarService.showSnackbar({ type: "success",   text: "Beitrag gelöscht", showIcon: true });
-                        } catch {
-                            snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen.", showIcon: true });
-                        }
+                        onFeedbackDelete();
                     }}
                     title="Beitrag Löschen"
                     subtitle="Dieser Beitrag wird unwiederuflich gelöscht. Bist du sicher?"

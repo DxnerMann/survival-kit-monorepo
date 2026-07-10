@@ -11,12 +11,20 @@ import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionD
 import {suggestLink} from "../../services/quickLinkService.tsx";
 import LinkCard from "../../components/LinkCard/LinkCard.tsx";
 import UsefullLinks from "../../components/UsefullLinks.tsx";
-import {snackbarService} from "../../services/snackBarService.tsx";
 import Minigames from "../../components/Minigames.tsx";
 
 const DashboardPage = () => {
 
     const username = getUsername();
+
+    const onLinkSubmit = async (data : {title: string, description: string, url: string}) => {
+        try {
+            await suggestLink(data);
+            setShowGameSuggestionDialog(false);
+        } finally {
+            setShowGameSuggestionDialog(false);
+        }
+    }
 
     const welcomePhrases = [
         "Der frühe Wurm scheißt auf den Vogel",
@@ -122,15 +130,7 @@ const DashboardPage = () => {
                 <GameSuggestionDialog
                     isOpen={showGameSuggestionDialog}
                     onCancel={() => setShowGameSuggestionDialog(false)}
-                    onSubmit={(data) => {
-                        try {
-                            suggestLink(data);
-                            setShowGameSuggestionDialog(false);
-                            snackbarService.showSnackbar({ type: "success",   text: "Vorschlag abgesendet", showIcon: true });
-                        } catch {
-                            snackbarService.showSnackbar({ type: "error",   text: "Etwas ist schiefgelaufen.", showIcon: true });
-                        }
-                    }}
+                    onSubmit={(data) => {onLinkSubmit(data)}}
                 />
                 <PopularLinks />
                 <SectionHeading

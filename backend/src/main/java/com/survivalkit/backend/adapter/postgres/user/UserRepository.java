@@ -132,12 +132,12 @@ public class UserRepository implements UserPersistancePort {
 
     @Override
     public boolean isLastAdmin(String userId) {
-        var admins = jdbcClient.sql(Statements.GET_ADMINS.sql).query(UserModel.class).list();
+        var adminIds = jdbcClient.sql(Statements.GET_ADMINS.sql).query(String.class).list();
 
-        if (admins.size() != 1) {
+        if (adminIds.size() != 1) {
             return false;
         }
-        if (admins.getFirst() != null && admins.getFirst().id().equals(userId)) {
+        if (adminIds.getFirst() != null && adminIds.contains(userId)) {
             return true;
         }
         return false;
@@ -257,7 +257,7 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         GET_ADMINS(
         """
-                SELECT * FROM users WHERE role = 'ADMIN' 
+                SELECT id FROM users WHERE role = 'ADMIN' 
             """
         ),
         // language=sql

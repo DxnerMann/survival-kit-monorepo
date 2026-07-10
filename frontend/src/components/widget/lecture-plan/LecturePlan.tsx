@@ -12,7 +12,6 @@ import type {Lecture} from "../../../models/Lecture.tsx";
 import LectureCalendar from "../../LectureCalendar.tsx";
 import ColorPicker from "../../shared/ColorPicker.tsx";
 import SelectionDropdown from "../../shared/SelectionDropdown.tsx";
-import {snackbarService} from "../../../services/snackBarService.tsx";
 
 interface LecturePlanData {
     lectureColor: string,
@@ -83,7 +82,6 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 }));
             } catch (error) {
                 console.error(error);
-                snackbarService.showSnackbar({type: "error", text:"Fehler beim Laden des Vorlesungsplans.", showIcon: true });
             }
         })();
     }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset]);
