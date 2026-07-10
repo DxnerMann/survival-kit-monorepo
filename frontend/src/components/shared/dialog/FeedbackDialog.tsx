@@ -53,10 +53,6 @@ export default function FeedbackDialog({
         >
             <form
                 className="feedback-form"
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSubmit();
-                }}
             >
                 <div className="form-group">
                     <label htmlFor="type">Typ</label>
@@ -89,7 +85,6 @@ export default function FeedbackDialog({
                         text={"Abbrechen"}
                         onClick={onCancel}
                         variant="secondary"
-                        type="reset"
                         fullWidth={true}
                     />
 
@@ -97,7 +92,6 @@ export default function FeedbackDialog({
                         text={"Absenden"}
                         onClick={handleSubmit}
                         variant="primary"
-                        type="submit"
                         fullWidth={true}
                     />
                 </div>

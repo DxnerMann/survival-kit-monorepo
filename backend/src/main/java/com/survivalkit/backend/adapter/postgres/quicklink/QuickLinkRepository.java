@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.quicklink;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Page;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -74,9 +75,9 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                 ).update();
 
         if (quickLink.approvedByAdmin()) {
-            securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("Quicklink %s updated"));
+            securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("Quicklink %s updated"));
         } else {
-            securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("New Quicklink suggestion created with id %s", quickLink.id()));
+            securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("New Quicklink suggestion created with id %s", quickLink.id()));
         }
     }
 
@@ -85,7 +86,7 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
         jdbcClient.sql(Statements.DELETE.sql)
                 .paramSource(new MapSqlParameterSource("id", id))
                 .update();
-        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("Quicklink with id %s deleted. ", id));
+        securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("Quicklink with id %s deleted. ", id));
     }
 
     @Override

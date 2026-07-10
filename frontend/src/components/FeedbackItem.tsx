@@ -27,6 +27,8 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
     const [showFeedbackAnswerDialog, setShowFeedbackAnswerDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [feedbackAnswer, setFeedbackAnswer] = useState(answer);
+    const [localLikes, setLocalLikes] = useState(likes);
+    const [localDislikes, setLocalDislikes] = useState(dislikes);
 
 
     const onFeedbackAnswerSubmit = async (data: {answer: string}) => {
@@ -90,6 +92,11 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
             return;
         }
         rateFeedback(id, like);
+        if (like) {
+            setLocalLikes(prev => prev + 1);
+        } else {
+            setLocalDislikes(prev => prev + 1);
+        }
     }
 
     return <div className="feedback-item-wrapper">
@@ -127,14 +134,14 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                     onClick={() => onRatingClicked(true)}
                 >
                     <ThumbsUp size={20} />
-                    <h5>{likes}</h5>
+                    <h5>{localLikes}</h5>
                 </div>
                 <div
                     className={id === "local-id" ? "feedback-item-rateing-button deactivated" : "feedback-item-rateing-button"}
                     onClick={() => onRatingClicked(false)}
                 >
                     <ThumbsDown size={20} />
-                    <h5>{dislikes}</h5>
+                    <h5>{localDislikes}</h5>
                 </div>
                 {
                     getUserRole() === "ADMIN" &&

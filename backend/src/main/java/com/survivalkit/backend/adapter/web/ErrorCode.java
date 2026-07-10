@@ -88,7 +88,9 @@ public enum ErrorCode {
         EXTERNAL,
         QUICKLINK,
         LECTURE,
-        WIDGET
+        WIDGET,
+        COURSE,
+        FEEDBACK
     }
 
     private static final Map<String, ErrorCode> BY_CODE = Arrays.stream(values())

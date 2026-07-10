@@ -1,10 +1,12 @@
 package com.survivalkit.backend.adapter.postgres.logs;
 
+import com.survivalkit.backend.adapter.web.ErrorCode;
+
 import java.time.Instant;
 
 public record Log(
     SecurityLogType type,
-    SecurityLogSubType subType,
+    ErrorCode.ErrorCategory subType,
     Instant timestamp,
     String message
 ) {

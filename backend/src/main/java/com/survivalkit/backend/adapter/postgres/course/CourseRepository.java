@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.course;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.security.SecurityLog;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -26,7 +27,7 @@ public class CourseRepository implements CoursePersistancePort {
                 .paramSource(new MapSqlParameterSource("course", course)
                         .addValue("raplaBaseUrl", raplaBaseUrl))
                 .update();
-        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("New Course %s with Url %s saved.", course, raplaBaseUrl));
+        securityLog.logInfo(ErrorCode.ErrorCategory.COURSE, String.format("New Course %s with Url %s saved.", course, raplaBaseUrl));
     }
 
     @Override

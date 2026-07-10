@@ -77,7 +77,7 @@ const IdeasPage = () => {
         };
 
         loadInit();
-    }, [feedbacks, loading]);
+    }, []);
 
     const formatDate = (instant: string): string => {
         return new Date(instant).toLocaleDateString("de-DE", {
