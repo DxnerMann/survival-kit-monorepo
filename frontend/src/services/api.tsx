@@ -49,6 +49,10 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "06x00000001": { text: "Kurs nicht gefunden.", type: "error" },
 };
 
+/*
+TODO: Remove Individual Snackbars when Fetching an Api, since snackbar is now shown here
+ */
+
 export function resolveError(error: ApiError): void {
     const mapping = ERROR_CODE_MAP[error.errorCode];
 
