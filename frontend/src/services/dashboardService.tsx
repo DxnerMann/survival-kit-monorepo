@@ -1,4 +1,4 @@
-import {api} from "./api.tsx";
+import {api, checkResponse} from "./api.tsx";
 import type {UserWidget} from "../models/UserWidget.tsx";
 import {authService} from "./authService.tsx";
 import LecturePlan from "../components/widget/lecture-plan/LecturePlan.tsx";
@@ -9,7 +9,7 @@ import DailyCat from "../components/widget/cat/DailyCat.tsx";
 
 const API_URL = api.baseUrl;
 
-const getDashboardLayout =  async () : Promise<UserWidget[]> => {
+const getDashboardLayout = async (): Promise<UserWidget[]> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/dashboard`, {
@@ -19,59 +19,45 @@ const getDashboardLayout =  async () : Promise<UserWidget[]> => {
         },
     })
 
-    if (response.ok) {
-        return await response.json();
-    } else {
-        throw new Error("Failed to get Dashboard Layout")
-    }
+    await checkResponse(response);
+
+    return await response.json();
 }
 
-const saveDashbordLayout = async (widgets : UserWidget[])  => {
-    try {
-        const token = authService.getToken();
+const saveDashbordLayout = async (widgets: UserWidget[]): Promise<void> => {
+    const token = authService.getToken();
 
-        const response = await fetch(`${API_URL}/dashboard`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(widgets)
+    const response = await fetch(`${API_URL}/dashboard`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(widgets)
+    })
+
+    await checkResponse(response);
+}
+
+const saveWidgetData = async (id: string, data: string): Promise<void> => {
+    const token = authService.getToken();
+
+    const response = await fetch(`${API_URL}/dashboard/widget`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            id,
+            data
         })
+    })
 
-        if (response.ok) {
-            return;
-        }
-    } catch {
-        throw new Error("Failed to Save Dashboard Layout for User");
-    }
+    await checkResponse(response);
 }
 
-const saveWidgetData = async (id : string, data: string)  => {
-    try {
-        const token = authService.getToken();
-
-        const response = await fetch(`${API_URL}/dashboard/widget`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                id,
-                data
-            })
-        })
-
-        if (response.ok) {
-            return;
-        }
-    } catch {
-        throw new Error("Failed to Save Widget Data for User");
-    }
-}
-
-const getDefaultLayout = () : UserWidget[] => {
+const getDefaultLayout = (): UserWidget[] => {
     return [
         {
             id: "default-lecture-plan",
@@ -94,7 +80,7 @@ const getDefaultLayout = () : UserWidget[] => {
     ]
 }
 
-const getDefaultToolbox = () : UserWidget[] => {
+const getDefaultToolbox = (): UserWidget[] => {
     return [
         {
             id: "default-clock",
@@ -126,7 +112,7 @@ const getDefaultToolbox = () : UserWidget[] => {
     ]
 }
 
-const decideOnWidget = (widget : UserWidget, isPreview : boolean)=> {
+const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
     switch (widget.type) {
         case "LECTURE_PLAN":
             return <LecturePlan title={"Vorlesungsplan"} data={widget.data} id={widget.id} isPreview={isPreview} />

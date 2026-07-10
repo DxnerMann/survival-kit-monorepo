@@ -1,4 +1,5 @@
-import {api} from "./api.tsx";
+import type {ApiError} from '../models/ApiError.tsx'
+import {api, checkResponse, resolveError} from "./api.tsx";
 import {authService} from "./authService.tsx";
 import type {DayOfWeek, Lecture} from "../models/Lecture.tsx";
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -8,11 +9,11 @@ const API_URL = api.baseUrl;
 const lectureCache = new Map<string, Promise<Lecture[]>>();
 
 const DEBUG_TIME_OFFSET: { day: number; hours: number; minutes: number } =
-{
-    day: 0,
-    hours: 0,
-    minutes: 0,
-};
+    {
+        day: 0,
+        hours: 0,
+        minutes: 0,
+    };
 
 const getNow = (): Date => {
     const real = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
@@ -22,9 +23,8 @@ const getNow = (): Date => {
     return debug;
 };
 
-const getAvailableCourses =  async () : Promise<string[]> => {
+const getAvailableCourses = async (): Promise<string[]> => {
     try {
-
         const response = await fetch(`${API_URL}/profile/courses`, {
             method: 'GET',
             headers: {
@@ -34,8 +34,7 @@ const getAvailableCourses =  async () : Promise<string[]> => {
 
         if (response.ok) {
             return await response.json();
-        }
-        else {
+        } else {
             return [];
         }
     } catch {
@@ -43,8 +42,7 @@ const getAvailableCourses =  async () : Promise<string[]> => {
     }
 }
 
-const extractCourse  =  async (raplaUrl : string) : Promise<string> => {
-
+const extractCourse = async (raplaUrl: string): Promise<string> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/lecture/course?raplaUrl=${encodeURIComponent(raplaUrl)}`,
@@ -57,11 +55,9 @@ const extractCourse  =  async (raplaUrl : string) : Promise<string> => {
         }
     );
 
-    if (response.ok) {
-        return await response.text();
-    } else {
-        throw new Error("Failed to get Course");
-    }
+    await checkResponse(response);
+
+    return await response.text();
 }
 
 const getLecturesForWeek = async (weekOffset: number, course: string): Promise<Lecture[]> => {
@@ -76,17 +72,18 @@ const getLecturesForWeek = async (weekOffset: number, course: string): Promise<L
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    ...(token !== undefined && { Authorization: `Bearer ${token}` }),
                 },
-                ...(token !== undefined && { Authorization: `Bearer ${token}` }),
             }
         )
-        .then(res => {
-            if (!res.ok) {
-                lectureCache.delete(cacheKey);
-                throw new Error("Failed to get Lectures for Week");
-            }
-            return res.json() as Promise<Lecture[]>;
-        });
+            .then(async res => {
+                if (!res.ok) {
+                    lectureCache.delete(cacheKey);
+                    const apiError: ApiError = await res.json();
+                    resolveError(apiError);
+                }
+                return res.json() as Promise<Lecture[]>;
+            });
 
         lectureCache.set(cacheKey, promise);
     }
@@ -196,8 +193,7 @@ const useCurrentAndNextLecture = (course: string | null) => {
     return { current, next, refresh };
 };
 
-const getLectureNamesForSemester = async (course: string) : Promise<string[]> => {
-
+const getLectureNamesForSemester = async (course: string): Promise<string[]> => {
     if (course === "") {
         return [];
     }
@@ -212,23 +208,21 @@ const getLectureNamesForSemester = async (course: string) : Promise<string[]> =>
         }
     );
 
-    if (response.ok) {
-        return await response.json();
-    } else {
-        throw new Error("Failed to get Lectures Names for Semester");
-    }
+    await checkResponse(response);
+
+    return await response.json();
 }
 
-const isToday = (day : string) =>
+const isToday = (day: string) =>
 {
     const now = getNow();
     return DAYS_OF_WEEK[now.getDay() === 0 ? 6 : now.getDay() - 1] === day;
 }
 
-const isTomorrow = (day : string) =>
+const isTomorrow = (day: string) =>
 {
     const now = getNow();
-    return DAYS_OF_WEEK[(now.getDay() + 1 )=== 0 ? 6 : now.getDay()] === day;
+    return DAYS_OF_WEEK[(now.getDay() + 1) === 0 ? 6 : now.getDay()] === day;
 }
 
 let timerCourse: string | null = null;

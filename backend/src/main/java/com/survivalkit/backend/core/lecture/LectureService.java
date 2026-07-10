@@ -2,6 +2,7 @@ package com.survivalkit.backend.core.lecture;
 
 import com.survivalkit.backend.adapter.postgres.course.CoursePersistancePort;
 import com.survivalkit.backend.adapter.rapla.RaplaApiPort;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.course.CourseNotFoundException;
 import com.survivalkit.backend.shared.Lecture;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class LectureService implements LecturePort {
             if (raplaCourseBaseUrl.isPresent()) {
                 return raplaApiPort.getLectures(weekOffset, raplaCourseBaseUrl.get());
             } else if(raplaUrl == null || raplaUrl.isEmpty()) {
-                throw new CourseNotFoundException(course);
+                throw new CourseNotFoundException(ErrorCode.COURSE_NOT_FOUND.getCode());
             }
         }
         if (raplaUrl != null && !raplaUrl.isEmpty()) {
@@ -35,7 +36,7 @@ public class LectureService implements LecturePort {
             coursePersistancePort.save(extractedCourse, baseUrl);
             return raplaApiPort.getLectures(weekOffset, baseUrl);
         }
-        throw new IllegalArgumentException("course and raplaUrl cannot be both empty");
+        throw new IllegalArgumentException(ErrorCode.RAPLA_URL_AND_COURSE_EMPTY.getCode());
     }
 
     @Override
@@ -44,6 +45,6 @@ public class LectureService implements LecturePort {
         if (raplaCourseBaseUrl.isPresent()) {
             return raplaApiPort.getLectureNamesForSemester(raplaCourseBaseUrl.get());
         }
-        throw new CourseNotFoundException(course);
+        throw new CourseNotFoundException(ErrorCode.COURSE_NOT_FOUND.getCode());
     }
 }

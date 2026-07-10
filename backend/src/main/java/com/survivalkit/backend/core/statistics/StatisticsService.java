@@ -3,6 +3,7 @@ package com.survivalkit.backend.core.statistics;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.config.SecurityContext;
 import com.survivalkit.backend.core.user.AuthenticatedUser;
 import com.survivalkit.backend.shared.Page;
@@ -25,42 +26,37 @@ public class StatisticsService implements StatisticsPort {
     @Override
     public void saveTrackAction(TrackAction.Action action) {
 
-        var userId = SecurityContext.current().map(AuthenticatedUser::userId).orElse(null);
-
-        userTrackingPersistancePort.saveTrackAction(
-                new TrackAction(
-                        NanoId.generate(25),
-                        action,
-                        userId,
-                        null,
-                        Instant.now()
-                )
-        );
+        String userId = null;
+        try {
+            var user = SecurityContext.current();
+            userId = user.userId();
+        } finally {
+            userTrackingPersistancePort.saveTrackAction(
+                    new TrackAction(
+                            NanoId.generate(25),
+                            action,
+                            userId,
+                            null,
+                            Instant.now()
+                    )
+            );
+        }
     }
 
     @Override
     public Page<TrackAction> getUserActions(TrackAction.Action actionType, String continuation) {
 
         var user = SecurityContext.current();
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-        return  userTrackingPersistancePort.getUserActionsLast7Days(user.get().userId(), actionType, continuation);
+        return  userTrackingPersistancePort.getUserActionsLast7Days(user.userId(), actionType, continuation);
     }
 
     @Override
     public Page<TrackAction> getCourseActions(TrackAction.Action actionType, String continuation) {
         var authUser = SecurityContext.current();
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-        var user = userPersistancePort.getById(authUser.get().userId());
+
+        var user = userPersistancePort.getById(authUser.userId());
         if (user.isEmpty()) {
-            throw new IllegalStateException(String.format("User with id %s does not exist.", authUser.get().userId()));
+            throw new IllegalStateException(ErrorCode.USER_DOES_NOT_EXIST.getCode());
         }
         return userTrackingPersistancePort.getCourseActionsLast7Days(user.get().course(), actionType, continuation);
     }
@@ -73,25 +69,15 @@ public class StatisticsService implements StatisticsPort {
     @Override
     public int getActionSumForUser(TrackAction.Action target) {
         var user = SecurityContext.current();
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-        return userTrackingPersistancePort.getActionSumForUser(user.get().userId(), target).orElse(0);
+        return userTrackingPersistancePort.getActionSumForUser(user.userId(), target).orElse(0);
     }
 
     @Override
     public int getActionSumForCourse(TrackAction.Action target) {
         var authUser = SecurityContext.current();
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-        var user = userPersistancePort.getById(authUser.get().userId());
+        var user = userPersistancePort.getById(authUser.userId());
         if (user.isEmpty()) {
-            throw new IllegalStateException(String.format("User with id %s does not exist.", authUser.get().userId()));
+            throw new IllegalStateException(ErrorCode.USER_DOES_NOT_EXIST.getCode());
         }
         return userTrackingPersistancePort.getActionSumForCourse(user.get().course(), target).orElse(0);
     }

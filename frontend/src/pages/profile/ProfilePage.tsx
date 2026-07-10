@@ -24,6 +24,7 @@ import {snackbarService} from "../../services/snackBarService.tsx";
 import {useNavigate} from "react-router-dom";
 import DeleteDialog from "../../components/shared/dialog/DeleteDialog.tsx";
 import ChangeEmailDialog from "../../components/shared/dialog/ChangeEmailDialog.tsx";
+import {useCountdownTimer} from "../../services/utils.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -31,6 +32,7 @@ const ProfilePage = () => {
     const [currentTab, setCurrentTab] = useState<string>("PROFILE_SETTINGS")
     const [profileSettings, setprofileSettings] = useState<ProfileSettings>();
     const [selectedCourse, setSelectedCourse] = useState("");
+    const [isVerified, setIsVerified] = useState(false);
     const [isPictureDialogOpen, setIsPictureDialogOpen] = useState(false);
     const [avatarVersion, setAvatarVersion] = useState(0);
     const [profileColor, setProfileColor] = useState("");
@@ -40,6 +42,7 @@ const ProfilePage = () => {
     const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [showEmailDialog, setShowEmailDialog] = useState(false);
+    const { secondsLeft, reset } = useCountdownTimer(0);
 
     const navigate = useNavigate();
 
@@ -51,6 +54,7 @@ const ProfilePage = () => {
             setSelectedCourse(profileSettings.course);
             setProfileColor(profileSettings.color);
             setUsername(profileSettings.username);
+            setIsVerified(profileSettings.isVerified);
         }
         fetchData();
     }, []);
@@ -118,7 +122,12 @@ const ProfilePage = () => {
     }
 
     const handleResend = async () => {
-        await authService.resendVerification();
+        try {
+            await authService.resendVerification();
+            setIsVerified(true)
+        } finally {
+            reset(30)
+        }
     }
 
     async function onCourseChanged(course: string) {
@@ -228,8 +237,9 @@ const ProfilePage = () => {
                 </div>
                 <Info text={"Dein voller name, sowie deine Email-Adresse sind nur für dich einsehbar. Dein Benutzername, sowie dein Profilbild werden ggf. Öffentlich angezeit!"} type={"SUCCESS"} />
                 { !profileSettings.isVerified && <div className="not-varified-wrapper">
-                    <Info text="Deine Email Adresse ist noch nicht Verifiziert. Du wirst einige Funktionen nicht vollumfänglich verwenden können" type="ERROR" />
-                    <Button text="Jetzt Verifizieren" onClick={handleResend} />
+                    { !isVerified && <Info text="Deine Email Adresse ist noch nicht Verifiziert. Du wirst einige Funktionen nicht vollumfänglich verwenden können" type="ERROR" />}
+                    { isVerified && <Info text="Eine Bestätigungsmail wurde an die angegebene Adresse gesendet." type="INFO" />}
+                    <Button text={secondsLeft <= 0 && !isVerified ? "Verifizieren" : secondsLeft <= 0 && isVerified ? "Erneut senden" : "Erneut senden in " + secondsLeft} disabled={secondsLeft > 0} onClick={handleResend} />
                 </div> }
                 <br />
                 <Separator width={"100%"} height={"2px"} variant="secondary" />

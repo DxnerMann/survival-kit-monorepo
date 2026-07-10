@@ -1,5 +1,6 @@
 package com.survivalkit.backend.core.security;
 
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.config.SecurityContext;
 import com.survivalkit.backend.core.user.AuthenticatedUser;
 import com.survivalkit.backend.core.user.exception.AccessDeniedException;
@@ -75,24 +76,24 @@ public class AuthGuard extends OncePerRequestFilter {
         try {
             var authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
-                throw new UserUnauthorizedException("User Unauthorized");
+                throw new UserUnauthorizedException(ErrorCode.UNAUTHORIZED.getCode());
             }
 
             var token = authHeader.substring(BEARER_PREFIX.length()).trim();
             var maybeUser = tokenService.validate(token);
 
             if (maybeUser.isEmpty()) {
-                throw new UserUnauthorizedException("Invalid or expired token.");
+                throw new UserUnauthorizedException(ErrorCode.TOKEN_INVALID_OR_EXPIRED.getCode());
             }
 
             var user = maybeUser.get();
 
             if (!user.isVerified()) {
-                throw new UserUnauthorizedException("User not Verified Yet.");
+                throw new UserUnauthorizedException(ErrorCode.NOT_VERIFIED.getCode());
             }
 
             if (!user.role().hasAtLeast(requiredRole)) {
-                throw new AccessDeniedException(requiredRole);
+                throw new AccessDeniedException(ErrorCode.NOT_REQUIRED_ROLE.getCode());
             }
 
             SecurityContext.set(user);

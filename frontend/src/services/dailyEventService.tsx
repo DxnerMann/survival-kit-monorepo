@@ -1,15 +1,11 @@
-import {api} from "./api.tsx";
+import {api, checkResponse} from "./api.tsx";
 
 const API_URL = api.baseUrl;
 
+export const getDailyCat = async (): Promise<Blob> => {
+    const response = await fetch(`${API_URL}/daily/cat`);
 
-export const getDailyCat = async () => {
-
-    const response = await fetch(`${API_URL}/daily/cat?`);
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch daily Cat image: ${response.statusText}`);
-    }
+    await checkResponse(response);
 
     return response.blob();
 }

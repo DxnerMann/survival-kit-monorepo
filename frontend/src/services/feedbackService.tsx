@@ -1,10 +1,10 @@
-import {api} from "./api.tsx";
+import {api, checkResponse} from "./api.tsx";
 import type {Feedback, FeedbackType} from "../models/Feedback.tsx";
 import {authService} from "./authService.tsx";
 
 const API_URL = api.baseUrl;
 
-export const submitFeedback = async (title: string, description: string, type: FeedbackType) => {
+export const submitFeedback = async (title: string, description: string, type: FeedbackType): Promise<void> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/feedback`, {
@@ -20,9 +20,7 @@ export const submitFeedback = async (title: string, description: string, type: F
         })
     })
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 }
 
 export const getFeedback = async (
@@ -36,14 +34,12 @@ export const getFeedback = async (
 
     const response = await fetch(`${API_URL}/feedback?${params.toString()}`);
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch quick links: ${response.statusText}`);
-    }
+    await checkResponse(response);
 
     return response.json();
 }
 
-export const rateFeedback = async (id: string, upVote: boolean) => {
+export const rateFeedback = async (id: string, upVote: boolean): Promise<void> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/feedback/rate?id=${id}&upVote=${upVote}`, {
@@ -54,12 +50,10 @@ export const rateFeedback = async (id: string, upVote: boolean) => {
         }
     })
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 }
 
-export const deleteFeedback = async (id: string) => {
+export const deleteFeedback = async (id: string): Promise<void> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/feedback?id=${id}`, {
@@ -70,12 +64,10 @@ export const deleteFeedback = async (id: string) => {
         }
     })
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 }
 
-export const answerFeedback = async (id: string, answer: string) => {
+export const answerFeedback = async (id: string, answer: string): Promise<void> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/feedback/answer`, {
@@ -90,12 +82,10 @@ export const answerFeedback = async (id: string, answer: string) => {
         })
     })
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 }
 
-export const hasAlreadyVoted = async (id: string) : Promise<boolean> => {
+export const hasAlreadyVoted = async (id: string): Promise<boolean> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/feedback/alreadyVoted?id=${id}`, {
@@ -106,9 +96,7 @@ export const hasAlreadyVoted = async (id: string) : Promise<boolean> => {
         }
     })
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 
     return response.json();
 }

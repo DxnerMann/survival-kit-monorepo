@@ -1,10 +1,13 @@
 package com.survivalkit.backend.adapter.web;
 
+import org.springframework.http.HttpStatus;
+
 import java.time.Instant;
 
 public record ApiError(
-        int status,
-        String error,
+        int httpStatusCode,
+        String errorCode,
+        HttpStatus httpStatus,
         String message,
         Instant timestamp
 ) {

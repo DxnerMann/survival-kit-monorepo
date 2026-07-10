@@ -21,92 +21,38 @@ public class GlobalExceptionHandler {
         this.securityLog = securityLog;
     }
 
-    @ExceptionHandler(UserUnauthorizedException.class)
-    public ResponseEntity<ApiError> handleGeneric(UserUnauthorizedException ex) {
-        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiError(401, HttpStatus.UNAUTHORIZED.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiError> handleGeneric(AccessDeniedException ex) {
-        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(new ApiError(403, HttpStatus.FORBIDDEN.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ApiError> handleGeneric(UserAlreadyExistsException ex) {
-        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleGeneric(IllegalArgumentException ex) {
-        securityLog.logWarning(Log.SecurityLogSubType.API, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ApiError> handleGeneric(InvalidCredentialsException ex) {
-        securityLog.logError(Log.SecurityLogSubType.AUTH, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(CannotDeleteLastAdminException.class)
-    public ResponseEntity<ApiError> handleGeneric(CannotDeleteLastAdminException ex) {
-        securityLog.logWarning(Log.SecurityLogSubType.API, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(CourseNotFoundException.class)
-    public ResponseEntity<ApiError> handleGeneric(CourseNotFoundException ex) {
-        securityLog.logError(Log.SecurityLogSubType.API, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(CourseExtractionFailedException.class)
-    public ResponseEntity<ApiError> handleGeneric(CourseExtractionFailedException ex) {
-        securityLog.logError(Log.SecurityLogSubType.RAPLA, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError(400, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiError> handleGeneric(UserNotFoundException ex) {
-        securityLog.logError(Log.SecurityLogSubType.API, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(new ApiError(404, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
-    @ExceptionHandler(UsernameChangeToSoonException.class)
-    public ResponseEntity<ApiError> handleGeneric(UsernameChangeToSoonException ex) {
-        return ResponseEntity
-                .status(HttpStatus.UNPROCESSABLE_CONTENT)
-                .body(new ApiError(422, HttpStatus.UNPROCESSABLE_CONTENT.getReasonPhrase().toUpperCase(),ex.getMessage(), Instant.now()));
-    }
-
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(Exception ex) {
-        ex.printStackTrace();
-        securityLog.logError(Log.SecurityLogSubType.UNCATEGORIZED, ex.getMessage());
+    public ResponseEntity<ApiError> handleError(Exception ex) {
+        var resolved = resolveError(ex);
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiError(500, HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase().toUpperCase(),"An unexpected error occurred", Instant.now()));
+                .status(resolved.httpStatus())
+                .body(resolved);
+    }
+
+    private ApiError resolveError(Exception exception) {
+        ApiError error = null;
+        try {
+            var errorCode = ErrorCode.fromCode(exception.getMessage());
+            error = new ApiError(
+                    errorCode.getHttpStatus().value(),
+                    errorCode.getCode(),
+                    errorCode.getHttpStatus(),
+                    errorCode.getMessage(),
+                    Instant.now()
+            );
+        } catch (IllegalArgumentException ex) {
+            error = new ApiError(
+                    ErrorCode.UNKNOWN.getHttpStatus().value(),
+                    ErrorCode.UNKNOWN.getCode(),
+                    ErrorCode.UNKNOWN.getHttpStatus(),
+                    ErrorCode.UNKNOWN.getMessage(),
+                    Instant.now()
+            );
+            exception.printStackTrace();
+        } finally {
+            // securityLog.logError(Log.SecurityLogSubType.UNCATEGORIZED, ex.getMessage());
+        }
+        return error;
     }
 
 }

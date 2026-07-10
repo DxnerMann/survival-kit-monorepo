@@ -1,11 +1,11 @@
-import {api} from "./api.tsx";
+import {api, checkResponse} from "./api.tsx";
 import {authService} from "./authService.tsx";
 import type {TrackAction, TrackActionType} from "../models/TrackAction.tsx";
 import type {Page} from "../models/Page.tsx";
 
 const API_URL = api.baseUrl;
 
-export const trackActivity = async (action : TrackActionType) => {
+export const trackActivity = async (action: TrackActionType): Promise<void> => {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/track/action?action=${action}`, {
@@ -16,9 +16,7 @@ export const trackActivity = async (action : TrackActionType) => {
         }
     });
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 }
 
 export const getUserActions = async (
@@ -35,6 +33,8 @@ export const getUserActions = async (
             ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
     });
+
+    await checkResponse(response);
 
     return response.json();
 };
@@ -54,6 +54,8 @@ export const getCourseActions = async (
         },
     });
 
+    await checkResponse(response);
+
     return response.json();
 };
 
@@ -72,6 +74,8 @@ export const getGlobalActions = async (
         },
     });
 
+    await checkResponse(response);
+
     return response.json();
 };
 
@@ -88,6 +92,8 @@ export const getUserActionSum = async (
             ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
     });
+
+    await checkResponse(response);
 
     return response.json();
 };
@@ -106,6 +112,8 @@ export const getCourseActionSum = async (
         },
     });
 
+    await checkResponse(response);
+
     return response.json();
 };
 
@@ -122,6 +130,8 @@ export const getGlobalActionSum = async (
             ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
     });
+
+    await checkResponse(response);
 
     return response.json();
 };
@@ -164,4 +174,3 @@ export const groupActionsByDay = (
 
     return Array.from(buckets.values());
 };
-

@@ -85,11 +85,4 @@ public class ProfileController {
         }
         return ResponseEntity.ok().build();
     }
-
-    /*
-    * TODO:
-    *  - Change Email Endpoint
-    *       - Reset Verification / Rework Verification (maybe make it possible to log in, but not do anything)
-    *  - Add Custom Profile Accent Color Functionality
-     */
 }

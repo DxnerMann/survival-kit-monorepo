@@ -1,6 +1,7 @@
 export type ApiError = {
-    status: number
-    error: string
+    httpStatusCode: number
+    errorCode: string
+    httpStatus: string
     message: string,
     timestamp: string
 }

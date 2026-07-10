@@ -1,4 +1,4 @@
-import {api} from "./api.tsx";
+import {api, checkResponse} from "./api.tsx";
 import type {SecurityLog} from "../models/SecurityLog.tsx";
 import {authService} from "./authService.tsx";
 
@@ -22,9 +22,7 @@ export const getLatestLogs = async (
         }
     });
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch quick links: ${response.statusText}`);
-    }
+    await checkResponse(response);
 
     return response.json();
 };

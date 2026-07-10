@@ -8,6 +8,7 @@ import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetPersistancePort;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;
 import com.survivalkit.backend.config.SecurityContext;
@@ -63,14 +64,14 @@ public class AuthService implements AuthPort {
     public void register(RegisterRequest request) {
 
         if (!isEmailValid(request.email()) || isPasswordInvalid(request.password())) {
-            throw new InvalidCredentialsException("Password or Email are not Valid");
+            throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode());
         }
 
         var existingUser = userPersistancePort.findByEmailOrUsername(request.email(), request.username());
 
         if (existingUser.isPresent()) {
             if (existingUser.get().isVerified()) {
-                throw new UserAlreadyExistsException(request.email(), request.username());
+                throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
             } else {
                 emailPort.sendVerificationEmail(request.email(), request.firstName(), existingUser.get().verificationToken());
                 return;
@@ -134,7 +135,7 @@ public class AuthService implements AuthPort {
     public LoginResponse login(String email, String password) {
         var user = userPersistancePort.findByEmailOrUsername(email, "");
         if (user.isEmpty() || isPasswordIncorrect(password, user.get().password())) {
-            throw new InvalidCredentialsException("Invalid Email or Password");
+            throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode());
         }
         var existingUser = user.get();
 
@@ -148,22 +149,15 @@ public class AuthService implements AuthPort {
 
     @Override
     public LoginResponse validate() {
-        var authUser = SecurityContext.current();
+        var user = SecurityContext.current();
 
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
+        if (tokenService.validate(user.token()).isEmpty()) {
+            throw new UserUnauthorizedException(ErrorCode.TOKEN_INVALID_OR_EXPIRED.getCode());
         }
-
-        if (tokenService.validate(authUser.get().token()).isEmpty()) {
-            throw new UserUnauthorizedException("Token is Invalid or Expired");
-        }
-        var user = authUser.get();
 
         var existingUser = userPersistancePort.findByEmailOrUsername(user.email(), "");
         if (existingUser.isEmpty()) {
-            throw new UserUnauthorizedException("User Does not exist");
+            throw new UserUnauthorizedException(ErrorCode.USER_DOES_NOT_EXIST.getCode());
         }
         statisticsPort.saveTrackAction(TrackAction.Action.LOGGED_IN);
         return new LoginResponse(
@@ -178,24 +172,18 @@ public class AuthService implements AuthPort {
     public LoginResponse changePassword(String oldPassword, String newPassword) {
         var authUser = SecurityContext.current();
 
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        var user = userPersistancePort.getById(authUser.get().userId());
+        var user = userPersistancePort.getById(authUser.userId());
         if (user.isEmpty() || isPasswordIncorrect(oldPassword, user.get().password())) {
-            throw new InvalidCredentialsException("Invalid Password");
+            throw new InvalidCredentialsException(ErrorCode.OLD_PASSWORD_INVALID.getCode());
         }
 
         var existingUser = user.get();
 
         if (!existingUser.isVerified()) {
-            throw new UserUnauthorizedException("User is not yet Verified");
+            throw new UserUnauthorizedException(ErrorCode.NOT_VERIFIED.getCode());
         }
         if (isPasswordInvalid(newPassword)) {
-            throw new InvalidCredentialsException("Password is not Valid");
+            throw new InvalidCredentialsException(ErrorCode.PASSWORD_NOT_VALID.getCode());
         }
         userPersistancePort.updatePassword(existingUser.id(), hashPassword(newPassword));
         return new LoginResponse(
@@ -209,31 +197,17 @@ public class AuthService implements AuthPort {
     @Override
     public void logout() {
         var authUser = SecurityContext.current();
-
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        tokenService.revoke(authUser.get().token());
+        tokenService.revoke(authUser.token());
     }
 
     @Override
     @Transactional
     public void deleteAccount() {
         var authUser = SecurityContext.current();
-
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        var userId = authUser.get().userId();
+        var userId = authUser.userId();
 
         if (userPersistancePort.isLastAdmin(userId)) {
-            throw new CannotDeleteLastAdminException("Unable to delete the last Admin.");
+            throw new CannotDeleteLastAdminException(ErrorCode.UNABLE_TO_DELETE_LAST_ADMIN.getCode());
         }
 
         favouritePersistancePort.deleteAll(userId);
@@ -248,27 +222,21 @@ public class AuthService implements AuthPort {
     @Override
     public void changeEmail(String email) {
         var authUser = SecurityContext.current();
-
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-        var userId = authUser.get().userId();
+        var userId = authUser.userId();
 
         if (!isEmailValid(email)) {
-            throw new InvalidCredentialsException("Password or Email are not Valid");
+            throw new InvalidCredentialsException(ErrorCode.EMAIL_NOT_VALID.getCode());
         }
 
         var existingUser = userPersistancePort.findByEmailOrUsername(email, "");
 
         if (existingUser.isPresent()) {
             if (existingUser.get().isVerified()) {
-                throw new UserAlreadyExistsException(email, "");
+                throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
             }
         }
 
-        var user = userPersistancePort.getById(authUser.get().userId());
+        var user = userPersistancePort.getById(authUser.userId());
 
         if (user.isPresent()) {
             var token = tokenService.generateToken(userId, RoleLevel.USER, email, user.get().username());
@@ -283,14 +251,7 @@ public class AuthService implements AuthPort {
     @Override
     public void sendVerifcationEmailAgain() {
         var authUser = SecurityContext.current();
-
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        var user = userPersistancePort.getById(authUser.get().userId());
+        var user = userPersistancePort.getById(authUser.userId());
         user.ifPresent(userModel -> emailPort.sendVerificationEmail(userModel.email(), userModel.firstname(), userModel.verificationToken()));
     }
 
