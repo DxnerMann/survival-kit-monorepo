@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.favourites;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Page;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -29,7 +30,7 @@ public class FavouriteRepository implements FavouritePersistancePort {
                 .paramSource(new MapSqlParameterSource("userId", userId)
                         .addValue("quickLinkId", quickLinkId)
                 ).update();
-        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("New Favourite saved for user %s with ID %s", userId, quickLinkId));
+        securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("New Favourite saved for user %s with ID %s", userId, quickLinkId));
     }
 
     @Override

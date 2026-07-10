@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.user;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.RoleLevel;
@@ -45,7 +46,7 @@ public class UserRepository implements UserPersistancePort {
                         .addValue("img", user.img().img())
                         .addValue("imgType", user.img().imgType().toString())
                 ).update();
-        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User created with id %s", user.id()));
+        securityLog.logInfo(ErrorCode.ErrorCategory.USER, String.format("User created with id %s", user.id()));
     }
 
     @Override
@@ -71,7 +72,7 @@ public class UserRepository implements UserPersistancePort {
                 .paramSource(new MapSqlParameterSource("id", userId)
                         .addValue("isVerified", verified)
                 ).update();
-        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User with id %s was verified", userId));
+        securityLog.logInfo(ErrorCode.ErrorCategory.USER, String.format("User with id %s was verified", userId));
     }
 
     @Override
@@ -80,7 +81,7 @@ public class UserRepository implements UserPersistancePort {
                 .paramSource(new MapSqlParameterSource("id", userId)
                         .addValue("course", course)
                 ).update();
-        securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User-Course changed for user with id %s", userId));
+        securityLog.logInfo(ErrorCode.ErrorCategory.USER, String.format("User-Course changed for user with id %s", userId));
     }
 
     @Override
