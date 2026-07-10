@@ -134,13 +134,22 @@ public class UserRepository implements UserPersistancePort {
     public boolean isLastAdmin(String userId) {
         var admins = jdbcClient.sql(Statements.GET_ADMINS.sql).query(UserModel.class).list();
 
-        if (admins.size() > 1) {
+        if (admins.size() != 1) {
             return false;
         }
         if (admins.getFirst() != null && admins.getFirst().id().equals(userId)) {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void changeEmail(String userId, String newEmail, String newToken) {
+        jdbcClient.sql(Statements.CHANGE_EMAIL.sql)
+                .paramSource(new MapSqlParameterSource("email", newEmail)
+                        .addValue("id", userId)
+                        .addValue("verificationToken", newToken)
+                ).update();
     }
 
     private static final RowMapper<UserModel> USER_ROW_MAPPER = (rs, rowNum) -> {
@@ -212,7 +221,7 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         USER_PROFILE(
         """
-                SELECT firstname, lastname, course, role, email, username, color, id as userId FROM users WHERE id = :id;
+                SELECT firstname, lastname, course, role, email, username, color, id as userId, isverified FROM users WHERE id = :id;
             """
         ),
         // language=sql
@@ -250,6 +259,12 @@ public class UserRepository implements UserPersistancePort {
         """
                 SELECT * FROM users WHERE role = 'ADMIN' 
             """
+        ),
+        // language=sql
+        CHANGE_EMAIL(
+                """
+                        UPDATE users SET email = :email, verificationToken = :verificationToken, isverified = false WHERE id = :id
+                    """
         );
 
         private String sql;

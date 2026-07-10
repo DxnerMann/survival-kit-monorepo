@@ -137,9 +137,6 @@ public class AuthService implements AuthPort {
             throw new InvalidCredentialsException("Invalid Email or Password");
         }
         var existingUser = user.get();
-        if (!existingUser.isVerified()) {
-            throw new UserUnauthorizedException("User is not yet Verified");
-        }
 
         return new LoginResponse(
                 tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
@@ -245,7 +242,56 @@ public class AuthService implements AuthPort {
         feedbackPersistancePort.deleteUser(userId);
         userPersistancePort.deleteUser(userId);
 
-        logout();
+
+    }
+
+    @Override
+    public void changeEmail(String email) {
+        var authUser = SecurityContext.current();
+
+        if (authUser.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+        var userId = authUser.get().userId();
+
+        if (!isEmailValid(email)) {
+            throw new InvalidCredentialsException("Password or Email are not Valid");
+        }
+
+        var existingUser = userPersistancePort.findByEmailOrUsername(email, "");
+
+        if (existingUser.isPresent()) {
+            if (existingUser.get().isVerified()) {
+                throw new UserAlreadyExistsException(email, "");
+            }
+        }
+
+        var user = userPersistancePort.getById(authUser.get().userId());
+
+        if (user.isPresent()) {
+            var token = tokenService.generateToken(userId, RoleLevel.USER, email, user.get().username());
+
+            emailPort.sendVerificationEmail(email, user.get().firstname(), token);
+            userPersistancePort.changeEmail(userId, email, token);
+
+            logout();
+        }
+    }
+
+    @Override
+    public void sendVerifcationEmailAgain() {
+        var authUser = SecurityContext.current();
+
+        if (authUser.isEmpty()) {
+            throw new IllegalStateException(
+                    "No authenticated user in context. " +
+                            "Ensure this is called within a secured request.");
+        }
+
+        var user = userPersistancePort.getById(authUser.get().userId());
+        user.ifPresent(userModel -> emailPort.sendVerificationEmail(userModel.email(), userModel.firstname(), userModel.verificationToken()));
     }
 
     private String hashPassword(String password) {

@@ -151,6 +151,43 @@ const logout = async (callback : () => void) => {
     callback();
 };
 
+const deleteAccount = async (callback : () => void) => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth`, {
+        method: 'DELETE',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+    Cookies.remove(TOKEN_KEY);
+    callback();
+};
+
+const changeEmail = async (newEmail: string, callback: () => void) => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth/email?email=${newEmail}`, {
+        method: 'PUT',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+    Cookies.remove(TOKEN_KEY);
+    callback();
+};
+
+const resendVerification = async () => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth/resend`, {
+        method: 'POST',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+};
+
 export const authService = {
     login,
     register,
@@ -159,5 +196,8 @@ export const authService = {
     getToken,
     removeToken,
     changePassword,
-    logout
+    logout,
+    deleteAccount,
+    changeEmail,
+    resendVerification
 }

@@ -157,8 +157,9 @@ public class FeedbackRepository implements FeedbackPersistancePort {
 
         // language=sql
         USER_DELETE("""
-            UPDATE feedback SET authorusername = 'Unbekannter Benutzer', authoruserid = 'deleted_' + authoruserid WHERE authoruserid = :userId
-        """),
+            UPDATE feedback SET authorusername = 'Unbekannter Benutzer', authoruserid = CONCAT('deleted_', authoruserid)  WHERE authoruserid = :userId
+        """
+        ),
 
         // language=sql
         DELETE_VOTES("""

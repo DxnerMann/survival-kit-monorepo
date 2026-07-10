@@ -7,4 +7,5 @@ export type ProfileSettings = {
     username: string,
     color: string,
     userId: string
+    isVerified: boolean,
 }

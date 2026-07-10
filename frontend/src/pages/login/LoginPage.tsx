@@ -20,6 +20,7 @@ const LoginPage = () => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [repeatPassword, setRepeatPassword] = useState('')
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const handleLogin = async () => {
         try {
@@ -64,6 +65,11 @@ const LoginPage = () => {
 
             if (password !== repeatPassword) {
                 snackbarService.showSnackbar({type: "error", text:"Passwörter stimmen nicht überein", showIcon: true });
+                return
+            }
+
+            if (!email.match(EMAIL_REGEX)) {
+                snackbarService.showSnackbar({type: "error", text:"Die eingegebene Email ist ungültig", showIcon: true });
                 return
             }
 

@@ -12,4 +12,6 @@ public interface AuthPort {
     LoginResponse changePassword(String oldPassword, String newPassword);
     void logout();
     void deleteAccount();
+    void changeEmail(String email);
+    void sendVerifcationEmailAgain();
 }

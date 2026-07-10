@@ -18,4 +18,9 @@ public interface UserPersistancePort {
     void updatePassword(String userId, String newPassword);
     void deleteUser(String userId);
     boolean isLastAdmin(String userId);
+    void changeEmail(String userId, String newEmail, String newToken);
+
+    /*
+    TODO: Delete unverified Accounts after a while.
+     */
 }

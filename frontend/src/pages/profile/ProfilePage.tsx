@@ -22,6 +22,8 @@ import Separator from "../../components/shared/Seperator.tsx";
 import {authService, validatePassword} from "../../services/authService.tsx";
 import {snackbarService} from "../../services/snackBarService.tsx";
 import {useNavigate} from "react-router-dom";
+import DeleteDialog from "../../components/shared/dialog/DeleteDialog.tsx";
+import ChangeEmailDialog from "../../components/shared/dialog/ChangeEmailDialog.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -36,6 +38,9 @@ const ProfilePage = () => {
     const [newPassword, setNewPassword] = useState("");
     const [oldPassword, setOldPassword] = useState("");
     const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [showEmailDialog, setShowEmailDialog] = useState(false);
+
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -91,7 +96,8 @@ const ProfilePage = () => {
                     lastname: profileSettings.lastname,
                     userId: profileSettings.userId,
                     email: profileSettings.email,
-                    role: profileSettings.role
+                    role: profileSettings.role,
+                    isVerified: profileSettings.isVerified,
                 })
             }
         } catch (error) {
@@ -100,7 +106,19 @@ const ProfilePage = () => {
     }
 
     const handleLogout = async () => {
-        await authService.logout(() => navigate("/login"))
+        await authService.logout(() => navigate("/login"));
+    }
+
+    const handleAccountDeletion = async () => {
+        await authService.deleteAccount(() => navigate("/login"));
+    }
+
+    const handleEmailChange = async (newEmail: string) => {
+        await authService.changeEmail(newEmail, () => navigate("/login"));
+    }
+
+    const handleResend = async () => {
+        await authService.resendVerification();
     }
 
     async function onCourseChanged(course: string) {
@@ -209,6 +227,10 @@ const ProfilePage = () => {
                     </div>
                 </div>
                 <Info text={"Dein voller name, sowie deine Email-Adresse sind nur für dich einsehbar. Dein Benutzername, sowie dein Profilbild werden ggf. Öffentlich angezeit!"} type={"SUCCESS"} />
+                { !profileSettings.isVerified && <div className="not-varified-wrapper">
+                    <Info text="Deine Email Adresse ist noch nicht Verifiziert. Du wirst einige Funktionen nicht vollumfänglich verwenden können" type="ERROR" />
+                    <Button text="Jetzt Verifizieren" onClick={handleResend} />
+                </div> }
                 <br />
                 <Separator width={"100%"} height={"2px"} variant="secondary" />
                 <div className="profile-page-settings-section">
@@ -243,11 +265,6 @@ const ProfilePage = () => {
             return;
         }
 
-        /*
-        * TODO:
-        *  - Add Change Password Functionality
-        */
-
         return <div className="profile-page-content">
             <SectionHeading heading={"Sicherheit"} centered={false} />
             <div className="profile-page-settings-section-security">
@@ -262,7 +279,7 @@ const ProfilePage = () => {
             <Separator width={"100%"} height={"2px"} variant="secondary" />
             <div className="profile-page-settings-section-security">
                 <h2 className="profile-page-subheading">Email-Adresse ändern</h2>
-                <Button text="Email-Adresse ändern" onClick={() => {/* TODO */}} />
+                <Button text="Email-Adresse ändern" onClick={() => {setShowEmailDialog(true)}} />
                 <Info text={"Deine bissherige Login Email-Adresse wird dadurch ersetzt."} type={"WARNING"} />
             </div>
             <br />
@@ -271,6 +288,7 @@ const ProfilePage = () => {
                 <h2 className="profile-page-subheading">Abmelden</h2>
                 <Button text="Abmelden" onClick={() => handleLogout()} />
             </div>
+            < ChangeEmailDialog isOpen={showEmailDialog} onCancel={() => setShowEmailDialog(false)} onSubmit={handleEmailChange} title={"Email Adresse ändern"} subtitle={"Du musst dich im Anschluss mit deiner neuen email Adresse neu Anmelden."} oldEmail={profileSettings.email} />
         </div>
     }
 
@@ -279,19 +297,14 @@ const ProfilePage = () => {
         if (profileSettings === undefined) {
             return;
         }
-
-        /*
-        * TODO:
-        *  - Add Delete Account Functionality
-        */
-
         return <div className="profile-page-content">
             <SectionHeading heading={"Danger Zone"} centered={false} />
             <div className="profile-page-settings-section-danger">
                 <h2 className="profile-page-subheading"><a className="important-text">Konto Löschen</a></h2>
-                <Button text="Konto Löschen" onClick={() => {/* TODO */}} />
+                <Button text="Konto Löschen" onClick={() => setShowDeleteDialog(true)} />
                 <Info text={"Die Löschung deines Kontos mit all deinen Daten ist unwiederuflich."} type={"ERROR"} />
             </div>
+            <DeleteDialog isOpen={showDeleteDialog} onCancel={() => setShowDeleteDialog(false)} onSubmit={() => handleAccountDeletion() } title={"Konto Löschen"} subtitle={"Bist du sicher? Alle deine Daten werden unwiederuflich gelöscht."} />
         </div>
     }
 

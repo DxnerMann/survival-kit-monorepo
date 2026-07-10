@@ -180,3 +180,10 @@
     outline: none;
     border-color: var(--color-primary-accent);
 }
+
+.not-varified-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin-top: 1rem;
+}
