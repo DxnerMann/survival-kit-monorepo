@@ -1,5 +1,5 @@
 import type {QuickLink} from "../models/QuickLink.tsx";
-import {api} from "./api.tsx";
+import {api, checkResponse} from "./api.tsx";
 import {authService} from "./authService.tsx";
 
 const API_URL = api.baseUrl;
@@ -50,9 +50,7 @@ export const getQuickLinksFiltered = async (
 
     const response = await fetch(`${API_URL}/link/filter?${params.toString()}`);
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch quick links: ${response.statusText}`);
-    }
+    await checkResponse(response);
 
     return response.json();
 };
@@ -73,9 +71,7 @@ export const suggestLink = async (data: {
         body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-        throw new Error("Fehler beim Senden des Vorschlags");
-    }
+    await checkResponse(response);
 
     return response.json();
 };
@@ -86,17 +82,18 @@ export const approveLink = async (data: {
     improvedDescription: string;
     improvedTitle: string;
 }) => {
+    const token = authService.getToken();
+
     const response = await fetch(`${API_URL}/link/approve`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-        throw new Error("Error trying to Approve / Disapprove");
-    }
+    await checkResponse(response);
 
     return;
 };

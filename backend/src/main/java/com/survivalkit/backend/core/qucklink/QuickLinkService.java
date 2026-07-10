@@ -4,6 +4,7 @@ import com.survivalkit.backend.adapter.postgres.favourites.FavouritePersistanceP
 import com.survivalkit.backend.adapter.postgres.quicklink.QuickLink;
 import com.survivalkit.backend.adapter.postgres.quicklink.QuickLinkPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkApprovementRequest;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkSuggestionRequest;
 import com.survivalkit.backend.config.SecurityContext;
@@ -47,15 +48,15 @@ public class QuickLinkService implements QuickLinkPort {
     public void suggestLink(QuickLinkSuggestionRequest suggestion) {
 
         if (suggestion.title() == null || suggestion.title().isEmpty()) {
-            throw new IllegalArgumentException("title can not be empty");
+            throw new IllegalArgumentException(ErrorCode.QUICKLINK_TITLE_CANNOT_BE_EMPTY.getCode());
         }
 
         if (suggestion.description() == null || suggestion.description().isEmpty()) {
-            throw new IllegalArgumentException("description can not be empty");
+            throw new IllegalArgumentException(ErrorCode.QUICKLINK_DESCRIPTION_CANNOT_BE_EMPTY.getCode());
         }
 
         if (suggestion.url() == null || suggestion.url().isEmpty()) {
-            throw new IllegalArgumentException("url can not be empty");
+            throw new IllegalArgumentException(ErrorCode.QUICKLINK_URL_CANNOT_BE_EMPTY.getCode());
         }
 
         var newLink = new QuickLink(
@@ -101,18 +102,11 @@ public class QuickLinkService implements QuickLinkPort {
     @Override
     public void markAsFav(String quickLinkId, boolean fav) {
         var user = SecurityContext.current();
-
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
         if (fav) {
-            favouritePersistancePort.addFav(user.get().userId(), quickLinkId);
+            favouritePersistancePort.addFav(user.userId(), quickLinkId);
             return;
         }
-        favouritePersistancePort.deleteFav(user.get().userId(), quickLinkId);
+        favouritePersistancePort.deleteFav(user.userId(), quickLinkId);
     }
 
     @Override
@@ -121,14 +115,7 @@ public class QuickLinkService implements QuickLinkPort {
         pageSize = pageSize > 50 ? 50 : pageSize;
 
         var user = SecurityContext.current();
-
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        var favIds = favouritePersistancePort.getFavouritesForUser(user.get().userId(), continuation, pageSize);
+        var favIds = favouritePersistancePort.getFavouritesForUser(user.userId(), continuation, pageSize);
 
         if (favIds.data().isEmpty()) {
             return new Page<>(

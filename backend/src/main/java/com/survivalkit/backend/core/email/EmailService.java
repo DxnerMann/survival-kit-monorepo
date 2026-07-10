@@ -1,5 +1,6 @@
 package com.survivalkit.backend.core.email;
 
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import jakarta.mail.MessagingException;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -42,7 +43,7 @@ public class EmailService implements EmailPort {
             helper.addInline("icon", new ClassPathResource("static/icon.png"));
             helper.setFrom("auth@lecture-survival-kit.jannis-saur.de", "Lecture Survival Kit");            mailSender.send(message);
         } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send email", e);
+            throw new RuntimeException(ErrorCode.FAILED_TO_SEND_EMAIL.getCode());
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }

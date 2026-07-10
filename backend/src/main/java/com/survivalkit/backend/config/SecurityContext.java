@@ -1,5 +1,6 @@
 package com.survivalkit.backend.config;
 
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.user.AuthenticatedUser;
 
 import java.util.Optional;
@@ -14,8 +15,13 @@ public final class SecurityContext {
         HOLDER.set(user);
     }
 
-    public static Optional<AuthenticatedUser> current() {
-        return Optional.ofNullable(HOLDER.get());
+    public static AuthenticatedUser current() {
+        var user = Optional.ofNullable(HOLDER.get());
+
+        if (user.isEmpty()) {
+            throw new RuntimeException(ErrorCode.NO_AUTHENTICATED_USER_IN_CONTEXT.getCode());
+        }
+        return user.get();
     }
 
     public static void clear() {

@@ -1,5 +1,6 @@
 package com.survivalkit.backend.adapter.rapla;
 
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.shared.Lecture;
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
@@ -103,8 +104,7 @@ public class RaplaApiClient implements RaplaApiPort {
         } catch (Exception ignored) {
 
         }
-
-        throw new CourseExtractionFailedException("Could not extract Course from the provided Rapla Url.");
+        throw new CourseExtractionFailedException(ErrorCode.COURSE_EXTRACTION_FAILED.getCode());
     }
 
     @Override

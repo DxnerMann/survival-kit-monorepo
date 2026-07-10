@@ -28,18 +28,12 @@ public class FeedbackService implements FeedbackPort {
 
         var user = SecurityContext.current();
 
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
         var newFeedback = new Feedback(
             NanoId.generate(25),
                 title,
                 description,
-                user.get().username(),
-                user.get().userId(),
+                user.username(),
+                user.userId(),
                 type,
                 0,
                 0,
@@ -64,14 +58,8 @@ public class FeedbackService implements FeedbackPort {
 
         var user = SecurityContext.current();
 
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        if (feedbackPersistancePort.canVote(feedbackId, user.get().userId())) {
-            feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.get().userId());
+        if (feedbackPersistancePort.canVote(feedbackId, user.userId())) {
+            feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.userId());
         }
     }
 
@@ -88,13 +76,6 @@ public class FeedbackService implements FeedbackPort {
     @Override
     public boolean hasVoted(String id) {
         var user = SecurityContext.current();
-
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        return !feedbackPersistancePort.canVote(id, user.get().userId());
+        return !feedbackPersistancePort.canVote(id, user.userId());
     }
 }

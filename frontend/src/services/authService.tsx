@@ -4,7 +4,7 @@ import type {ApiError} from '../models/ApiError.tsx'
 import type {LoginRequest} from '../models/LoginRequest.tsx'
 import type {LoginResponse} from '../models/LoginResponse.tsx'
 import type {RegisterRequest} from '../models/RegisterRequest.tsx'
-import {api} from "./api.tsx";
+import {api, checkResponse, resolveError} from "./api.tsx";
 import {setUserContext} from "./userService.tsx";
 
 const API_URL = api.baseUrl;
@@ -30,28 +30,6 @@ const removeToken = () => {
     Cookies.remove(TOKEN_KEY)
 }
 
-const handleApiError = async (response: Response): Promise<never> => {
-    if (response.status === 500) {
-        throw new Error(
-            'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut.'
-        )
-    }
-    let message = 'Ein unerwarteter Fehler ist aufgetreten, bitte versuche es später erneut.';
-
-    try {
-        const error = (await response.json()) as Partial<ApiError>;
-
-        if (typeof error.message === 'string') {
-            message = error.message;
-        }
-    } catch {
-        // parsing failed -> keep fallback message
-    }
-    throw new Error(message);
-
-
-}
-
 const login = async (
     request: LoginRequest
 ): Promise<LoginResponse> => {
@@ -63,9 +41,7 @@ const login = async (
         body: JSON.stringify(request),
     })
 
-    if (!response.ok) {
-        await handleApiError(response)
-    }
+    await checkResponse(response);
 
     const data: LoginResponse = await response.json();
     saveToken(data.token)
@@ -85,9 +61,7 @@ const register = async (
         body: JSON.stringify(request),
     })
 
-    if (!response.ok) {
-        await handleApiError(response)
-    }
+    await checkResponse(response);
 }
 
 const validate = async (): Promise<boolean> => {
@@ -97,31 +71,27 @@ const validate = async (): Promise<boolean> => {
         return false
     }
 
-    try {
-        const response = await fetch(`${API_URL}/auth/validate`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
+    const response = await fetch(`${API_URL}/auth/validate`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    })
 
-        if (!response.ok) {
-            removeToken()
-            return false
-        }
-
-        const data: LoginResponse = await response.json();
-        saveToken(data.token);
-        setUserContext(data);
-        return true;
-    } catch {
-        removeToken()
-        return false
+    if (!response.ok) {
+        removeToken();
+        const apiError: ApiError = await response.json();
+        resolveError(apiError);
     }
+
+    const data: LoginResponse = await response.json();
+    saveToken(data.token);
+    setUserContext(data);
+    return true;
 }
 
 const changePassword = async (
-    oldPassword : string,
+    oldPassword: string,
     newPassword: string,
 ): Promise<void> => {
     const token = authService.getToken();
@@ -133,33 +103,37 @@ const changePassword = async (
         },
     });
 
-    if (!response.ok) {
-        await handleApiError(response)
-    }
+    await checkResponse(response);
 }
 
-const logout = async (callback : () => void) => {
+const logout = async (callback: () => void) => {
     const token = authService.getToken();
 
-    await fetch(`${API_URL}/auth/logout`, {
+    const response = await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         headers: {
             ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
     });
+
+    await checkResponse(response);
+
     Cookies.remove(TOKEN_KEY);
     callback();
 };
 
-const deleteAccount = async (callback : () => void) => {
+const deleteAccount = async (callback: () => void) => {
     const token = authService.getToken();
 
-    await fetch(`${API_URL}/auth`, {
+    const response = await fetch(`${API_URL}/auth`, {
         method: 'DELETE',
         headers: {
             ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
     });
+
+    await checkResponse(response);
+
     Cookies.remove(TOKEN_KEY);
     callback();
 };
@@ -167,12 +141,15 @@ const deleteAccount = async (callback : () => void) => {
 const changeEmail = async (newEmail: string, callback: () => void) => {
     const token = authService.getToken();
 
-    await fetch(`${API_URL}/auth/email?email=${newEmail}`, {
+    const response = await fetch(`${API_URL}/auth/email?email=${newEmail}`, {
         method: 'PUT',
         headers: {
             ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
     });
+
+    await checkResponse(response);
+
     Cookies.remove(TOKEN_KEY);
     callback();
 };
@@ -180,12 +157,14 @@ const changeEmail = async (newEmail: string, callback: () => void) => {
 const resendVerification = async () => {
     const token = authService.getToken();
 
-    await fetch(`${API_URL}/auth/resend`, {
+    const response = await fetch(`${API_URL}/auth/resend`, {
         method: 'POST',
         headers: {
             ...(token !== undefined && { Authorization: `Bearer ${token}` }),
         },
     });
+
+    await checkResponse(response);
 };
 
 export const authService = {

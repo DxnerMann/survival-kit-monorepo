@@ -3,6 +3,7 @@ package com.survivalkit.backend.core.user;
 import com.survivalkit.backend.adapter.postgres.user.ImgWrapper;
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.ProfileImageResponse;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.config.SecurityContext;
@@ -31,42 +32,23 @@ public class UserService implements UserPort {
     @Override
     public void setCourseForUser(String course) {
             var user = SecurityContext.current();
-
-            if (user.isEmpty()) {
-                throw new IllegalStateException(
-                        "No authenticated user in context. " +
-                                "Ensure this is called within a secured request.");
-            }
-
-            userPersistancePort.setUserCourse(user.get().userId(), course);
-            return;
+            userPersistancePort.setUserCourse(user.userId(), course);
     }
 
     @Override
     public UserProfile getUserProfile() {
         var user = SecurityContext.current();
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-        return userPersistancePort.getUserProfile(user.get().userId())
-                .orElseThrow(() -> new UserNotFoundException(user.get().userId()));
+        return userPersistancePort.getUserProfile(user.userId())
+                .orElseThrow(() -> new UserNotFoundException(user.userId()));
     }
 
     @Override
     public void updateProfilePicture(MultipartFile file) {
         var user = SecurityContext.current();
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
         var contentType = file.getContentType();
 
         if (contentType == null) {
-            throw new IllegalArgumentException("Missing content type");
+            throw new IllegalArgumentException(ErrorCode.MISSING_CONTENT_TYPE_PROFILE_PICTURE.getCode());
         }
         var normalized = contentType.toLowerCase().split(";")[0].trim();
         try {
@@ -74,15 +56,15 @@ public class UserService implements UserPort {
                 case "image/png" -> ImgWrapper.ProfileImgType.PNG;
                 case "image/jpeg" -> ImgWrapper.ProfileImgType.JPG;
                 case "image/gif" -> ImgWrapper.ProfileImgType.GIF;
-                default -> throw new IllegalArgumentException("Unsupported content type: " + contentType);
+                default -> throw new IllegalArgumentException(ErrorCode.UNSUPPORTED_CONTENT_TYPE_PROFILE_PICTURE.getCode());
             };
             var wrapper = new ImgWrapper(
                     file.getBytes(),
                     type
             );
-            userPersistancePort.updateProfilePicture(wrapper, user.get().userId());
+            userPersistancePort.updateProfilePicture(wrapper, user.userId());
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read image bytes", e);
+            throw new RuntimeException(ErrorCode.FAILED_TO_READ_IMAGE_BYTES.getCode());
         }
     }
 
@@ -117,24 +99,17 @@ public class UserService implements UserPort {
                     ImgWrapper.ProfileImgType.PNG
             );
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read default profile picture", e);
+            throw new RuntimeException(ErrorCode.FAILED_TO_LOAD_DEFAULT_PICTURE.getCode());
         }
     }
 
     @Override
     public void updateUsername(String newUsername) {
         var authUser = SecurityContext.current();
-
-        if (authUser.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
-
-        var user = userPersistancePort.getById(authUser.get().userId());
+        var user = userPersistancePort.getById(authUser.userId());
 
         if (user.isEmpty()) {
-            throw new UserNotFoundException(authUser.get().userId());
+            throw new UserNotFoundException(ErrorCode.USER_DOES_NOT_EXIST.getCode());
         }
         var oldUser = user.get();
         var lastUpdated = oldUser.lastUpdated();
@@ -143,7 +118,7 @@ public class UserService implements UserPort {
         var daysLeft = ChronoUnit.DAYS.between(Instant.now(), nextAllowed);
 
         if (daysLeft > 0) {
-            throw new UsernameChangeToSoonException(daysLeft);
+            throw new UsernameChangeToSoonException(ErrorCode.USERNAME_CHANGE_TO_EARLY.getCode());
         }
         userPersistancePort.save(
             new UserModel(
@@ -168,14 +143,9 @@ public class UserService implements UserPort {
     public void updateColor(String newColor) {
         var user = SecurityContext.current();
 
-        if (user.isEmpty()) {
-            throw new IllegalStateException(
-                    "No authenticated user in context. " +
-                            "Ensure this is called within a secured request.");
-        }
         if (!newColor.matches("^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$")) {
-            throw new IllegalArgumentException("Invalid hex color: " + newColor);
+            throw new IllegalArgumentException(ErrorCode.INVALID_COLOR.getCode());
         }
-        userPersistancePort.updateProfileColor(user.get().userId(), newColor);
+        userPersistancePort.updateProfileColor(user.userId(), newColor);
     }
 }

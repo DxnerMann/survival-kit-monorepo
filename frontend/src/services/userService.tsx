@@ -2,18 +2,17 @@ import type {LoginResponse} from "../models/LoginResponse.tsx";
 import {getUsernameFromToken} from "./tokenService.tsx";
 import type {ProfileSettings} from "../models/ProfileSettings.tsx";
 import {authService} from "./authService.tsx";
-import {api} from "./api.tsx";
-import type {ApiError} from "../models/ApiError.tsx";
+import {api, checkResponse} from "./api.tsx";
 
-let user : LoginResponse;
+let user: LoginResponse;
 const API_URL = api.baseUrl;
 
 
-export function setUserContext(loginResponse : LoginResponse) {
+export function setUserContext(loginResponse: LoginResponse) {
     user = loginResponse;
 }
 
-export function getUsername() : string {
+export function getUsername(): string {
     if (!user) {
         const usernameFromToken = getUsernameFromToken()
         if (usernameFromToken) {
@@ -24,7 +23,7 @@ export function getUsername() : string {
     return user.username;
 }
 
-export async function fetchProfileSettings() : Promise<ProfileSettings> {
+export async function fetchProfileSettings(): Promise<ProfileSettings> {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/profile`, {
@@ -35,14 +34,12 @@ export async function fetchProfileSettings() : Promise<ProfileSettings> {
         }
     });
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 
     return response.json();
 }
 
-export async function setUserCourse(course: string) : Promise<void> {
+export async function setUserCourse(course: string): Promise<void> {
     const token = authService.getToken();
 
     const response = await fetch(`${API_URL}/profile/course?course=${course}`, {
@@ -53,9 +50,7 @@ export async function setUserCourse(course: string) : Promise<void> {
         }
     });
 
-    if (!response.ok) {
-        throw new Error("Es ist ein unerwarteter Fehler aufgetreten");
-    }
+    await checkResponse(response);
 }
 
 export async function uploadProfileImage(file: File | Blob, isGif: boolean): Promise<void> {
@@ -72,12 +67,10 @@ export async function uploadProfileImage(file: File | Blob, isGif: boolean): Pro
         body: formData,
     });
 
-    if (!response.ok) {
-        throw new Error(`Upload failed with status ${response.status}`);
-    }
+    await checkResponse(response);
 }
 
-export async function updateUsernameAndColor(data : {
+export async function updateUsernameAndColor(data: {
     color?: string;
     username?: string;
 }) {
@@ -95,20 +88,5 @@ export async function updateUsernameAndColor(data : {
         },
     });
 
-    if (response.status === 422) {
-        const apiError: ApiError = await response.json();
-        const daysLeft = apiError.message.match(/\d+/)?.[0];
-        console.log(apiError.message)
-
-        if (daysLeft) {
-            throw new Error(
-                `Du kannst deinen Benutzernamen erst in ${daysLeft} Tagen wieder ändern.`
-            );
-        }
-        throw new Error("Fehler beim ändern des Benutzernamens");
-    }
-
-    if (response.status === 400) {
-        throw new Error(`Fehler beim ändern der Profilfarbe`);
-    }
+    await checkResponse(response);
 }
