@@ -1,16 +1,21 @@
 package com.survivalkit.backend.adapter.web.profile;
 
 import com.survivalkit.backend.core.course.CoursePort;
+import com.survivalkit.backend.core.user.UserPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,10 +25,19 @@ import java.util.List;
 public class ProfileController {
 
     private final CoursePort coursePort;
+    private final UserPort userPort;
 
-    public ProfileController(CoursePort coursePort) {
+    public ProfileController(CoursePort coursePort, UserPort userPort) {
         this.coursePort = coursePort;
+        this.userPort = userPort;
     }
+
+    @Role(RoleLevel.USER)
+    @GetMapping
+    public ResponseEntity<UserProfile> getProfile() {
+        return ResponseEntity.ok(userPort.getUserProfile());
+    }
+
 
     @Role(RoleLevel.GUEST)
     @GetMapping("courses")
@@ -31,21 +45,51 @@ public class ProfileController {
         return ResponseEntity.ok(coursePort.getAvailableCourses());
     }
 
-    @Role(RoleLevel.GUEST)
-    @GetMapping("course")
-    public ResponseEntity<String> getUserCourseOrExtract(
-            @RequestParam (required = false) String raplaUrl
-    ) {
-        return ResponseEntity.ok(coursePort.getUserCourseOrExtract(raplaUrl));
-    }
-
     @Role(RoleLevel.USER)
     @PostMapping("course")
     public ResponseEntity<Void> setUserCourse(
-            @RequestParam(required = false) String course,
-            @RequestParam(required = false) String raplaUrl
+            @RequestParam String course
     ) {
-        coursePort.setCourseForUser(course, raplaUrl);
+        userPort.setCourseForUser(course);
         return ResponseEntity.ok().build();
     }
+
+    @Role(RoleLevel.USER)
+    @PutMapping("/img")
+    public ResponseEntity<Void> uploadProfileImage(
+            @RequestParam MultipartFile file
+    ) {
+        userPort.updateProfilePicture(file);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/img/{userId}")
+    public ResponseEntity<Resource> getProfilePicture(@PathVariable String userId) {
+        var response = userPort.getProfilePicture(userId);
+        return ResponseEntity.ok()
+                .contentType(response.contentType())
+                .body(response.resource());
+    }
+
+    @Role(RoleLevel.USER)
+    @PutMapping()
+    public ResponseEntity<Void> updateUsername(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String color
+    ) {
+        if (username != null) {
+            userPort.updateUsername(username);
+        }
+        if (color != null) {
+            userPort.updateColor(color);
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    /*
+    * TODO:
+    *  - Change Email Endpoint
+    *       - Reset Verification / Rework Verification (maybe make it possible to log in, but not do anything)
+    *  - Add Custom Profile Accent Color Functionality
+     */
 }

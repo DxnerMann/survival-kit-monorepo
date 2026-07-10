@@ -94,7 +94,6 @@ const AdminPage = () => {
 
         setSuggestedGames(prev => prev.filter(g => g.id !== game.id));
         snackbarService.showSnackbar({ type: "success",   text: "Bestätigung gesendet", showIcon: true });
-
     };
 
     useEffect(() => {

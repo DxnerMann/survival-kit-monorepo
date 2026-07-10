@@ -20,3 +20,8 @@ MAIL_HOST=
 MAIL_PORT=
 MAIL_USERNAME=
 MAIL_PASSWORD=
+
+# =========================
+# REDIS
+# =========================
+REDIS_PASSWORD=

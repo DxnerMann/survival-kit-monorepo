@@ -1,13 +1,33 @@
 services:
   postgres:
     image: postgres:16
-    container_name: survival-kit-local
+    container_name: survival-kit-local-database
     env_file:
       ../.env
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   mailhog:
     image: mailhog/mailhog
+    container_name: survival-kit-local-mailhog
     ports:
       - "1025:1025"
       - "8025:8025"   # Web UI to view emails
+
+  redis:
+    image: redis:7-alpine
+    container_name: survival-kit-local-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    env_file:
+      ../.env
+    command: sh -c "redis-server --appendonly yes --requirepass $$REDIS_PASSWORD"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

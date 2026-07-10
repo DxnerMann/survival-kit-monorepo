@@ -4,6 +4,7 @@ import "./FeedbackDialog.css";
 import Button from "../Button.tsx";
 import type {FeedbackType} from "../../../models/Feedback.tsx";
 import {RichTextEditor} from "../RichTextEditor.tsx";
+import {snackbarService} from "../../../services/snackBarService.tsx";
 
 interface FeedbackDialogProps {
     isOpen: boolean;
@@ -22,22 +23,19 @@ export default function FeedbackDialog({
                                              }: FeedbackDialogProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [errorText, setErrorText] = useState("");
     const [type, setType] = useState<FeedbackType>("OTHER");
 
     const handleSubmit = () => {
 
         if (title === null || title === "") {
-            setErrorText("Titel kann nicht leer sein");
+            snackbarService.showSnackbar({type: "error", text:"Titel kann nicht leer sein", showIcon: true });
             return
         }
 
         if (description === null || description === "") {
-            setErrorText("Beschreibung kann nicht leer sein");
+            snackbarService.showSnackbar({type: "error", text:"Beschreibung kann nicht leer sein", showIcon: true });
             return
         }
-
-        setErrorText("");
 
         onSubmit({
             title: title,
@@ -53,9 +51,6 @@ export default function FeedbackDialog({
             subtitle="Dein Beitrag wird öffentlich mit angabe deines Benutzernamens gepostet."
             onClose={onCancel}
         >
-            <div className="error-text">
-                <a>{errorText}</a>
-            </div>
             <form
                 className="feedback-form"
                 onSubmit={(e) => {

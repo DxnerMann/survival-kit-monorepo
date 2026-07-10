@@ -22,6 +22,10 @@ const getToken = (): string | undefined => {
     return Cookies.get(TOKEN_KEY)
 }
 
+export const validatePassword = (pw: string) => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/.test(pw)
+}
+
 const removeToken = () => {
     Cookies.remove(TOKEN_KEY)
 }
@@ -116,6 +120,74 @@ const validate = async (): Promise<boolean> => {
     }
 }
 
+const changePassword = async (
+    oldPassword : string,
+    newPassword: string,
+): Promise<void> => {
+    const token = authService.getToken();
+    const params = new URLSearchParams({ oldPassword, newPassword });
+    const response = await fetch(`${API_URL}/auth/password?${params.toString()}`, {
+        method: 'PUT',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+
+    if (!response.ok) {
+        await handleApiError(response)
+    }
+}
+
+const logout = async (callback : () => void) => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+    Cookies.remove(TOKEN_KEY);
+    callback();
+};
+
+const deleteAccount = async (callback : () => void) => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth`, {
+        method: 'DELETE',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+    Cookies.remove(TOKEN_KEY);
+    callback();
+};
+
+const changeEmail = async (newEmail: string, callback: () => void) => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth/email?email=${newEmail}`, {
+        method: 'PUT',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+    Cookies.remove(TOKEN_KEY);
+    callback();
+};
+
+const resendVerification = async () => {
+    const token = authService.getToken();
+
+    await fetch(`${API_URL}/auth/resend`, {
+        method: 'POST',
+        headers: {
+            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+        },
+    });
+};
+
 export const authService = {
     login,
     register,
@@ -123,4 +195,9 @@ export const authService = {
     saveToken,
     getToken,
     removeToken,
+    changePassword,
+    logout,
+    deleteAccount,
+    changeEmail,
+    resendVerification
 }

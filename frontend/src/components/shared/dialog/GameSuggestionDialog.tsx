@@ -2,6 +2,7 @@ import { useState } from "react";
 import Dialog from "./Dialog";
 import "./GameSuggestionDialog.css";
 import Button from "../Button.tsx";
+import {snackbarService} from "../../../services/snackBarService.tsx";
 
 interface GameSuggestionDialogProps {
     isOpen: boolean;
@@ -21,26 +22,23 @@ export default function GameSuggestionDialog({
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [url, setUrl] = useState("");
-    const [errorText, setErrorText] = useState("");
 
     const handleSubmit = () => {
 
         if (title === null || title === "") {
-            setErrorText("Titel kann nicht leer sein");
+            snackbarService.showSnackbar({type: "error", text:"Titel kann nicht leer sein", showIcon: true });
             return
         }
 
         if (description === null || description === "") {
-            setErrorText("Beschreibung kann nicht leer sein");
+            snackbarService.showSnackbar({type: "error", text:"Beschreibung kann nicht leer sein", showIcon: true });
             return
         }
 
         if (url === null || url === "") {
-            setErrorText("Url kann nicht leer sein");
+            snackbarService.showSnackbar({type: "error", text:"Url kann nicht leer sein", showIcon: true });
             return
         }
-
-        setErrorText("");
 
         onSubmit({
             title: title,
@@ -56,9 +54,6 @@ export default function GameSuggestionDialog({
             subtitle="Dein Vorschlag wird im Anschluss von einem Admin geprüft und gegebenenfalls zur Liste hinzugefügt."
             onClose={onCancel}
         >
-            <div className="error-text">
-                <a>{errorText}</a>
-            </div>
             <form
                 className="game-suggestion-form"
                 onSubmit={(e) => {

@@ -1,12 +1,14 @@
 package com.survivalkit.backend.adapter.web.auth;
 
-import com.survivalkit.backend.core.auth.AuthPort;
+import com.survivalkit.backend.core.user.AuthPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,5 +53,45 @@ public class AuthController {
     @PostMapping("validate")
     public ResponseEntity<LoginResponse> validate() {
         return ResponseEntity.ok(authPort.validate());
+    }
+
+    @Role(RoleLevel.USER)
+    @PutMapping("password")
+    public ResponseEntity<LoginResponse> changePassword(
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword
+    ) {
+        authPort.changePassword(oldPassword, newPassword);
+        return ResponseEntity.ok().build();
+    }
+
+    @Role(RoleLevel.USER)
+    @PostMapping("logout")
+    public ResponseEntity<Void> logout() {
+        authPort.logout();
+        return ResponseEntity.ok().build();
+    }
+
+    @Role(RoleLevel.USER)
+    @DeleteMapping()
+    public ResponseEntity<Void> deleteAccount() {
+        authPort.deleteAccount();
+        return ResponseEntity.ok().build();
+    }
+
+    @Role(RoleLevel.USER)
+    @PutMapping("email")
+    public ResponseEntity<Void> changeEmail(
+            @RequestParam String email
+    ) {
+        authPort.changeEmail(email);
+        return ResponseEntity.ok().build();
+    }
+
+    @Role(RoleLevel.USER)
+    @PostMapping("resend")
+    public ResponseEntity<Void> sendVerificationEmailAgain() {
+        authPort.sendVerifcationEmailAgain();
+        return ResponseEntity.ok().build();
     }
 }

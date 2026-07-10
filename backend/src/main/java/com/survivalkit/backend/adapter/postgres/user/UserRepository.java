@@ -1,14 +1,20 @@
 package com.survivalkit.backend.adapter.postgres.user;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
+import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.core.security.SecurityLog;
+import com.survivalkit.backend.shared.RoleLevel;
 import com.survivalkit.backend.shared.Utils;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
+
+import static com.survivalkit.backend.shared.Utils.toInstant;
 
 @Repository
 public class UserRepository implements UserPersistancePort {
@@ -35,6 +41,9 @@ public class UserRepository implements UserPersistancePort {
                         .addValue("isVerified", user.isVerified())
                         .addValue("course", user.course())
                         .addValue("currentTime", Utils.toTimestamp(Instant.now()))
+                        .addValue("color", user.color())
+                        .addValue("img", user.img().img())
+                        .addValue("imgType", user.img().imgType().toString())
                 ).update();
         securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User created with id %s", user.id()));
     }
@@ -43,7 +52,7 @@ public class UserRepository implements UserPersistancePort {
     public Optional<UserModel> getById(String id) {
         return jdbcClient.sql(Statements.GET_BY_ID.sql)
                 .paramSource(new MapSqlParameterSource("id", id))
-                .query(UserModel.class)
+                .query(USER_ROW_MAPPER)
                 .optional();
     }
 
@@ -52,7 +61,7 @@ public class UserRepository implements UserPersistancePort {
         return jdbcClient.sql(Statements.GET_BY_MAIL_OR_USERNAME.sql)
                 .paramSource(new MapSqlParameterSource("email", email)
                         .addValue("username", username))
-                .query(UserModel.class)
+                .query(USER_ROW_MAPPER)
                 .optional();
     }
 
@@ -74,12 +83,106 @@ public class UserRepository implements UserPersistancePort {
         securityLog.logInfo(Log.SecurityLogSubType.DATABASE, String.format("User-Course changed for user with id %s", userId));
     }
 
+    @Override
+    public Optional<UserProfile> getUserProfile(String userId) {
+        return jdbcClient.sql(Statements.USER_PROFILE.sql)
+                .paramSource(new MapSqlParameterSource("id", userId))
+                .query(UserProfile.class)
+                .optional();
+    }
+
+    @Override
+    public void updateProfilePicture(ImgWrapper wrapper, String userId) {
+        jdbcClient.sql(Statements.UPDATE_PROFILE_IMG.sql)
+                .paramSource(new MapSqlParameterSource("img", wrapper.img())
+                        .addValue("imgType", wrapper.imgType().toString())
+                        .addValue("id", userId)
+                ).update();
+    }
+
+    @Override
+    public Optional<ImgWrapper> getProfilePicture(String userId) {
+        return jdbcClient.sql(Statements.GET_IMG.sql)
+                .paramSource(new MapSqlParameterSource("id", userId))
+                .query(ImgWrapper.class).optional();
+    }
+
+    @Override
+    public void updateProfileColor(String userId, String color) {
+        jdbcClient.sql(Statements.UPDATE_COLOR.sql)
+                .paramSource(new MapSqlParameterSource("color", color)
+                        .addValue("id", userId)
+                ).update();
+    }
+
+    @Override
+    public void updatePassword(String userId, String newPassword) {
+        jdbcClient.sql(Statements.UPDATE_PASSWORD.sql)
+                .paramSource(new MapSqlParameterSource("password", newPassword)
+                        .addValue("id", userId)
+                ).update();
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        jdbcClient.sql(Statements.DELETE.sql)
+                .paramSource(new MapSqlParameterSource("id", userId))
+                .update();
+    }
+
+    @Override
+    public boolean isLastAdmin(String userId) {
+        var admins = jdbcClient.sql(Statements.GET_ADMINS.sql).query(UserModel.class).list();
+
+        if (admins.size() != 1) {
+            return false;
+        }
+        if (admins.getFirst() != null && admins.getFirst().id().equals(userId)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void changeEmail(String userId, String newEmail, String newToken) {
+        jdbcClient.sql(Statements.CHANGE_EMAIL.sql)
+                .paramSource(new MapSqlParameterSource("email", newEmail)
+                        .addValue("id", userId)
+                        .addValue("verificationToken", newToken)
+                ).update();
+    }
+
+    private static final RowMapper<UserModel> USER_ROW_MAPPER = (rs, rowNum) -> {
+        byte[] imgBytes = rs.getBytes("img");
+        String imgTypeRaw = rs.getString("imgType");
+
+        ImgWrapper img = imgBytes != null && imgTypeRaw != null
+                ? new ImgWrapper(imgBytes, ImgWrapper.ProfileImgType.valueOf(imgTypeRaw))
+                : null;
+
+        return new UserModel(
+                rs.getString("id"),
+                rs.getString("firstname"),
+                rs.getString("lastname"),
+                rs.getString("username"),
+                rs.getString("email"),
+                rs.getString("password"),
+                RoleLevel.valueOf(rs.getString("role")),
+                rs.getString("verificationToken"),
+                rs.getBoolean("isVerified"),
+                rs.getString("course"),
+                rs.getString("color"),
+                img,
+                toInstant(rs.getTimestamp("lastUpdated"))
+        );
+    };
+
     private enum Statements{
         // language=sql
         UPSERT(
         """
-                INSERT INTO users (id, firstname, lastname, username, email, password, role, verificationToken, isVerified, course, createdat, lastupdated)
-                VALUES (:id, :firstname, :lastname, :username, :email, :password, :role, :verificationToken, :isVerified, :course, :currentTime, :currentTime)
+                INSERT INTO users (id, firstname, lastname, username, email, password, role, verificationToken, isVerified, course, createdat, lastupdated, color, img, imgType)
+                VALUES (:id, :firstname, :lastname, :username, :email, :password, :role, :verificationToken, :isVerified, :course, :currentTime, :currentTime, :color, :img, :imgType)
                 ON CONFLICT (id)
                 DO UPDATE SET
                     firstname   = :firstname,
@@ -113,6 +216,54 @@ public class UserRepository implements UserPersistancePort {
         SET_COURSE(
                 """
                         UPDATE users SET course = :course WHERE id = :id;
+                    """
+        ),
+        // language=sql
+        USER_PROFILE(
+        """
+                SELECT firstname, lastname, course, role, email, username, color, id as userId, isverified FROM users WHERE id = :id;
+            """
+        ),
+        // language=sql
+        UPDATE_PROFILE_IMG(
+        """
+                UPDATE users SET img = :img, imgType = :imgType WHERE id = :id;
+            """
+        ),
+        // language=sql
+        GET_IMG(
+        """
+                SELECT img, imgType FROM users WHERE id = :id;
+            """
+        ),
+        // language=sql
+        UPDATE_COLOR(
+        """
+                UPDATE users SET color = :color WHERE id = :id 
+            """
+        ),
+        // language=sql
+        UPDATE_PASSWORD(
+        """
+                UPDATE users SET password = :password WHERE id = :id 
+            """
+        ),
+        // language=sql
+        DELETE(
+        """
+                DELETE FROM users WHERE id = :id 
+            """
+        ),
+        // language=sql
+        GET_ADMINS(
+        """
+                SELECT * FROM users WHERE role = 'ADMIN' 
+            """
+        ),
+        // language=sql
+        CHANGE_EMAIL(
+                """
+                        UPDATE users SET email = :email, verificationToken = :verificationToken, isverified = false WHERE id = :id
                     """
         );
 

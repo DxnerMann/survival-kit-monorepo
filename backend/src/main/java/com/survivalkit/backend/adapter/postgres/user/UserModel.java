@@ -14,6 +14,10 @@ public record UserModel(
         RoleLevel role,
         String verificationToken,
         Boolean isVerified,
-        String course
+        String course,
+        String color,
+        ImgWrapper img,
+		Instant lastUpdated
 ) {
+
 }

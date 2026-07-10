@@ -3,6 +3,7 @@ import Dialog from "./Dialog";
 import "./FeedbackAnswerDialog.css";
 import Button from "../Button.tsx";
 import {RichTextEditor} from "../RichTextEditor.tsx";
+import {snackbarService} from "../../../services/snackBarService.tsx";
 
 interface FeedbackAnswerDialogProps {
     isOpen: boolean;
@@ -20,16 +21,13 @@ export default function FeedbackAnswerDialog({
     previousAnswer
                                        }: FeedbackAnswerDialogProps) {
     const [answer, setAnswer] = useState(previousAnswer);
-    const [errorText, setErrorText] = useState("");
 
     const handleSubmit = () => {
 
         if (answer === null || answer === "") {
-            setErrorText("Antwort kann nicht leer sein");
+            snackbarService.showSnackbar({type: "error", text:"Antwort kann nicht leer sein", showIcon: true });
             return
         }
-
-        setErrorText("");
 
         onSubmit({
             answer: answer
@@ -43,9 +41,6 @@ export default function FeedbackAnswerDialog({
             subtitle="Die Antwort wird im Anschluss öffentlich sichtbar sein."
             onClose={onCancel}
         >
-            <div className="error-text">
-                <a>{errorText}</a>
-            </div>
             <form
                 className="feedback-form"
                 onSubmit={(e) => {

@@ -43,33 +43,19 @@ const getAvailableCourses =  async () : Promise<string[]> => {
     }
 }
 
-const getCourseOrExtract =  async (raplaUrl? : string) : Promise<string> => {
+const extractCourse  =  async (raplaUrl : string) : Promise<string> => {
 
-    let response;
+    const token = authService.getToken();
 
-    if (raplaUrl) {
-        response = await fetch(
-            `${API_URL}/profile/course?raplaUrl=${encodeURIComponent(raplaUrl)}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
-
-    } else {
-        const token = authService.getToken();
-
-        response = await fetch(`${API_URL}/profile/course`, {
+    const response = await fetch(`${API_URL}/lecture/course?raplaUrl=${encodeURIComponent(raplaUrl)}`,
+        {
             method: 'GET',
             headers: {
-                Authorization: `Bearer ${token}`,
-
                 'Content-Type': 'application/json',
-            }
-        });
-    }
+                ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+            },
+        }
+    );
 
     if (response.ok) {
         return await response.text();
@@ -81,6 +67,8 @@ const getCourseOrExtract =  async (raplaUrl? : string) : Promise<string> => {
 const getLecturesForWeek = async (weekOffset: number, course: string): Promise<Lecture[]> => {
     const cacheKey = `${weekOffset}-${course}`;
 
+    const token = authService.getToken();
+
     if (!lectureCache.has(cacheKey)) {
         const promise = fetch(
             `${API_URL}/lecture/week?weekOffset=${weekOffset}&course=${course}`,
@@ -89,6 +77,7 @@ const getLecturesForWeek = async (weekOffset: number, course: string): Promise<L
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                ...(token !== undefined && { Authorization: `Bearer ${token}` }),
             }
         )
         .then(res => {
@@ -271,7 +260,7 @@ export const setHiddenLectures = (lectures: string[] | null) => {
 
 export const lectureService = {
     getAvailableCourses,
-    getCourseOrExtract,
+    extractCourse,
     getLecturesForWeek,
     getLectureNamesForSemester,
     getCurrentAndNextLecture,

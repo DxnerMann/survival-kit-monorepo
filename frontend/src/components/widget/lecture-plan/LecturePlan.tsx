@@ -12,6 +12,7 @@ import type {Lecture} from "../../../models/Lecture.tsx";
 import LectureCalendar from "../../LectureCalendar.tsx";
 import ColorPicker from "../../shared/ColorPicker.tsx";
 import SelectionDropdown from "../../shared/SelectionDropdown.tsx";
+import {snackbarService} from "../../../services/snackBarService.tsx";
 
 interface LecturePlanData {
     lectureColor: string,
@@ -54,7 +55,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 }
             }
         } catch {
-            return defaultData;
+            throw new Error("Failed to fetch Lecture-Plan Data");
         }
     });
     const [selectedCourse, setSelectedCourse] = useState(decodedData.course);
@@ -72,14 +73,20 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
             return;
         }
         (async () => {
-            const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
-            setLectures(data.filter(lecture => {
-                const isHidden = decodedData.hiddenLectures.some(hiddenText =>
-                    lecture.title.trim().includes(hiddenText.trim())
-                );
-                return !isHidden;
-            }));        })();
-    }, [decodedData.course, decodedData.hiddenLectures, selectedCourse, weekOffset]);
+            try {
+                const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
+                setLectures(data.filter(lecture => {
+                    const isHidden = decodedData.hiddenLectures.some(hiddenText =>
+                        lecture.title.trim().includes(hiddenText.trim())
+                    );
+                    return !isHidden;
+                }));
+            } catch (error) {
+                console.error(error);
+                snackbarService.showSnackbar({type: "error", text:"Fehler beim Laden des Vorlesungsplans.", showIcon: true });
+            }
+        })();
+    }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset]);
 
     useEffect(() => {
         async function load() {
@@ -108,11 +115,19 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     }
 
     async function onLinkChnaged(link: string) {
-        const course = await lectureService.getCourseOrExtract(link);
+        try {
+            if (new URL(link).protocol !== 'https:') {
+                return false
+            }
+        } catch {
+            return false;
+        }
+        const course = await lectureService.extractCourse(link);
         updateData({course: course});
         setSelectedCourse(course);
         setTimerCourse(course);
     }
+
     function onFilterChanged(newHiddenLectures: string[]) {
         updateData({ hiddenLectures: newHiddenLectures });
         setHiddenLectures(newHiddenLectures);
@@ -220,7 +235,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                                     Du hast noch keinen Kurs angegeben, der angezeigt werden soll.
                                     <a className="important-text" onClick={() => setInSettings(true)}>Einstellungen</a>
                                 </div>
-                                : <>
+                                :  <>
                                     <h4 className="lecture-plan-heading">{decodedData.course}</h4>
                                     <LectureCalendar
                                         key={`${weekOffset}`}

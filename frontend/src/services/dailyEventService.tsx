@@ -4,6 +4,7 @@ const API_URL = api.baseUrl;
 
 
 export const getDailyCat = async () => {
+
     const response = await fetch(`${API_URL}/daily/cat?`);
 
     if (!response.ok) {

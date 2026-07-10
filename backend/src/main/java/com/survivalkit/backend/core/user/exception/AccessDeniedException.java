@@ -1,4 +1,4 @@
-package com.survivalkit.backend.core.auth.exception;
+package com.survivalkit.backend.core.user.exception;
 
 import com.survivalkit.backend.shared.RoleLevel;
 

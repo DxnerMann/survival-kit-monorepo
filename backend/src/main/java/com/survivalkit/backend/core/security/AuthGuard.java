@@ -1,9 +1,9 @@
 package com.survivalkit.backend.core.security;
 
 import com.survivalkit.backend.config.SecurityContext;
-import com.survivalkit.backend.core.auth.AuthenticatedUser;
-import com.survivalkit.backend.core.auth.exception.AccessDeniedException;
-import com.survivalkit.backend.core.auth.exception.UserUnauthorizedException;
+import com.survivalkit.backend.core.user.AuthenticatedUser;
+import com.survivalkit.backend.core.user.exception.AccessDeniedException;
+import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import jakarta.servlet.FilterChain;
@@ -51,26 +51,23 @@ public class AuthGuard extends OncePerRequestFilter {
         var requiredRole = resolveRequiredRole(request);
 
         if (isLocalProfile() || requiredRole == RoleLevel.GUEST) {
-            try {
-                var token = request.getHeader("Authorization")
-                        .substring(BEARER_PREFIX.length()).trim();
-                var user = tokenService.validate(token).get();
-                SecurityContext.set(user);
+            var authHeader = request.getHeader("Authorization");
 
-            } catch (Exception e) {
-                if (isLocalProfile()) {
-                    SecurityContext.set(
-                            new AuthenticatedUser(
-                                    "",
-                                    "local-admin-id",
-                                    "Admin",
-                                    RoleLevel.ADMIN,
-                                    "email",
-                                    true
-                            )
-                    );
+            if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+                var token = authHeader.substring(BEARER_PREFIX.length()).trim();
+                var maybeUser = tokenService.validate(token);
+
+                if (maybeUser.isPresent()) {
+                    SecurityContext.set(maybeUser.get());
+                } else if (isLocalProfile()) {
+                    // token was provided but Invalid/Revoked - Reject (for testing Token revocation)
                 }
+            } else if (isLocalProfile()) {
+                SecurityContext.set(
+                        new AuthenticatedUser("", "local-admin-id", "Admin", RoleLevel.ADMIN, "email", true)
+                );
             }
+
             filterChain.doFilter(request, response);
             return;
         }

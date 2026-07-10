@@ -7,6 +7,8 @@ public interface FeedbackPersistancePort {
     Page<Feedback> getFeedbackPaged(int pageSize, String continuation);
     void rateFeedback(String id, Boolean upVote, String userId);
     void deleteFeedback(String id);
+    void deleteAllVotes(String userId);
     void answerFeedback(String id, String answer);
     boolean canVote(String feedbackId, String userId);
+    void deleteUser(String userId);
 }

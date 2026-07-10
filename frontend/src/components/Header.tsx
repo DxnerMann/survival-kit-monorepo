@@ -25,9 +25,9 @@ const Header = () => {
             <NavIcon icon={<ChartNoAxesColumn size={20} />} label="Statistiken" path="/stats" />
             { isGuest
                 ?  <NavIcon icon={<KeyRound size={20} />} label="Login" path="/login" />
-                : <NavIcon icon={<User size={20} />} label="Profil" path="/profile" />
+                : <NavIcon icon={<User size={20} />} label="Profil" path="/account" />
             }
-            <Seperator width={"1px"} height={"50%"} />
+            <Seperator width={"1px"} height={"50%"} variant={"primary"} />
             <div className="header-theme-toggle-wrapper">
                 <ThemeToggle />
             </div>
