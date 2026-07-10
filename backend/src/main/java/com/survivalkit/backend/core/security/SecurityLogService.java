@@ -2,6 +2,7 @@ package com.survivalkit.backend.core.security;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.postgres.logs.SecurityLogPersistancePort;
+import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.shared.Page;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class SecurityLogService implements SecurityLog {
 
 
     @Override
-    public void logInfo(Log.SecurityLogSubType subType, String message) {
+    public void logInfo(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
                 Log.SecurityLogType.INFO,
                 subType,
@@ -29,7 +30,7 @@ public class SecurityLogService implements SecurityLog {
     }
 
     @Override
-    public void logWarning(Log.SecurityLogSubType subType, String message) {
+    public void logWarning(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
                 Log.SecurityLogType.WARNING,
                 subType,
@@ -39,7 +40,7 @@ public class SecurityLogService implements SecurityLog {
     }
 
     @Override
-    public void logError(Log.SecurityLogSubType subType, String message) {
+    public void logError(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
                 Log.SecurityLogType.ERROR,
                 subType,

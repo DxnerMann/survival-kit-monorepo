@@ -31,29 +31,24 @@ public class GlobalExceptionHandler {
     }
 
     private ApiError resolveError(Exception exception) {
-        ApiError error = null;
+        var errorCode = ErrorCode.UNKNOWN;
         try {
-            var errorCode = ErrorCode.fromCode(exception.getMessage());
-            error = new ApiError(
-                    errorCode.getHttpStatus().value(),
-                    errorCode.getCode(),
-                    errorCode.getHttpStatus(),
-                    errorCode.getMessage(),
-                    Instant.now()
-            );
+            errorCode = ErrorCode.fromCode(exception.getMessage());
         } catch (IllegalArgumentException | NoSuchElementException ex) {
-            error = new ApiError(
-                    ErrorCode.UNKNOWN.getHttpStatus().value(),
-                    ErrorCode.UNKNOWN.getCode(),
-                    ErrorCode.UNKNOWN.getHttpStatus(),
-                    ErrorCode.UNKNOWN.getMessage(),
-                    Instant.now()
-            );
             exception.printStackTrace();
         } finally {
-            // securityLog.logError(Log.SecurityLogSubType.UNCATEGORIZED, ex.getMessage());
+            securityLog.logError(
+                errorCode.getErrorCategory(),
+                errorCode.getMessage()
+            );
         }
-        return error;
+        return new ApiError(
+                errorCode.getHttpStatus().value(),
+                errorCode.getCode(),
+                errorCode.getHttpStatus(),
+                errorCode.getMessage(),
+                Instant.now()
+        );
     }
 
 }
