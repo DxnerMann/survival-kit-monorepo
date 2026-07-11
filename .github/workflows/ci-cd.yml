@@ -134,7 +134,7 @@ jobs:
             MAIL_HOST=${{ secrets.MAIL_HOST }}
             MAIL_PORT=${{ secrets.MAIL_PORT }}
             MAIL_USERNAME=${{ secrets.BREVO_USERNAME }}
-            MAIL_PASSWORD=${{ secrets.BREVO_SMPT_KEY }}
+            MAIL_PASSWORD=${{ secrets.BREVO_SMTP_KEY }}
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             EOF
 
