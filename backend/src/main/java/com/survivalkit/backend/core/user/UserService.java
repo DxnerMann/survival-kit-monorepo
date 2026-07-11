@@ -7,8 +7,10 @@ import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.ProfileImageResponse;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.core.user.exception.CannotDeleteLastAdminException;
 import com.survivalkit.backend.core.user.exception.UsernameChangeToSoonException;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
+import com.survivalkit.backend.shared.Page;
 import com.survivalkit.backend.shared.RoleLevel;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
@@ -147,5 +149,23 @@ public class UserService implements UserPort {
             throw new IllegalArgumentException(ErrorCode.INVALID_COLOR.getCode());
         }
         userPersistancePort.updateProfileColor(user.userId(), newColor);
+    }
+
+    @Override
+    public Page<UserProfile> getUsers(Integer pageSize, String continuation) {
+        pageSize = pageSize == null ? 20 : pageSize;
+        pageSize = pageSize > 50 ? 50 : pageSize;
+
+        return userPersistancePort.getUsers(pageSize, continuation);
+    }
+
+    @Override
+    public void promote(String userId, RoleLevel role) {
+
+        if (role == RoleLevel.USER && userPersistancePort.isLastAdmin(userId)) {
+            throw new CannotDeleteLastAdminException(ErrorCode.UNABLE_TO_DELETE_LAST_ADMIN.getCode());
+        }
+
+        userPersistancePort.setRole(userId, role);
     }
 }

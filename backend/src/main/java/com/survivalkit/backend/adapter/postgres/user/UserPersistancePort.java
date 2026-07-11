@@ -1,6 +1,8 @@
 package com.survivalkit.backend.adapter.postgres.user;
 
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
+import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.RoleLevel;
 
 import java.util.Optional;
 
@@ -19,6 +21,8 @@ public interface UserPersistancePort {
     void deleteUser(String userId);
     boolean isLastAdmin(String userId);
     void changeEmail(String userId, String newEmail, String newToken);
+    Page<UserProfile> getUsers(int pageSize, String continuation);
+    void setRole(String userId, RoleLevel role);
 
     /*
     TODO: Delete unverified Accounts after a while.

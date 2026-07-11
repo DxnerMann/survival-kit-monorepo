@@ -4,6 +4,7 @@ import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.core.security.SecurityLog;
+import com.survivalkit.backend.shared.Page;
 import com.survivalkit.backend.shared.RoleLevel;
 import com.survivalkit.backend.shared.Utils;
 import org.springframework.jdbc.core.RowMapper;
@@ -12,9 +13,12 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.survivalkit.backend.shared.ContinuationTokenHelper.decode;
+import static com.survivalkit.backend.shared.ContinuationTokenHelper.encode;
 import static com.survivalkit.backend.shared.Utils.toInstant;
 
 @Repository
@@ -153,6 +157,34 @@ public class UserRepository implements UserPersistancePort {
                 ).update();
     }
 
+    @Override
+    public Page<UserProfile> getUsers(int pageSize, String continuation) {
+        var users = jdbcClient.sql(Statements.GET_USERS.sql)
+                .paramSource(new MapSqlParameterSource("pageSize", pageSize)
+                        .addValue("continuation", decode(continuation)))
+                .query(UserProfile.class)
+                .list();
+
+        if (users.isEmpty()) {
+            return new Page<>(
+                    List.of(),
+                    null
+            );
+        }
+        return new Page<>(
+                users,
+                encode(users.getLast().userId())
+        );
+    }
+
+    @Override
+    public void setRole(String userId, RoleLevel role) {
+        jdbcClient.sql(Statements.SET_ROLE.sql)
+                .paramSource(new MapSqlParameterSource("id", userId)
+                        .addValue("role", role.toString()))
+                .update();
+    }
+
     private static final RowMapper<UserModel> USER_ROW_MAPPER = (rs, rowNum) -> {
         byte[] imgBytes = rs.getBytes("img");
         String imgTypeRaw = rs.getString("imgType");
@@ -265,6 +297,22 @@ public class UserRepository implements UserPersistancePort {
         CHANGE_EMAIL(
                 """
                         UPDATE users SET email = :email, verificationToken = :verificationToken, isverified = false WHERE id = :id
+                    """
+        ),
+        // language=sql
+        GET_USERS(
+                """
+                        SELECT firstname, lastname, course, role, email, username, color, id as userId, isverified
+                        FROM users
+                        WHERE (:continuation::TEXT IS NULL OR id > :continuation)
+                        ORDER BY id
+                        LIMIT :pageSize
+                    """
+        ),
+        // language=sql
+        SET_ROLE(
+                """
+                        UPDATE users SET role = :role WHERE id = :id
                     """
         );
 
