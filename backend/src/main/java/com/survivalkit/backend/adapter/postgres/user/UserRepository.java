@@ -236,8 +236,7 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         GET_BY_MAIL_OR_USERNAME(
         """
-                SELECT * FROM users WHERE username = :username OR email = :email LIMIT 1;
-            """
+                SELECT * FROM users WHERE username = :username OR LOWER(email) = LOWER(:email) LIMIT 1;            """
         ),
         // language=sql
         VERIFY(

@@ -7,7 +7,7 @@ import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkApprovementRequest;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkSuggestionRequest;
-import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.Page;
 import io.viascom.nanoid.NanoId;
@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+
+import static com.survivalkit.backend.context.SecurityContext.requireVerification;
 
 @Service
 public class QuickLinkService implements QuickLinkPort {
@@ -46,6 +48,8 @@ public class QuickLinkService implements QuickLinkPort {
 
     @Override
     public void suggestLink(QuickLinkSuggestionRequest suggestion) {
+
+        requireVerification();
 
         if (suggestion.title() == null || suggestion.title().isEmpty()) {
             throw new IllegalArgumentException(ErrorCode.QUICKLINK_TITLE_CANNOT_BE_EMPTY.getCode());
@@ -79,6 +83,8 @@ public class QuickLinkService implements QuickLinkPort {
     @Override
     public void approveOrDisApprove(QuickLinkApprovementRequest request) {
 
+        requireVerification();
+
         if (!request.approved()) {
             quickLinkPersistancePort.deleteQuickLink(request.linkId());
             return;
@@ -101,6 +107,9 @@ public class QuickLinkService implements QuickLinkPort {
 
     @Override
     public void markAsFav(String quickLinkId, boolean fav) {
+
+        requireVerification();
+
         var user = SecurityContext.current();
         if (fav) {
             favouritePersistancePort.addFav(user.userId(), quickLinkId);

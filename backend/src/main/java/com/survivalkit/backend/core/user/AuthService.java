@@ -11,7 +11,7 @@ import com.survivalkit.backend.adapter.postgres.widget.UserWidgetPersistancePort
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.auth.LoginResponse;
 import com.survivalkit.backend.adapter.web.auth.RegisterRequest;
-import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.user.exception.CannotDeleteLastAdminException;
 import com.survivalkit.backend.core.user.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.user.exception.UserAlreadyExistsException;

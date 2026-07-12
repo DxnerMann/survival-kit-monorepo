@@ -78,7 +78,7 @@ public class FeedbackController {
 
     @Role(RoleLevel.ADMIN)
     @PatchMapping("/answer")
-    public ResponseEntity<Void> deleteFeedback(
+    public ResponseEntity<Void> answerFeedback(
             @RequestBody FeedbackAnswerRequest request
     ) {
         feedbackPort.answerFeedback(request.id(), request.answer());
