@@ -1,4 +1,4 @@
-package com.survivalkit.backend.config;
+package com.survivalkit.backend.context;
 
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.user.AuthenticatedUser;
@@ -26,5 +26,11 @@ public final class SecurityContext {
 
     public static void clear() {
         HOLDER.remove();
+    }
+
+    public static void requireVerification() {
+        if (!current().isVerified()) {
+            throw new IllegalStateException(ErrorCode.NOT_VERIFIED.getCode());
+        }
     }
 }

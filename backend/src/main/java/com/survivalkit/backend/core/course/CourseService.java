@@ -3,7 +3,6 @@ package com.survivalkit.backend.core.course;
 import com.survivalkit.backend.adapter.postgres.course.CoursePersistancePort;
 import com.survivalkit.backend.adapter.rapla.RaplaApiPort;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
-import com.survivalkit.backend.config.SecurityContext;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

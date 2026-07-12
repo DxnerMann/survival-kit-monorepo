@@ -6,7 +6,7 @@ import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.ProfileImageResponse;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
-import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.user.exception.CannotDeleteLastAdminException;
 import com.survivalkit.backend.core.user.exception.UsernameChangeToSoonException;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static com.survivalkit.backend.context.SecurityContext.requireVerification;
+
 @Service
 public class UserService implements UserPort {
 
@@ -33,8 +35,9 @@ public class UserService implements UserPort {
 
     @Override
     public void setCourseForUser(String course) {
-            var user = SecurityContext.current();
-            userPersistancePort.setUserCourse(user.userId(), course);
+        requireVerification();
+        var user = SecurityContext.current();
+        userPersistancePort.setUserCourse(user.userId(), course);
     }
 
     @Override
@@ -46,6 +49,7 @@ public class UserService implements UserPort {
 
     @Override
     public void updateProfilePicture(MultipartFile file) {
+        requireVerification();
         var user = SecurityContext.current();
         var contentType = file.getContentType();
 
@@ -107,6 +111,7 @@ public class UserService implements UserPort {
 
     @Override
     public void updateUsername(String newUsername) {
+        requireVerification();
         var authUser = SecurityContext.current();
         var user = userPersistancePort.getById(authUser.userId());
 
@@ -143,6 +148,7 @@ public class UserService implements UserPort {
 
     @Override
     public void updateColor(String newColor) {
+        requireVerification();
         var user = SecurityContext.current();
 
         if (!newColor.matches("^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$")) {
@@ -161,7 +167,7 @@ public class UserService implements UserPort {
 
     @Override
     public void promote(String userId, RoleLevel role) {
-
+        requireVerification();
         if (role == RoleLevel.USER && userPersistancePort.isLastAdmin(userId)) {
             throw new CannotDeleteLastAdminException(ErrorCode.UNABLE_TO_DELETE_LAST_ADMIN.getCode());
         }

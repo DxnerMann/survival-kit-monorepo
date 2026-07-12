@@ -1,7 +1,7 @@
 package com.survivalkit.backend.core.security;
 
 import com.survivalkit.backend.adapter.web.ErrorCode;
-import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.user.AuthenticatedUser;
 import com.survivalkit.backend.core.user.exception.AccessDeniedException;
 import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;

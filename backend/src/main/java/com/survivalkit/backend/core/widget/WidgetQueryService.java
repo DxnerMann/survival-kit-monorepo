@@ -1,17 +1,18 @@
 package com.survivalkit.backend.core.widget;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetModel;
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetPersistancePort;
 import com.survivalkit.backend.adapter.web.ErrorCode;
-import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.context.SecurityContext;
 import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+import static com.survivalkit.backend.context.SecurityContext.requireVerification;
 
 @Service
 public class WidgetQueryService implements WidgetQueryPort {
@@ -43,6 +44,9 @@ public class WidgetQueryService implements WidgetQueryPort {
 
     @Override
     public void saveAllWidgets(List<UserWidgetModel> widgetModels) {
+
+        requireVerification();
+
         var user = SecurityContext.current();
 
         if (widgetModels.isEmpty()) {

@@ -3,14 +3,15 @@ package com.survivalkit.backend.core.feedback;
 import com.survivalkit.backend.adapter.postgres.feedback.Feedback;
 import com.survivalkit.backend.adapter.postgres.feedback.FeedbackPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
-import com.survivalkit.backend.config.SecurityContext;
+import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.Page;
 import io.viascom.nanoid.NanoId;
-import org.springframework.data.relational.core.sql.In;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+
+import static com.survivalkit.backend.context.SecurityContext.requireVerification;
 
 @Service
 public class FeedbackService implements FeedbackPort {
@@ -56,6 +57,8 @@ public class FeedbackService implements FeedbackPort {
     @Override
     public void rateFeedback(String feedbackId, Boolean upVote) {
 
+        requireVerification();
+
         var user = SecurityContext.current();
 
         if (feedbackPersistancePort.canVote(feedbackId, user.userId())) {
@@ -65,11 +68,13 @@ public class FeedbackService implements FeedbackPort {
 
     @Override
     public void deleteFeedback(String feedbackId) {
+        requireVerification();
         feedbackPersistancePort.deleteFeedback(feedbackId);
     }
 
     @Override
     public void answerFeedback(String id, String answer) {
+        requireVerification();
         feedbackPersistancePort.answerFeedback(id, answer);
     }
 
