@@ -122,14 +122,11 @@ Routing is handled by the external Nginx proxy:
 ## ToDo's ~before Release
 
 - [ ] Rate Limiting on Several Places
-- [ ] View / Promote Users as Admin in Adminpanel
-- [ ] Option to resend Authentication Mail
-- [ ] Profile Options (Change email, delete Account)
 - [ ] Random Word generator game
 - [ ] Integrate Free-Room-Finder from Kai
 - [ ] Daily Phrase Rework from v2
 - [ ] Daily-Course-Chat Rework from v2 (Encrypted?, RichText, Images, GIFs, Videos?, Files)
-- [ ] Rework Logging and Exception Handling
+- [ ] QuickLink-Favourites and Widget
 
 ## Further Ideas
 

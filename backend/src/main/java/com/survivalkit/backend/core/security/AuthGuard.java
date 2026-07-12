@@ -88,10 +88,6 @@ public class AuthGuard extends OncePerRequestFilter {
 
             var user = maybeUser.get();
 
-            if (!user.isVerified()) {
-                throw new UserUnauthorizedException(ErrorCode.NOT_VERIFIED.getCode());
-            }
-
             if (!user.role().hasAtLeast(requiredRole)) {
                 throw new AccessDeniedException(ErrorCode.NOT_REQUIRED_ROLE.getCode());
             }
