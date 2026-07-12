@@ -100,7 +100,6 @@ export default function GameSuggestionDialog({
                         text={"Abbrechen"}
                         onClick={onCancel}
                         variant="secondary"
-                        type="reset"
                         fullWidth={true}
                     />
 
@@ -108,7 +107,6 @@ export default function GameSuggestionDialog({
                         text={"Absenden"}
                         onClick={handleSubmit}
                         variant="primary"
-                        type="submit"
                         fullWidth={true}
                     />
                 </div>

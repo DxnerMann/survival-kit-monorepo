@@ -119,9 +119,8 @@ Routing is handled by the external Nginx proxy:
 | `api.lecture-survival-kit.jannis-saur.de` | Backend |
 
 ---
-## ToDo's ~before Release
+## Roadmap and ToDo's
 
-- [ ] Rate Limiting on Several Places
 - [ ] Random Word generator game
 - [ ] Integrate Free-Room-Finder from Kai
 - [ ] Daily Phrase Rework from v2
@@ -131,4 +130,3 @@ Routing is handled by the external Nginx proxy:
 ## Further Ideas
 
 - [ ] 5 Days at DHBW (FNAF) Game
-- [ ] Private Chat with Users (Encrypted?)
