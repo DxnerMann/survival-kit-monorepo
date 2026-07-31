@@ -43,6 +43,11 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
 
     "06x00000000": { text: "Rapla-URL und Kurs dürfen nicht beide leer sein.", type: "warning" },
     "06x00000001": { text: "Kurs nicht gefunden.", type: "error" },
+
+    "08x00000000": { text: "Die Koffeinmenge muss zwischen 1 und 1000 mg liegen.", type: "warning" },
+    "08x00000001": { text: "Ungültige Koffein-Quelle.", type: "warning" },
+    "08x00000002": { text: "Ungültiger Zeitpunkt (max. 7 Tage zurück).", type: "warning" },
+    "08x00000003": { text: "Koffein-Eintrag wurde nicht gefunden.", type: "error" },
 };
 
 export function resolveError(error: ApiError): void {

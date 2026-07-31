@@ -54,7 +54,13 @@ public enum ErrorCode {
 
     // WIDGET (07x)
     FAILED_TO_READ_WIDGET_DATA("07x00000000", "Failed to read data of the widget", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.WIDGET),
-    WIDGET_NOT_FOUND("07x00000001", "Widget not found or not owned by user", HttpStatus.NOT_FOUND, ErrorCategory.WIDGET);
+    WIDGET_NOT_FOUND("07x00000001", "Widget not found or not owned by user", HttpStatus.NOT_FOUND, ErrorCategory.WIDGET),
+
+    // CAFFEINE (08x)
+    CAFFEINE_AMOUNT_INVALID("08x00000000", "Caffeine amount must be between 1 and 1000 mg", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
+    CAFFEINE_SOURCE_INVALID("08x00000001", "Caffeine source is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
+    CAFFEINE_TIMESTAMP_INVALID("08x00000002", "Caffeine timestamp is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
+    CAFFEINE_ENTRY_NOT_FOUND("08x00000003", "Caffeine entry not found", HttpStatus.NOT_FOUND, ErrorCategory.CAFFEINE);
 
     private final String code;
     private final String message;
@@ -94,7 +100,8 @@ public enum ErrorCode {
         LECTURE,
         WIDGET,
         COURSE,
-        FEEDBACK
+        FEEDBACK,
+        CAFFEINE
     }
 
     private static final Map<String, ErrorCode> BY_CODE = Arrays.stream(values())
