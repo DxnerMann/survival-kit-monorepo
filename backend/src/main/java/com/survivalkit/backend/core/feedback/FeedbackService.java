@@ -26,6 +26,7 @@ public class FeedbackService implements FeedbackPort {
 
     @Override
     public void saveFeedback(String title, String description, Feedback.FeedbackType type) {
+        requireVerification();
 
         var user = SecurityContext.current();
 

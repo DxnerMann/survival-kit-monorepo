@@ -21,23 +21,25 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 @Component
 public class AuthGuard extends OncePerRequestFilter {
 
-    private static final String BEARER_PREFIX = "Bearer ";
     private final TokenService tokenService;
+    private final SessionCookieService sessionCookieService;
     private final RequestMappingHandlerMapping handlerMapping;
     private final HandlerExceptionResolver exceptionResolver;
     private final Environment environment;
 
     public AuthGuard(
             TokenService tokenService,
+            SessionCookieService sessionCookieService,
             RequestMappingHandlerMapping handlerMapping,
-            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver, Environment environment
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver,
+            Environment environment
     ) {
         this.tokenService = tokenService;
+        this.sessionCookieService = sessionCookieService;
         this.handlerMapping = handlerMapping;
         this.exceptionResolver = exceptionResolver;
         this.environment = environment;
@@ -49,79 +51,70 @@ public class AuthGuard extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        var requiredRole = resolveRequiredRole(request);
+        try {
+            var requiredRole = resolveRequiredRole(request);
 
-        if (isLocalProfile() || requiredRole == RoleLevel.GUEST) {
-            var authHeader = request.getHeader("Authorization");
-
-            if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
-                var token = authHeader.substring(BEARER_PREFIX.length()).trim();
-                var maybeUser = tokenService.validate(token);
-
-                if (maybeUser.isPresent()) {
-                    SecurityContext.set(maybeUser.get());
-                } else if (isLocalProfile()) {
-                    // token was provided but Invalid/Revoked - Reject (for testing Token revocation)
-                }
-            } else if (isLocalProfile()) {
-                SecurityContext.set(
-                        new AuthenticatedUser("", "local-admin-id", "Admin", RoleLevel.ADMIN, "email", true)
-                );
+            if (requiredRole == RoleLevel.GUEST) {
+                authenticateOptional(request);
+                filterChain.doFilter(request, response);
+                return;
             }
 
-            filterChain.doFilter(request, response);
-            return;
-        }
+            var user = authenticateRequired(request);
 
-        try {
-            var authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            if (isLocalProfile() && user == null) {
+                user = new AuthenticatedUser("", "local-admin-id", "Admin", RoleLevel.ADMIN, "email", true);
+            }
+
+            if (user == null) {
                 throw new UserUnauthorizedException(ErrorCode.UNAUTHORIZED.getCode());
             }
-
-            var token = authHeader.substring(BEARER_PREFIX.length()).trim();
-            var maybeUser = tokenService.validate(token);
-
-            if (maybeUser.isEmpty()) {
-                throw new UserUnauthorizedException(ErrorCode.TOKEN_INVALID_OR_EXPIRED.getCode());
-            }
-
-            var user = maybeUser.get();
 
             if (!user.role().hasAtLeast(requiredRole)) {
                 throw new AccessDeniedException(ErrorCode.NOT_REQUIRED_ROLE.getCode());
             }
 
             SecurityContext.set(user);
-            try {
-                filterChain.doFilter(request, response);
-            } finally {
-                SecurityContext.clear();
-            }
+            filterChain.doFilter(request, response);
 
         } catch (UserUnauthorizedException | AccessDeniedException ex) {
             exceptionResolver.resolveException(request, response, null, ex);
+        } finally {
+            SecurityContext.clear();
         }
     }
 
-    private static final List<String> SWAGGER_PATHS = List.of(
-            "/v3/api-docs",
-            "/v3/api-docs/swagger-config",
-            "/swagger-ui/index.html",
-            "/swagger-ui/swagger-initializer.js"
-    );
+    private void authenticateOptional(HttpServletRequest request) {
+        var token = sessionCookieService.extractToken(request);
+        if (token == null) {
+            return;
+        }
+        tokenService.validate(token).ifPresent(SecurityContext::set);
+    }
+
+    private AuthenticatedUser authenticateRequired(HttpServletRequest request) {
+        var token = sessionCookieService.extractToken(request);
+        if (token == null) {
+            return null;
+        }
+
+        return tokenService.validate(token).orElseThrow(
+                () -> new UserUnauthorizedException(ErrorCode.TOKEN_INVALID_OR_EXPIRED.getCode())
+        );
+    }
 
     private RoleLevel resolveRequiredRole(HttpServletRequest request) {
         String path = request.getRequestURI();
-        if (SWAGGER_PATHS.stream().anyMatch(path::startsWith))
-        {
+        if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
             return RoleLevel.ADMIN;
         }
 
         try {
             var handlerExecutionChain = handlerMapping.getHandler(request);
 
-            if (handlerExecutionChain == null) return RoleLevel.GUEST;
+            if (handlerExecutionChain == null) {
+                return RoleLevel.USER;
+            }
 
             var handler = handlerExecutionChain.getHandler();
             if (handler instanceof HandlerMethod method) {
@@ -134,10 +127,10 @@ public class AuthGuard extends OncePerRequestFilter {
                 return RoleLevel.USER;
             }
 
-            return RoleLevel.GUEST;
+            return RoleLevel.USER;
 
-        } catch (Exception ignored) {
-            return RoleLevel.GUEST;
+        } catch (Exception e) {
+            return RoleLevel.USER;
         }
     }
 

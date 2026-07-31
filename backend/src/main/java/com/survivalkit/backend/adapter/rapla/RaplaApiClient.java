@@ -26,6 +26,12 @@ import java.util.stream.Collectors;
 @Service
 public class RaplaApiClient implements RaplaApiPort {
 
+    private static final int MAX_SEMESTER_WEEKS = 30;
+    private static final Set<String> ALLOWED_RAPLA_HOSTS = Set.of(
+            "rapla.dhbw-karlsruhe.de",
+            "rapla.dhbw.de"
+    );
+
     private final RestClient restClient;
 
     public RaplaApiClient(RestClient restClient) {
@@ -34,6 +40,7 @@ public class RaplaApiClient implements RaplaApiPort {
 
     @Override
     public List<Lecture> getLectures(int weekOffset, String raplaCourseBaseUrl) {
+        assertAllowedRaplaUrl(raplaCourseBaseUrl);
 
         var document = Jsoup.parse(fetchRaplaPageWeek(weekOffset, raplaCourseBaseUrl));
         var lectures = new ArrayList<Lecture>();
@@ -66,6 +73,8 @@ public class RaplaApiClient implements RaplaApiPort {
 
     @Override
     public String extractCourse(String raplaCourseBaseUrl) {
+        assertAllowedRaplaUrl(raplaCourseBaseUrl);
+
         if (raplaCourseBaseUrl != null && raplaCourseBaseUrl.contains("file=")) {
             try {
                 var uri = new URI(raplaCourseBaseUrl);
@@ -127,8 +136,9 @@ public class RaplaApiClient implements RaplaApiPort {
             Set<String> lectureNames
     ) {
         var weekOffset = startOffset;
+        var weeksFetched = 0;
 
-        while (true) {
+        while (weeksFetched < MAX_SEMESTER_WEEKS) {
             var week = getLectures(weekOffset, raplaCourseBaseUrl);
 
             if (week.isEmpty()) {
@@ -137,6 +147,33 @@ public class RaplaApiClient implements RaplaApiPort {
 
             week.forEach(lecture -> lectureNames.add(lecture.title().replaceAll("\\s*\\([^)]*\\)", "")));
             weekOffset += direction;
+            weeksFetched++;
+        }
+    }
+
+    private void assertAllowedRaplaUrl(String raplaUrl) {
+        if (raplaUrl == null || raplaUrl.isBlank()) {
+            throw new IllegalArgumentException(ErrorCode.RAPLA_URL_NOT_ALLOWED.getCode());
+        }
+
+        try {
+            var uri = new URI(raplaUrl);
+            var scheme = uri.getScheme();
+            var host = uri.getHost();
+
+            if (scheme == null || host == null || !"https".equalsIgnoreCase(scheme)) {
+                throw new IllegalArgumentException(ErrorCode.RAPLA_URL_NOT_ALLOWED.getCode());
+            }
+
+            var normalizedHost = host.toLowerCase();
+            var allowed = ALLOWED_RAPLA_HOSTS.contains(normalizedHost)
+                    || (normalizedHost.startsWith("rapla.") && normalizedHost.endsWith(".dhbw.de"));
+
+            if (!allowed) {
+                throw new IllegalArgumentException(ErrorCode.RAPLA_URL_NOT_ALLOWED.getCode());
+            }
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(ErrorCode.RAPLA_URL_NOT_ALLOWED.getCode());
         }
     }
 

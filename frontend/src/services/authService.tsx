@@ -1,39 +1,24 @@
-import Cookies from 'js-cookie'
-
-import type {ApiError} from '../models/ApiError.tsx'
 import type {LoginRequest} from '../models/LoginRequest.tsx'
 import type {LoginResponse} from '../models/LoginResponse.tsx'
 import type {RegisterRequest} from '../models/RegisterRequest.tsx'
-import {api, checkResponse, resolveError} from "./api.tsx";
+import {api, apiFetch, checkResponse} from "./api.tsx";
 import {setUserContext} from "./userService.tsx";
+import {clearSessionMeta, hasSessionMeta, setSessionMeta} from "./tokenService.tsx";
 
 const API_URL = api.baseUrl;
-
-const TOKEN_KEY = 'session'
-
-const saveToken = (token: string) => {
-    Cookies.set(TOKEN_KEY, token, {
-        expires: 7,
-        sameSite: 'strict',
-    })
-}
-
-const getToken = (): string | undefined => {
-    return Cookies.get(TOKEN_KEY)
-}
 
 export const validatePassword = (pw: string) => {
     return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/.test(pw)
 }
 
-const removeToken = () => {
-    Cookies.remove(TOKEN_KEY)
+const clearSession = () => {
+    clearSessionMeta();
 }
 
 const login = async (
     request: LoginRequest
 ): Promise<LoginResponse> => {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await apiFetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -44,8 +29,9 @@ const login = async (
     await checkResponse(response);
 
     const data: LoginResponse = await response.json();
-    saveToken(data.token)
+    setSessionMeta(data.role, data.username);
     setUserContext(data);
+    localStorage.removeItem('guest');
 
     return data
 }
@@ -53,7 +39,7 @@ const login = async (
 const register = async (
     request: RegisterRequest
 ): Promise<void> => {
-    const response = await fetch(`${API_URL}/auth/register`, {
+    const response = await apiFetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -65,27 +51,17 @@ const register = async (
 }
 
 const validate = async (): Promise<boolean> => {
-    const token = getToken()
-
-    if (!token) {
-        return false
-    }
-
-    const response = await fetch(`${API_URL}/auth/validate`, {
+    const response = await apiFetch(`${API_URL}/auth/validate`, {
         method: 'POST',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
     })
 
     if (!response.ok) {
-        removeToken();
-        const apiError: ApiError = await response.json();
-        resolveError(apiError);
+        clearSession();
+        return false;
     }
 
     const data: LoginResponse = await response.json();
-    saveToken(data.token);
+    setSessionMeta(data.role, data.username);
     setUserContext(data);
     return true;
 }
@@ -94,89 +70,78 @@ const changePassword = async (
     oldPassword: string,
     newPassword: string,
 ): Promise<void> => {
-    const token = authService.getToken();
-    const params = new URLSearchParams({ oldPassword, newPassword });
-    const response = await fetch(`${API_URL}/auth/password?${params.toString()}`, {
+    const response = await apiFetch(`${API_URL}/auth/password`, {
         method: 'PUT',
         headers: {
-            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+            'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ oldPassword, newPassword }),
     });
 
     await checkResponse(response);
+
+    const data: LoginResponse = await response.json();
+    setSessionMeta(data.role, data.username);
+    setUserContext(data);
 }
 
 const logout = async (callback: () => void) => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/auth/logout`, {
+    const response = await apiFetch(`${API_URL}/auth/logout`, {
         method: 'POST',
-        headers: {
-            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
-        },
     });
 
     await checkResponse(response);
 
-    Cookies.remove(TOKEN_KEY);
+    clearSession();
     callback();
 };
 
 const deleteAccount = async (callback: () => void) => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/auth`, {
+    const response = await apiFetch(`${API_URL}/auth`, {
         method: 'DELETE',
-        headers: {
-            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
-        },
     });
 
     await checkResponse(response);
 
-    Cookies.remove(TOKEN_KEY);
+    clearSession();
     callback();
 };
 
 const changeEmail = async (newEmail: string, callback: () => void) => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/auth/email?email=${newEmail}`, {
+    const response = await apiFetch(`${API_URL}/auth/email`, {
         method: 'PUT',
         headers: {
-            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
+            'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ email: newEmail }),
     });
 
     await checkResponse(response);
 
-    Cookies.remove(TOKEN_KEY);
+    clearSession();
     callback();
 };
 
 const resendVerification = async () => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/auth/resend`, {
+    const response = await apiFetch(`${API_URL}/auth/resend`, {
         method: 'POST',
-        headers: {
-            ...(token !== undefined && { Authorization: `Bearer ${token}` }),
-        },
     });
 
     await checkResponse(response);
 };
+
+const hasSession = (): boolean => hasSessionMeta();
 
 export const authService = {
     login,
     register,
     validate,
-    saveToken,
-    getToken,
-    removeToken,
+    clearSession,
+    removeToken: clearSession,
     changePassword,
     logout,
     deleteAccount,
     changeEmail,
-    resendVerification
+    resendVerification,
+    hasSession,
 }

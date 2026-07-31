@@ -65,22 +65,23 @@ public class WidgetQueryService implements WidgetQueryPort {
 
     @Override
     public void updateWidgetData(String id, String data) {
+        var authUser = SecurityContext.current();
 
         try {
             var root = objectMapper.readTree(data);
-            if (root.has("course")) {
-                var authUser = SecurityContext.current();
-                if (!root.get("course").isNull()) {
-                    var user = userPersistancePort.getById(authUser.userId());
-                    if (user.isPresent() && user.get().course() == null) {
-                        userPersistancePort.setUserCourse(authUser.userId(), root.get("course").asText());
-                    }
+            if (root.has("course") && !root.get("course").isNull()) {
+                var user = userPersistancePort.getById(authUser.userId());
+                if (user.isPresent() && user.get().course() == null) {
+                    userPersistancePort.setUserCourse(authUser.userId(), root.get("course").asText());
                 }
             }
         } catch (JsonProcessingException e) {
-			throw new RuntimeException(ErrorCode.FAILED_TO_READ_WIDGET_DATA.getCode());
-		} finally {
-            userWidgetPersistancePort.saveDataForWidget(id, data);
+            throw new RuntimeException(ErrorCode.FAILED_TO_READ_WIDGET_DATA.getCode());
+        }
+
+        var updated = userWidgetPersistancePort.saveDataForWidget(id, authUser.userId(), data);
+        if (!updated) {
+            throw new IllegalArgumentException(ErrorCode.WIDGET_NOT_FOUND.getCode());
         }
     }
 

@@ -49,11 +49,13 @@ public class UserWidgetRepository implements UserWidgetPersistancePort {
     }
 
     @Override
-    public void saveDataForWidget(String id, String data) {
-        jdbcClient.sql(Statements.UPDATE_DATA.sql)
+    public boolean saveDataForWidget(String id, String userId, String data) {
+        int updated = jdbcClient.sql(Statements.UPDATE_DATA.sql)
                 .paramSource(new MapSqlParameterSource("id", id)
+                        .addValue("userId", userId)
                         .addValue("data", data))
                 .update();
+        return updated > 0;
     }
 
     private enum Statements {
@@ -80,7 +82,7 @@ public class UserWidgetRepository implements UserWidgetPersistancePort {
         UPDATE_DATA(
                 """
                     UPDATE userWidgets SET data = :data
-                    WHERE id = :id
+                    WHERE id = :id AND userId = :userId
                     """
         );
 

@@ -1,15 +1,13 @@
 import {snackbarService} from "./snackBarService.tsx";
 import type {ApiError} from "../models/ApiError.tsx";
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 const API_VERSION = "v1"
 
 export const api = {
-    baseUrl: API_URL +  "/" + API_VERSION,
+    baseUrl: (API_URL ? API_URL.replace(/\/$/, "") : "") + "/" + API_VERSION,
 }
-
-// #####################
 
 type ErrorMapping = {
     text: string;
@@ -19,7 +17,6 @@ type ErrorMapping = {
 const GENERIC_ERROR_TEXT = "Etwas ist schiefgelaufen. Versuche es später erneut.";
 
 const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
-    // AUTHENTICATION
     "01x00000000": { text: "Du bist nicht angemeldet.", type: "error" },
     "01x00000001": { text: "E-Mail oder Passwort ist falsch.", type: "error" },
     "01x00000002": { text: "Bitte bestätige zuerst deine E-Mail-Adresse.", type: "warning" },
@@ -30,21 +27,20 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "01x00000008": { text: "Bitte gib eine gültige E-Mail-Adresse ein.", type: "error" },
     "01x0000000A": { text: "Du hast nicht die erforderliche Berechtigung.", type: "error" },
     "01x0000000B": { text: "Diese E-Mail oder dieser Benutzername wird bereits verwendet.", type: "error" },
+    "01x0000000C": { text: "Zu viele Anfragen. Bitte warte einen Moment.", type: "warning" },
 
-    // USER
     "03x00000001": { text: "Dieses Bildformat wird nicht unterstützt.", type: "error" },
     "03x00000004": { text: "Ungültige Farbe.", type: "error" },
     "03x00000005": { text: "Der Benutzername kann nur alle 30 Tage geändert werden.", type: "warning" },
 
-    // EXTERNAL
     "04x00000000": { text: "Der Kurs konnte nicht aus der Rapla-URL geladen werden.", type: "error" },
+    "04x00000001": { text: "Diese Rapla-URL ist nicht erlaubt.", type: "error" },
 
-    // QUICKLINK
     "05x00000000": { text: "Der Titel darf nicht leer sein.", type: "warning" },
     "05x00000001": { text: "Die Beschreibung darf nicht leer sein.", type: "warning" },
     "05x00000002": { text: "Die URL darf nicht leer sein.", type: "warning" },
+    "05x00000003": { text: "Die URL muss mit http:// oder https:// beginnen.", type: "warning" },
 
-    // LECTURE
     "06x00000000": { text: "Rapla-URL und Kurs dürfen nicht beide leer sein.", type: "warning" },
     "06x00000001": { text: "Kurs nicht gefunden.", type: "error" },
 };
@@ -65,4 +61,13 @@ export async function checkResponse(response: Response): Promise<void> {
         const apiError: ApiError = await response.json();
         resolveError(apiError);
     }
+}
+
+export function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
+    const headers = new Headers(init.headers);
+    return fetch(input, {
+        ...init,
+        credentials: "include",
+        headers,
+    });
 }

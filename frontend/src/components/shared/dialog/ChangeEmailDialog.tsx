@@ -29,13 +29,13 @@ export default function ChangeEmailDialog({
 
         if (newEmail === oldEmail) {
             onCancel();
+            return;
         }
 
         if (newEmail.match(EMAIL_REGEX)) {
             onSubmit(newEmail);
         } else {
             snackbarService.showSnackbar({type: "error", text:"Die eingegebene Email ist ungültig", showIcon: true });
-            return
         }
     };
 

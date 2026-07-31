@@ -1,6 +1,8 @@
+import type {UserRole} from "../services/tokenService.tsx";
+
 export type LoginResponse = {
-    token: string,
     username: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    role: UserRole
 }

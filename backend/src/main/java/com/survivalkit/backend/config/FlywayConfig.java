@@ -34,7 +34,7 @@ public class FlywayConfig {
         return Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
-                .validateOnMigrate(false)
+                .validateOnMigrate(true)
                 .load();
     }
 }

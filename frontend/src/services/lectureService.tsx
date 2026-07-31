@@ -1,6 +1,5 @@
 import type {ApiError} from '../models/ApiError.tsx'
-import {api, checkResponse, resolveError} from "./api.tsx";
-import {authService} from "./authService.tsx";
+import {api, apiFetch, checkResponse, resolveError} from "./api.tsx";
 import type {DayOfWeek, Lecture} from "../models/Lecture.tsx";
 import {useCallback, useEffect, useRef, useState} from "react";
 
@@ -25,7 +24,7 @@ const getNow = (): Date => {
 
 const getAvailableCourses = async (): Promise<string[]> => {
     try {
-        const response = await fetch(`${API_URL}/profile/courses`, {
+        const response = await apiFetch(`${API_URL}/profile/courses`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -43,14 +42,11 @@ const getAvailableCourses = async (): Promise<string[]> => {
 }
 
 const extractCourse = async (raplaUrl: string): Promise<string> => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/lecture/course?raplaUrl=${encodeURIComponent(raplaUrl)}`,
+    const response = await apiFetch(`${API_URL}/lecture/course?raplaUrl=${encodeURIComponent(raplaUrl)}`,
         {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                ...(token !== undefined && { Authorization: `Bearer ${token}` }),
             },
         }
     );
@@ -63,16 +59,13 @@ const extractCourse = async (raplaUrl: string): Promise<string> => {
 const getLecturesForWeek = async (weekOffset: number, course: string): Promise<Lecture[]> => {
     const cacheKey = `${weekOffset}-${course}`;
 
-    const token = authService.getToken();
-
     if (!lectureCache.has(cacheKey)) {
-        const promise = fetch(
+        const promise = apiFetch(
             `${API_URL}/lecture/week?weekOffset=${weekOffset}&course=${course}`,
             {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(token !== undefined && { Authorization: `Bearer ${token}` }),
                 },
             }
         )
@@ -198,7 +191,7 @@ const getLectureNamesForSemester = async (course: string): Promise<string[]> => 
         return [];
     }
 
-    const response = await fetch(
+    const response = await apiFetch(
         `${API_URL}/lecture/all?course=${course}`,
         {
             method: 'GET',

@@ -40,6 +40,17 @@ export default function GameSuggestionDialog({
             return
         }
 
+        try {
+            const parsed = new URL(url);
+            if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+                snackbarService.showSnackbar({type: "error", text:"Url muss mit http:// oder https:// beginnen", showIcon: true });
+                return
+            }
+        } catch {
+            snackbarService.showSnackbar({type: "error", text:"Url ist ungültig", showIcon: true });
+            return
+        }
+
         onSubmit({
             title: title,
             description: description,

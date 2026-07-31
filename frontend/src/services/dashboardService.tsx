@@ -1,6 +1,5 @@
-import {api, checkResponse} from "./api.tsx";
+import {api, apiFetch, checkResponse} from "./api.tsx";
 import type {UserWidget} from "../models/UserWidget.tsx";
-import {authService} from "./authService.tsx";
 import LecturePlan from "../components/widget/lecture-plan/LecturePlan.tsx";
 import LectureTimer from "../components/widget/lecture-timer/LectureTimer.tsx";
 import Clock from "../components/widget/clock/Clock.tsx";
@@ -10,13 +9,8 @@ import DailyCat from "../components/widget/cat/DailyCat.tsx";
 const API_URL = api.baseUrl;
 
 const getDashboardLayout = async (): Promise<UserWidget[]> => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/dashboard`, {
+    const response = await apiFetch(`${API_URL}/dashboard`, {
         method: 'GET',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
     })
 
     await checkResponse(response);
@@ -25,12 +19,9 @@ const getDashboardLayout = async (): Promise<UserWidget[]> => {
 }
 
 const saveDashbordLayout = async (widgets: UserWidget[]): Promise<void> => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/dashboard`, {
+    const response = await apiFetch(`${API_URL}/dashboard`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(widgets)
@@ -40,12 +31,9 @@ const saveDashbordLayout = async (widgets: UserWidget[]): Promise<void> => {
 }
 
 const saveWidgetData = async (id: string, data: string): Promise<void> => {
-    const token = authService.getToken();
-
-    const response = await fetch(`${API_URL}/dashboard/widget`, {
+    const response = await apiFetch(`${API_URL}/dashboard/widget`, {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({

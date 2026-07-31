@@ -22,7 +22,7 @@ import Footer from "../../components/Footer.tsx";
 import type {ProfileSettings} from "../../models/ProfileSettings.tsx";
 import Seperator from "../../components/shared/Seperator.tsx";
 
-const SWAGGER_PATH = import.meta.env.VITE_API_BASE_URL + "/swagger-ui/index.html";
+const SWAGGER_PATH = (import.meta.env.VITE_API_BASE_URL || "") + "/swagger-ui/index.html";
 
 const AdminPage = () => {
 
@@ -154,20 +154,7 @@ const AdminPage = () => {
 
         loadSuggestionsInit();
 
-        const loadLogsInit = async () => {
-            if (loadingLogs) return;
-
-            setLoadingLogs(true);
-            const res = await getLatestLogs(
-                50,
-                null
-            );
-
-            setSecurityLogs(res.data);
-            setLoadingLogs(false);
-        };
-
-        loadLogsInit();
+        refreshLogs();
 
         const loadUsersInit = async () => {
             if (loading) return;
@@ -182,7 +169,7 @@ const AdminPage = () => {
 
             setUserContinuation(res.continuation);
             if (res.data.length < 50) {
-                setContinuation(null);
+                setUserContinuation(null);
             }
             setLoading(false);
         };

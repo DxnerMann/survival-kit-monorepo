@@ -1,12 +1,10 @@
 package com.survivalkit.backend.adapter.postgres.logs;
 
-import com.survivalkit.backend.adapter.web.ErrorCode;
-
 import java.time.Instant;
 
 public record Log(
     SecurityLogType type,
-    ErrorCode.ErrorCategory subType,
+    String subType,
     Instant timestamp,
     String message
 ) {
@@ -15,13 +13,5 @@ public record Log(
         INFO,
         WARNING,
         ERROR
-    }
-
-    public enum SecurityLogSubType {
-        AUTH,
-        API,
-        RAPLA,
-        UNCATEGORIZED,
-        DATABASE
     }
 }

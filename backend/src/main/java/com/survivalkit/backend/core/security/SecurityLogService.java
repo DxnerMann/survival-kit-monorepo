@@ -23,7 +23,7 @@ public class SecurityLogService implements SecurityLog {
     public void logInfo(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
                 Log.SecurityLogType.INFO,
-                subType,
+                subType.name(),
                 Instant.now(),
                 message
         ));
@@ -33,7 +33,7 @@ public class SecurityLogService implements SecurityLog {
     public void logWarning(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
                 Log.SecurityLogType.WARNING,
-                subType,
+                subType.name(),
                 Instant.now(),
                 message
         ));
@@ -43,7 +43,7 @@ public class SecurityLogService implements SecurityLog {
     public void logError(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
                 Log.SecurityLogType.ERROR,
-                subType,
+                subType.name(),
                 Instant.now(),
                 message
         ));

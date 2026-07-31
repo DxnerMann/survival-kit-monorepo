@@ -1,9 +1,12 @@
 package com.survivalkit.backend.adapter.web.auth;
 
+import com.survivalkit.backend.core.security.SessionCookieService;
 import com.survivalkit.backend.core.user.AuthPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +24,11 @@ import org.springframework.web.servlet.ModelAndView;
 public class AuthController {
 
     private final AuthPort authPort;
+    private final SessionCookieService sessionCookieService;
 
-    public AuthController(AuthPort authPort) {
+    public AuthController(AuthPort authPort, SessionCookieService sessionCookieService) {
         this.authPort = authPort;
+        this.sessionCookieService = sessionCookieService;
     }
 
     @Role(RoleLevel.GUEST)
@@ -44,47 +49,69 @@ public class AuthController {
     @Role(RoleLevel.GUEST)
     @PostMapping("login")
     public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginRequest loginRequest
+            @RequestBody LoginRequest loginRequest,
+            HttpServletRequest request,
+            HttpServletResponse response
     ) {
-        return ResponseEntity.ok(authPort.login(loginRequest.email(), loginRequest.password()));
+        var loginResponse = authPort.login(loginRequest.email(), loginRequest.password());
+        sessionCookieService.setSessionCookie(request, response, loginResponse.token());
+        return ResponseEntity.ok(loginResponse);
     }
 
     @Role(RoleLevel.USER)
     @PostMapping("validate")
-    public ResponseEntity<LoginResponse> validate() {
-        return ResponseEntity.ok(authPort.validate());
+    public ResponseEntity<LoginResponse> validate(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        var loginResponse = authPort.validate();
+        sessionCookieService.setSessionCookie(request, response, loginResponse.token());
+        return ResponseEntity.ok(loginResponse);
     }
 
     @Role(RoleLevel.USER)
     @PutMapping("password")
     public ResponseEntity<LoginResponse> changePassword(
-            @RequestParam String oldPassword,
-            @RequestParam String newPassword
+            @RequestBody ChangePasswordRequest requestBody,
+            HttpServletRequest request,
+            HttpServletResponse response
     ) {
-        authPort.changePassword(oldPassword, newPassword);
-        return ResponseEntity.ok().build();
+        var loginResponse = authPort.changePassword(requestBody.oldPassword(), requestBody.newPassword());
+        sessionCookieService.setSessionCookie(request, response, loginResponse.token());
+        return ResponseEntity.ok(loginResponse);
     }
 
     @Role(RoleLevel.USER)
     @PostMapping("logout")
-    public ResponseEntity<Void> logout() {
+    public ResponseEntity<Void> logout(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
         authPort.logout();
+        sessionCookieService.clearSessionCookie(request, response);
         return ResponseEntity.ok().build();
     }
 
     @Role(RoleLevel.USER)
     @DeleteMapping()
-    public ResponseEntity<Void> deleteAccount() {
+    public ResponseEntity<Void> deleteAccount(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
         authPort.deleteAccount();
+        sessionCookieService.clearSessionCookie(request, response);
         return ResponseEntity.ok().build();
     }
 
     @Role(RoleLevel.USER)
     @PutMapping("email")
     public ResponseEntity<Void> changeEmail(
-            @RequestParam String email
+            @RequestBody ChangeEmailRequest requestBody,
+            HttpServletRequest request,
+            HttpServletResponse response
     ) {
-        authPort.changeEmail(email);
+        authPort.changeEmail(requestBody.email());
+        sessionCookieService.clearSessionCookie(request, response);
         return ResponseEntity.ok().build();
     }
 

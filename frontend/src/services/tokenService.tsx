@@ -1,50 +1,36 @@
-import {authService} from "./authService.tsx";
-
 export type UserRole = "USER" | "ADMIN" | "GUEST";
 
-interface TokenPayload {
-    sub: string;
-    role: UserRole;
-    username: string;
-    exp: number;
+const ROLE_KEY = "userRole";
+const USERNAME_KEY = "username";
+const SESSION_KEY = "hasSession";
+
+export function setSessionMeta(role: UserRole, username: string) {
+    sessionStorage.setItem(ROLE_KEY, role);
+    sessionStorage.setItem(USERNAME_KEY, username);
+    sessionStorage.setItem(SESSION_KEY, "true");
 }
 
-function getTokenPayload(token: string): TokenPayload | null {
-    try {
-        const base64Payload = token.split(".")[1];
-        const decoded = decodeBase64Url(base64Payload);
-        return JSON.parse(decoded);
-    } catch {
-        return null;
-    }
+export function clearSessionMeta() {
+    sessionStorage.removeItem(ROLE_KEY);
+    sessionStorage.removeItem(USERNAME_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
 }
 
-function decodeBase64Url(str: string) {
-    return decodeURIComponent(
-        atob(str.replace(/-/g, "+").replace(/_/g, "/"))
-            .split("")
-            .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-            .join("")
-    );
+export function hasSessionMeta(): boolean {
+    return sessionStorage.getItem(SESSION_KEY) === "true";
 }
+
 export function getUserRole(): UserRole | null {
-    const token = authService.getToken();
-
-    if (!token) return "GUEST";
-
-    const payload = getTokenPayload(token);
-
-    return payload?.role ?? null;
+    if (!hasSessionMeta()) return "GUEST";
+    const role = sessionStorage.getItem(ROLE_KEY);
+    if (role === "USER" || role === "ADMIN" || role === "GUEST") {
+        return role;
+    }
+    return null;
 }
 
 export function getUsernameFromToken(): string | null {
-    const token = authService.getToken();
-
-    if (!token) return null;
-
-    const payload = getTokenPayload(token);
-
-    return payload?.username ?? null;
+    return sessionStorage.getItem(USERNAME_KEY);
 }
 
 export function isAdmin(): boolean {

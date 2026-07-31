@@ -94,7 +94,7 @@ const ProfilePage = () => {
                 await updateUsernameAndColor(updates);
                 setprofileSettings({
                     username: username,
-                    color: profileSettings.color,
+                    color: profileColor,
                     course: profileSettings.course,
                     firstname: profileSettings.firstname,
                     lastname: profileSettings.lastname,
@@ -124,7 +124,11 @@ const ProfilePage = () => {
     const handleResend = async () => {
         try {
             await authService.resendVerification();
-            setIsVerified(true)
+            snackbarService.showSnackbar({
+                type: "success",
+                text: "Bestätigungsmail wurde erneut gesendet.",
+                showIcon: true,
+            });
         } finally {
             reset(30)
         }

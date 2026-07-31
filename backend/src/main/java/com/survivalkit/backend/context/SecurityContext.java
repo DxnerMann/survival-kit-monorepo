@@ -15,13 +15,13 @@ public final class SecurityContext {
         HOLDER.set(user);
     }
 
-    public static AuthenticatedUser current() {
-        var user = Optional.ofNullable(HOLDER.get());
+    public static Optional<AuthenticatedUser> currentOptional() {
+        return Optional.ofNullable(HOLDER.get());
+    }
 
-        if (user.isEmpty()) {
-            throw new RuntimeException(ErrorCode.NO_AUTHENTICATED_USER_IN_CONTEXT.getCode());
-        }
-        return user.get();
+    public static AuthenticatedUser current() {
+        return currentOptional()
+                .orElseThrow(() -> new RuntimeException(ErrorCode.NO_AUTHENTICATED_USER_IN_CONTEXT.getCode()));
     }
 
     public static void clear() {

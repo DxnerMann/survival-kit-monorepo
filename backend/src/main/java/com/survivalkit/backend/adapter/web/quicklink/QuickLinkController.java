@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.web.quicklink;
 
 import com.survivalkit.backend.adapter.postgres.quicklink.QuickLink;
+import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.qucklink.QuickLinkPort;
 import com.survivalkit.backend.shared.Page;
 import com.survivalkit.backend.shared.Role;
@@ -40,7 +41,11 @@ public class QuickLinkController {
             @RequestParam(required = false) String continuation,
             @RequestParam(required = true) boolean sortByPopularity
     ) {
-        return ResponseEntity.ok(quickLinkPort.getQuickLinksFiltered(approved, pageSize, continuation, sortByPopularity));
+        var isAdmin = SecurityContext.currentOptional()
+                .map(user -> user.role().hasAtLeast(RoleLevel.ADMIN))
+                .orElse(false);
+        var effectiveApproved = isAdmin ? approved : true;
+        return ResponseEntity.ok(quickLinkPort.getQuickLinksFiltered(effectiveApproved, pageSize, continuation, sortByPopularity));
     }
 
     @Role(RoleLevel.USER)

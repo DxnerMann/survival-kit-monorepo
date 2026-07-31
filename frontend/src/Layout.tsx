@@ -29,7 +29,7 @@ const Layout = () => {
             {showHeader && <Header />}
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/admin" element={<ProtectedRoute requireAdmin> <AdminPage /> </ProtectedRoute>} />
                 <Route path="/chat" element={<ProtectedRoute> <ChatPage /> </ProtectedRoute>} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/ideas" element={<IdeasPage />} />

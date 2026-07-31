@@ -5,7 +5,6 @@ import com.survivalkit.backend.adapter.postgres.feedback.FeedbackPersistancePort
 import com.survivalkit.backend.adapter.postgres.quicklink.QuickLinkPersistancePort;
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
-import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.adapter.postgres.usetracking.UserTrackingPersistancePort;
 import com.survivalkit.backend.adapter.postgres.widget.UserWidgetPersistancePort;
 import com.survivalkit.backend.adapter.web.ErrorCode;
@@ -20,7 +19,6 @@ import com.survivalkit.backend.core.email.EmailPort;
 import com.survivalkit.backend.core.security.TokenService;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.RoleLevel;
-import io.jsonwebtoken.JwtException;
 import io.viascom.nanoid.NanoId;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -72,16 +70,35 @@ public class AuthService implements AuthPort {
         if (existingUser.isPresent()) {
             if (existingUser.get().isVerified()) {
                 throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
-            } else {
-                emailPort.sendVerificationEmail(request.email(), request.firstName(), existingUser.get().verificationToken());
-                return;
             }
+
+            var existing = existingUser.get();
+            var verificationToken = NanoId.generate(32);
+            emailPort.sendVerificationEmail(request.email(), request.firstName(), verificationToken);
+            userPersistancePort.save(
+                    new UserModel(
+                            existing.id(),
+                            request.firstName(),
+                            request.lastName(),
+                            request.username(),
+                            request.email(),
+                            hashPassword(request.password()),
+                            RoleLevel.USER,
+                            verificationToken,
+                            false,
+                            existing.course(),
+                            existing.color() != null ? existing.color() : String.format("#%06X", new SecureRandom().nextInt(0xFFFFFF + 1)),
+                            existing.img() != null ? existing.img() : userPort.getDefaultProfilePicture(),
+                            existing.lastUpdated() != null ? existing.lastUpdated() : Instant.now()
+                    )
+            );
+            return;
         }
 
         var userId = NanoId.generate(25);
-        var token = tokenService.generateToken(userId, RoleLevel.USER, request.email(), request.username());
+        var verificationToken = NanoId.generate(32);
 
-        emailPort.sendVerificationEmail(request.email(), request.firstName(), token);
+        emailPort.sendVerificationEmail(request.email(), request.firstName(), verificationToken);
 
         userPersistancePort.save(
                new UserModel(
@@ -92,7 +109,7 @@ public class AuthService implements AuthPort {
                        request.email(),
                        hashPassword(request.password()),
                        RoleLevel.USER,
-                       token,
+                       verificationToken,
                        false,
                        null,
                        String.format("#%06X", new SecureRandom().nextInt(0xFFFFFF + 1)),
@@ -104,31 +121,28 @@ public class AuthService implements AuthPort {
 
     @Override
     public ModelAndView verify(String token) {
-        try {
-            var email = tokenService.extractEmail(token);
-            var user = userPersistancePort.findByEmailOrUsername(email, "");
-
-            if (user.isEmpty() || tokenService.validate(token).isEmpty()) {
-                return new ModelAndView("verification-failed");
-            }
-
-            var loginUrl = "https://lecture-survival-kit.jannis-saur.de/login";
-
-            if (user.get().isVerified()) {
-                var mav = new ModelAndView("already-verified");
-                mav.addObject("loginUrl", loginUrl);
-                return mav;
-            }
-
-            userPersistancePort.setVerified(user.get().id(), true);
-
-            var mav = new ModelAndView("verification-success");
-            mav.addObject("loginUrl", loginUrl);
-            return mav;
-
-        } catch (JwtException | IllegalArgumentException e) {
+        if (token == null || token.isBlank()) {
             return new ModelAndView("verification-failed");
         }
+
+        var user = userPersistancePort.findByVerificationToken(token);
+        if (user.isEmpty()) {
+            return new ModelAndView("verification-failed");
+        }
+
+        var loginUrl = "https://lecture-survival-kit.jannis-saur.de/login";
+
+        if (user.get().isVerified()) {
+            var mav = new ModelAndView("already-verified");
+            mav.addObject("loginUrl", loginUrl);
+            return mav;
+        }
+
+        userPersistancePort.setVerified(user.get().id(), true);
+
+        var mav = new ModelAndView("verification-success");
+        mav.addObject("loginUrl", loginUrl);
+        return mav;
     }
 
     @Override
@@ -143,7 +157,8 @@ public class AuthService implements AuthPort {
                 tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
                 existingUser.username(),
                 existingUser.firstname(),
-                existingUser.lastname()
+                existingUser.lastname(),
+                existingUser.role()
         );
     }
 
@@ -155,16 +170,17 @@ public class AuthService implements AuthPort {
             throw new UserUnauthorizedException(ErrorCode.TOKEN_INVALID_OR_EXPIRED.getCode());
         }
 
-        var existingUser = userPersistancePort.findByEmailOrUsername(user.email(), "");
+        var existingUser = userPersistancePort.getById(user.userId());
         if (existingUser.isEmpty()) {
             throw new UserUnauthorizedException(ErrorCode.USER_DOES_NOT_EXIST.getCode());
         }
-        statisticsPort.saveTrackAction(TrackAction.Action.LOGGED_IN);
+        var dbUser = existingUser.get();
         return new LoginResponse(
-                tokenService.generateToken(user.userId(), user.role(), user.email(), user.username()),
-                user.username(),
-                existingUser.get().firstname(),
-                existingUser.get().lastname()
+                user.token(),
+                dbUser.username(),
+                dbUser.firstname(),
+                dbUser.lastname(),
+                dbUser.role()
         );
     }
 
@@ -186,11 +202,13 @@ public class AuthService implements AuthPort {
             throw new InvalidCredentialsException(ErrorCode.PASSWORD_NOT_VALID.getCode());
         }
         userPersistancePort.updatePassword(existingUser.id(), hashPassword(newPassword));
+        tokenService.revoke(authUser.token());
         return new LoginResponse(
                 tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
                 existingUser.username(),
                 existingUser.firstname(),
-                existingUser.lastname()
+                existingUser.lastname(),
+                existingUser.role()
         );
     }
 
@@ -214,9 +232,8 @@ public class AuthService implements AuthPort {
         userWidgetPersistancePort.overrideAll(List.of(), userId);
         feedbackPersistancePort.deleteAllVotes(userId);
         feedbackPersistancePort.deleteUser(userId);
+        tokenService.revoke(authUser.token());
         userPersistancePort.deleteUser(userId);
-
-
     }
 
     @Override
@@ -239,10 +256,10 @@ public class AuthService implements AuthPort {
         var user = userPersistancePort.getById(authUser.userId());
 
         if (user.isPresent()) {
-            var token = tokenService.generateToken(userId, RoleLevel.USER, email, user.get().username());
+            var verificationToken = NanoId.generate(32);
 
-            emailPort.sendVerificationEmail(email, user.get().firstname(), token);
-            userPersistancePort.changeEmail(userId, email, token);
+            emailPort.sendVerificationEmail(email, user.get().firstname(), verificationToken);
+            userPersistancePort.changeEmail(userId, email, verificationToken);
 
             logout();
         }
@@ -252,7 +269,11 @@ public class AuthService implements AuthPort {
     public void sendVerifcationEmailAgain() {
         var authUser = SecurityContext.current();
         var user = userPersistancePort.getById(authUser.userId());
-        user.ifPresent(userModel -> emailPort.sendVerificationEmail(userModel.email(), userModel.firstname(), userModel.verificationToken()));
+        user.ifPresent(userModel -> {
+            var verificationToken = NanoId.generate(32);
+            userPersistancePort.updateVerificationToken(userModel.id(), verificationToken);
+            emailPort.sendVerificationEmail(userModel.email(), userModel.firstname(), verificationToken);
+        });
     }
 
     private String hashPassword(String password) {

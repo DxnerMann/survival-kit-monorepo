@@ -25,6 +25,7 @@ public enum ErrorCode {
     NO_AUTHENTICATED_USER_IN_CONTEXT("01x00000009", "No authenticated user in context. Ensure this is called within a secured request.", HttpStatus.UNAUTHORIZED, ErrorCategory.AUTHENTICATION),
     NOT_REQUIRED_ROLE("01x0000000A", "User does not have the required role", HttpStatus.FORBIDDEN, ErrorCategory.AUTHENTICATION),
     USER_ALREADY_EXISTS("01x0000000B", "There already exists a user with the provided email or username", HttpStatus.CONFLICT, ErrorCategory.AUTHENTICATION),
+    RATE_LIMIT_EXCEEDED("01x0000000C", "Too many requests", HttpStatus.TOO_MANY_REQUESTS, ErrorCategory.AUTHENTICATION),
 
     // EMAIL (02x)
     FAILED_TO_SEND_EMAIL("02x00000000", "Failed to send email", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.EMAIL),
@@ -39,18 +40,21 @@ public enum ErrorCode {
 
     // EXTERNAL SERVICE (04x)
     COURSE_EXTRACTION_FAILED("04x00000000", "Failed to extract course from provided Rapla URL", HttpStatus.BAD_GATEWAY, ErrorCategory.EXTERNAL),
+    RAPLA_URL_NOT_ALLOWED("04x00000001", "Rapla URL host is not allowed", HttpStatus.BAD_REQUEST, ErrorCategory.EXTERNAL),
 
     // QUICKLINK (05x)
     QUICKLINK_TITLE_CANNOT_BE_EMPTY("05x00000000", "Quicklink title cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.QUICKLINK),
     QUICKLINK_DESCRIPTION_CANNOT_BE_EMPTY("05x00000001", "Quicklink description cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.QUICKLINK),
     QUICKLINK_URL_CANNOT_BE_EMPTY("05x00000002", "Quicklink URL cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.QUICKLINK),
+    QUICKLINK_URL_INVALID("05x00000003", "Quicklink URL must be a valid http(s) URL", HttpStatus.BAD_REQUEST, ErrorCategory.QUICKLINK),
 
     // LECTURE (06x)
     RAPLA_URL_AND_COURSE_EMPTY("06x00000000", "Rapla URL and course cannot both be empty", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
     COURSE_NOT_FOUND("06x00000001", "Course not found", HttpStatus.NOT_FOUND, ErrorCategory.LECTURE),
 
     // WIDGET (07x)
-    FAILED_TO_READ_WIDGET_DATA("07x00000000", "Failed to read data of the widget", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.WIDGET);
+    FAILED_TO_READ_WIDGET_DATA("07x00000000", "Failed to read data of the widget", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.WIDGET),
+    WIDGET_NOT_FOUND("07x00000001", "Widget not found or not owned by user", HttpStatus.NOT_FOUND, ErrorCategory.WIDGET);
 
     private final String code;
     private final String message;

@@ -63,6 +63,10 @@ public class QuickLinkService implements QuickLinkPort {
             throw new IllegalArgumentException(ErrorCode.QUICKLINK_URL_CANNOT_BE_EMPTY.getCode());
         }
 
+        if (!isHttpUrl(suggestion.url())) {
+            throw new IllegalArgumentException(ErrorCode.QUICKLINK_URL_INVALID.getCode());
+        }
+
         var newLink = new QuickLink(
                 NanoId.generate(25),
                 suggestion.title(),
@@ -144,5 +148,16 @@ public class QuickLinkService implements QuickLinkPort {
                 quickLinks,
                 favIds.continuation()
         );
+    }
+
+    private static boolean isHttpUrl(String url) {
+        try {
+            var uri = java.net.URI.create(url.trim());
+            var scheme = uri.getScheme();
+            return uri.getHost() != null
+                    && ("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme));
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

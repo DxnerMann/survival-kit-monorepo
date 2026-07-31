@@ -71,6 +71,14 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public Optional<UserModel> findByVerificationToken(String verificationToken) {
+        return jdbcClient.sql(Statements.GET_BY_VERIFICATION_TOKEN.sql)
+                .paramSource(new MapSqlParameterSource("verificationToken", verificationToken))
+                .query(USER_ROW_MAPPER)
+                .optional();
+    }
+
+    @Override
     public void setVerified(String userId, boolean verified) {
         jdbcClient.sql(Statements.VERIFY.sql)
                 .paramSource(new MapSqlParameterSource("id", userId)
@@ -158,6 +166,14 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public void updateVerificationToken(String userId, String verificationToken) {
+        jdbcClient.sql(Statements.UPDATE_VERIFICATION_TOKEN.sql)
+                .paramSource(new MapSqlParameterSource("id", userId)
+                        .addValue("verificationToken", verificationToken))
+                .update();
+    }
+
+    @Override
     public Page<UserProfile> getUsers(int pageSize, String continuation) {
         var users = jdbcClient.sql(Statements.GET_USERS.sql)
                 .paramSource(new MapSqlParameterSource("pageSize", pageSize)
@@ -221,7 +237,9 @@ public class UserRepository implements UserPersistancePort {
                     firstname   = :firstname,
                     lastname    = :lastname,
                     username    = :username,
+                    email       = :email,
                     password    = :password,
+                    verificationToken = :verificationToken,
                     isVerified  = :isVerified,
                     course      = :course,
                     lastupdated = :currentTime
@@ -237,6 +255,18 @@ public class UserRepository implements UserPersistancePort {
         GET_BY_MAIL_OR_USERNAME(
         """
                 SELECT * FROM users WHERE username = :username OR LOWER(email) = LOWER(:email) LIMIT 1;            """
+        ),
+        // language=sql
+        GET_BY_VERIFICATION_TOKEN(
+        """
+                SELECT * FROM users WHERE verificationToken = :verificationToken LIMIT 1
+            """
+        ),
+        // language=sql
+        UPDATE_VERIFICATION_TOKEN(
+        """
+                UPDATE users SET verificationToken = :verificationToken WHERE id = :id
+            """
         ),
         // language=sql
         VERIFY(

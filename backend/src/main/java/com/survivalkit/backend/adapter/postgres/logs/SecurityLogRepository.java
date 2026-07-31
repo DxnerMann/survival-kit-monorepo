@@ -32,7 +32,6 @@ public class SecurityLogRepository implements SecurityLogPersistancePort {
 
     @Override
     public Page<Log> getLatestLogs(int pageSize, String continuation) {
-        var test = decode(continuation);
         var logs = jdbcClient.sql(Statements.GET.sql)
                 .paramSource(new MapSqlParameterSource("pageSize", pageSize)
                         .addValue("continuation", decode(continuation))

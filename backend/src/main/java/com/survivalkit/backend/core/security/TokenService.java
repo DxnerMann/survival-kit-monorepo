@@ -26,7 +26,6 @@ public class TokenService {
     private final long expirationMs;
     private final UserPersistancePort userPersistancePort;
     private final StringRedisTemplate redisTemplate;
-    private static final String PREFIX = "revoked_jti:";
 
     public TokenService(
             @Value("${app.jwt.secret}") String secret,
@@ -60,8 +59,6 @@ public class TokenService {
                     .parseSignedClaims(token)
                     .getPayload();
 
-            var role = RoleLevel.valueOf(claims.get("role", String.class));
-
             var jti = claims.getId();
             if (isRevoked(jti)) {
                 return Optional.empty();
@@ -72,22 +69,13 @@ public class TokenService {
                     token,
                     claims.getSubject(),
                     userModel.username(),
-                    role,
-                    claims.get("email", String.class),
+                    userModel.role(),
+                    userModel.email(),
                     userModel.isVerified()
             ));
         } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
         }
-    }
-
-    public String extractEmail(String token) {
-        return Jwts.parser()
-                .verifyWith((SecretKey) signingKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("email", String.class);
     }
 
     public void revoke(String token) {
@@ -109,8 +97,6 @@ public class TokenService {
                 );
             }
         } catch (JwtException | IllegalArgumentException e) {
-            e.printStackTrace();
-            System.out.println("Token being revoked: [" + token + "]");
         }
     }
 

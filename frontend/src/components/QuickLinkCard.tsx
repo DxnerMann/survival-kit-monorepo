@@ -19,6 +19,15 @@ const QuickLinkCard = ({quickLink, showClickedThisMonth} : QuickLinkCardProps) =
     }, []);
 
     const onClick = () => {
+        try {
+            const parsed = new URL(quickLink.url);
+            if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+                return;
+            }
+        } catch {
+            return;
+        }
+
         onLinkClick(quickLink);
         setLocalClickUpdate(localClickUpdate + 1);
         window.open(quickLink.url, "_blank", "noopener,noreferrer");

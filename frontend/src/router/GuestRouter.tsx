@@ -12,22 +12,29 @@ const GuestRouter = ({ children }: Props) => {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const guest = localStorage.getItem('guest')
+            try {
+                const guest = localStorage.getItem('guest')
 
-            if (guest) {
-                setAuthorized(true)
+                if (guest && !authService.hasSession()) {
+                    setAuthorized(true)
+                    return
+                }
+
+                const valid = await authService.validate()
+                if (valid) {
+                    localStorage.removeItem('guest')
+                    setAuthorized(true)
+                    return
+                }
+
+                authService.clearSession()
+                setAuthorized(!!guest)
+            } catch {
+                authService.clearSession()
+                setAuthorized(!!localStorage.getItem('guest'))
+            } finally {
                 setLoading(false)
-                return
             }
-
-            const valid = await authService.validate()
-
-            if (!valid) {
-                authService.removeToken()
-            }
-
-            setAuthorized(valid)
-            setLoading(false)
         }
 
         checkAuth()
