@@ -215,6 +215,22 @@ Roles: `GUEST` (public), `USER`, `ADMIN`. Interactive OpenAPI UI: `/swagger-ui/i
 |--------|------|------|-------------|
 | `GET` | `/cat` | GUEST | Today's cat image (JPEG) |
 
+### Caffeine — `/v1/caffeine`
+
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| `POST` | `/` | USER | Log intake. Body: `{ source, amountMg?, consumedAt? }` — `source`: `MONSTER`/`REDBULL`/`COFFEE`/`TABLET`/`OTHER` (`amountMg` 1–1000 required for `OTHER`) |
+| `DELETE` | `/{id}` | USER | Delete own entry |
+| `GET` | `/today` | USER | Today's entries for the current user |
+| `GET` | `/user` | USER | Last 7 days (user) |
+| `GET` | `/course` | USER | Last 7 days (course) |
+| `GET` | `/global` | GUEST | Last 7 days (global) |
+| `GET` | `/average/user` | USER | Average dose mg (7 days) |
+| `GET` | `/average/course` | USER | Average dose mg for course (7 days) |
+| `GET` | `/average/global` | GUEST | Average dose mg global (7 days) |
+
+Entries older than 7 days are deleted hourly by a scheduler.
+
 Paginated endpoints return `{ data: [...], continuation: string | null }`.
 
 ---

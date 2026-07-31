@@ -1,5 +1,6 @@
 import "./Minigames.css";
 import LinkCard from "./LinkCard/LinkCard.tsx";
+import {getUserRole} from "../services/tokenService.tsx";
 
 const Minigames = () => {
     return <div className="minigames-container">
@@ -21,6 +22,22 @@ const Minigames = () => {
             alingRight={false}
             previewImagePath={"/images/Exmatriculation-Simulator-Preview.png"}
         />
+        {getUserRole() !== "GUEST" && (
+            <LinkCard
+                href={"/caffeine-calculator"}
+                heading={"Der Koffeinrechner"}
+                description={
+                    "Wie lange hält dich der Energy Drink noch wach?\n" +
+                    "\n" +
+                    "Gib deine Koffein-Dosis ein und sieh, wie der Blutspiegel über die Zeit abfällt – " +
+                    "mit Halbwertszeit-Berechnung für den restlichen Vorlesungstag.\n" +
+                    "\n" +
+                    "Perfekt, um den nächsten Monster zeitlich richtig zu planen."
+                }
+                alingRight={false}
+                previewImagePath={"/images/white-monster.png"}
+            />
+        )}
     </div>
 }
 
