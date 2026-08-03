@@ -12,6 +12,5 @@ public interface QuickLinkPersistancePort {
     void approveQuickLink(String id, String title, String description);
     void deleteQuickLink(String id);
     List<QuickLink> getFromIds(List<String> ids);
-
     void upsertquickLink(QuickLink quickLink);
 }

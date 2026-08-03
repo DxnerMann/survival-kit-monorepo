@@ -33,10 +33,12 @@
 }
 
 .quick-link-info {
+    position: relative;
     height: 50%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    width: 100%;
 }
 
 .quick-link-info-1 {
@@ -93,4 +95,31 @@
     transform: rotate(45deg);
     pointer-events: none;
     z-index: 1;
+}
+
+.quick-link-fav-button {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    opacity: 0.9;
+    transition: transform 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.quick-link-fav-button:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.quick-link-fav-button.is-favourite {
+    color: var(--color-favourite);
 }

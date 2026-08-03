@@ -20,6 +20,7 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
     DIGRESSION_TIMER: {minW: 4, minH: 3, defaultW: 4, defaultH: 3},
     DAILY_CAT: {minW: 2, minH: 2, defaultW: 2, defaultH: 2},
     CURRENT_CAFFEINE: { minW: 2, minH: 1, maxW: 4, maxH: 2, defaultW: 2, defaultH: 1 },
+    FAV_GAMES: { minW: 2, minH: 2, maxW: 10, defaultW: 2, defaultH: 2 },
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
@@ -180,8 +181,8 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                             {dashboardService.decideOnWidget({
                                 id: widget?.id ?? "",
                                 data: widget?.data ?? "",
-                                width: widget?.width ?? 0,
-                                height: widget?.height ?? 0,
+                                width: l.w,
+                                height: l.h,
                                 x: widget?.x ?? 0,
                                 y: widget?.y ?? 0,
                                 type: widget?.type ?? "EMPTY",

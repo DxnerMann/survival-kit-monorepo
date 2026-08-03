@@ -23,6 +23,7 @@
 
     --color-border: #d1d5db;
     --color-shadow: rgba(0, 0, 0, 0.08);
+    --color-favourite: #d4a017;
 }
 
 /* DARK THEME */
@@ -46,4 +47,5 @@
 
     --color-border: #374151;
     --color-shadow: rgba(0, 0, 0, 0.35);
+    --color-favourite: #f0c040;
 }

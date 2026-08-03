@@ -9,11 +9,13 @@ import {LayersPlus} from "lucide-react";
 import GameSuggestionDialog from "@/components/dialog/GameSuggestionDialog.tsx";
 import Minigames from "@/components/explore/Minigames.tsx";
 import Separator from "@/components/ui/Separator.tsx";
+import {useQuickLinkFavourites} from "@/hooks/useQuickLinkFavourites.tsx";
 
 const ExplorePage = () => {
     const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
     const [continuation, setContinuation] = useState<string | null>(null);
     const [showGameSuggestionDialog, setShowGameSuggestionDialog] = useState(false);
+    const {canFavourite, isFavourite, toggleFavourite} = useQuickLinkFavourites();
     const PAGE_SIZE = 20;
 
     useEffect(() => {
@@ -74,6 +76,9 @@ const ExplorePage = () => {
                         key={link.id}
                         quickLink={link}
                         showClickedThisMonth={true}
+                        showFavouriteButton={canFavourite}
+                        isFavourite={isFavourite(link.id)}
+                        onToggleFavourite={toggleFavourite}
                     />
                 ))}
             </div>

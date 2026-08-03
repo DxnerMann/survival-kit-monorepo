@@ -6,6 +6,7 @@ import Clock from "@/components/widgets/clock/Clock.tsx";
 import DigressionTimer from "@/components/widgets/digression-timer/DigressionTimer.tsx";
 import DailyCat from "@/components/widgets/cat/DailyCat.tsx";
 import CurrentCaffeine from "@/components/widgets/current-caffeine/CurrentCaffeine.tsx";
+import FavGames from "@/components/widgets/fav-games/FavGames.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -106,24 +107,44 @@ const getDefaultToolbox = (): UserWidget[] => {
             x: 0,
             y: 0,
             data: ""
+        },
+        {
+            id: "default-fav-games",
+            type: "FAV_GAMES",
+            height: 2,
+            width: 2,
+            x: 0,
+            y: 0,
+            data: ""
         }
     ]
 }
 
 const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
+    const shared = {
+        title: "",
+        data: widget.data,
+        id: widget.id,
+        isPreview,
+        width: widget.width,
+        height: widget.height,
+    };
+
     switch (widget.type) {
         case "LECTURE_PLAN":
-            return <LecturePlan title={"Vorlesungsplan"} data={widget.data} id={widget.id} isPreview={isPreview} />
+            return <LecturePlan {...shared} title={"Vorlesungsplan"} />
         case "LECTURE_TIMER":
-            return <LectureTimer title={"Vorlesungstimer"} data={widget.data} id={widget.id} isPreview={isPreview} />
+            return <LectureTimer {...shared} title={"Vorlesungstimer"} />
         case "CLOCK":
-            return <Clock title={"Uhr"} data={widget.data} id={widget.id} isPreview={isPreview} />
+            return <Clock {...shared} title={"Uhr"} />
         case "DIGRESSION_TIMER":
-            return <DigressionTimer title={"Schwurbeltimer"} data={widget.data} id={widget.id} isPreview={isPreview} />
+            return <DigressionTimer {...shared} title={"Schwurbeltimer"} />
         case "DAILY_CAT":
-            return <DailyCat title={"Tägliche Katze"} data={widget.data} id={widget.id} isPreview={isPreview} />
+            return <DailyCat {...shared} title={"Tägliche Katze"} />
         case "CURRENT_CAFFEINE":
-            return <CurrentCaffeine title={"Aktuelles Koffein"} data={widget.data} id={widget.id} isPreview={isPreview} />
+            return <CurrentCaffeine {...shared} title={"Aktuelles Koffein"} />
+        case "FAV_GAMES":
+            return <FavGames {...shared} title={"Lieblingsspiele"} />
     }
 }
 
