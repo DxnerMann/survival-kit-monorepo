@@ -1,9 +1,9 @@
-import './AdminPage.css';
+import "@/pages/admin/AdminPage.css";
 import {useEffect, useState} from "react";
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import type {QuickLink} from "../../models/QuickLink.tsx";
-import {approveLink, getQuickLinksFiltered} from "../../services/quickLinkService.tsx";
-import Button from "../../components/shared/Button.tsx";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
+import type {QuickLink} from "@/models/QuickLink.tsx";
+import {approveLink, getQuickLinksFiltered} from "@/services/quickLinkService.tsx";
+import Button from "@/components/ui/Button.tsx";
 import {
     AlertOctagon, AlertTriangle,
     BadgeCheck,
@@ -14,13 +14,12 @@ import {
     ThumbsDown,
     ThumbsUp
 } from "lucide-react";
-import {snackbarService} from "../../services/snackBarService.tsx";
-import type {SecurityLog} from "../../models/SecurityLog.tsx";
-import {fetchUsers, getLatestLogs, setUserRole} from "../../services/adminService.tsx";
-import {formatTimestamp} from "../../services/utils.tsx";
-import Footer from "../../components/Footer.tsx";
-import type {ProfileSettings} from "../../models/ProfileSettings.tsx";
-import Seperator from "../../components/shared/Seperator.tsx";
+import {snackbarService} from "@/services/snackBarService.tsx";
+import type {SecurityLog} from "@/models/SecurityLog.tsx";
+import {fetchUsers, getLatestLogs, setUserRole} from "@/services/adminService.tsx";
+import {formatTimestamp} from "@/services/utils.tsx";
+import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
+import Separator from "@/components/ui/Separator.tsx";
 
 const SWAGGER_PATH = (import.meta.env.VITE_API_BASE_URL || "") + "/swagger-ui/index.html";
 
@@ -343,8 +342,8 @@ const AdminPage = () => {
             </div>
             <br />
             { userContinuation !== null && <Button text="Mehr Laden" onClick={() => loadMoreUsers()} variant="primary" /> }
-            < Seperator width={"0%"} height={"10px"} variant={"primary"} />
-            < Seperator width={"100%"} height={"2px"} variant={"primary"} />
+            < Separator width={"0%"} height={"10px"} variant={"primary"} />
+            < Separator width={"100%"} height={"2px"} variant={"primary"} />
             <br />
             <SectionHeading heading={"Logs"} centered={false} />
             <div className="security-logs-window">
@@ -391,7 +390,6 @@ const AdminPage = () => {
                 {TabBar()}
                 {TabContent()}
             </div>
-            <Footer />
     </div>
 
     function getRoleActionButton(isAdmin : boolean, onClick : () => void) {

@@ -1,7 +1,7 @@
-import {api, apiFetch, checkResponse} from "./api.tsx";
-import type {SecurityLog} from "../models/SecurityLog.tsx";
-import type {Page} from "../models/Page.tsx";
-import type {ProfileSettings} from "../models/ProfileSettings.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
+import type {SecurityLog} from "@/models/SecurityLog.tsx";
+import type {Page} from "@/models/Page.tsx";
+import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
 
 const API_URL = api.baseUrl;
 

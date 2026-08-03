@@ -1,5 +1,5 @@
-import {snackbarService} from "./snackBarService.tsx";
-import type {ApiError} from "../models/ApiError.tsx";
+import {snackbarService} from "@/services/snackBarService.tsx";
+import type {ApiError} from "@/models/ApiError.tsx";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || "";
 
@@ -35,6 +35,8 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
 
     "04x00000000": { text: "Der Kurs konnte nicht aus der Rapla-URL geladen werden.", type: "error" },
     "04x00000001": { text: "Diese Rapla-URL ist nicht erlaubt.", type: "error" },
+    "04x00000002": { text: "Rapla ist derzeit nicht erreichbar. Versuche es später erneut.", type: "error" },
+    "04x00000003": { text: "Die tägliche Katze konnte nicht geladen werden.", type: "error" },
 
     "05x00000000": { text: "Der Titel darf nicht leer sein.", type: "warning" },
     "05x00000001": { text: "Die Beschreibung darf nicht leer sein.", type: "warning" },
@@ -50,15 +52,27 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "08x00000003": { text: "Koffein-Eintrag wurde nicht gefunden.", type: "error" },
 };
 
+export function getErrorText(error: ApiError | unknown): string {
+    if (error && typeof error === "object" && "errorCode" in error) {
+        const apiError = error as ApiError;
+        return ERROR_CODE_MAP[apiError.errorCode]?.text ?? GENERIC_ERROR_TEXT;
+    }
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+    return GENERIC_ERROR_TEXT;
+}
+
 export function resolveError(error: ApiError): void {
+    const text = getErrorText(error);
     const mapping = ERROR_CODE_MAP[error.errorCode];
 
     snackbarService.showSnackbar({
         type: mapping?.type ?? "error",
-        text: mapping?.text ?? GENERIC_ERROR_TEXT,
+        text,
         showIcon: true,
     });
-    throw new Error(mapping?.text);
+    throw new Error(text);
 }
 
 export async function checkResponse(response: Response): Promise<void> {

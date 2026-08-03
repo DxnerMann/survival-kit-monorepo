@@ -1,7 +1,5 @@
-import "./LegalPage.css"
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import Footer from "../../components/Footer.tsx";
-
+import "@/pages/legal/LegalPage.css"
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
 const Imprint = () => {
     return <div className="survival-kit-page">
         <div className="legal-page">
@@ -66,7 +64,6 @@ const Imprint = () => {
 
             </div>
         </div>
-        <Footer />
     </div>
 }
 

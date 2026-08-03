@@ -1,5 +1,5 @@
-import {api, apiFetch, checkResponse} from "./api.tsx";
-import type {Feedback, FeedbackType} from "../models/Feedback.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
+import type {Feedback, FeedbackType} from "@/models/Feedback.tsx";
 
 const API_URL = api.baseUrl;
 

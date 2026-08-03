@@ -1,5 +1,5 @@
-import {api, apiFetch, checkResponse} from "./api.tsx";
-import type {CaffeineEntry, CaffeineSource} from "../models/CaffeineEntry.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
+import type {CaffeineEntry, CaffeineSource} from "@/models/CaffeineEntry.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -125,6 +125,23 @@ export const getPeakMg = (series: { mg: number }[]): number => {
     if (series.length === 0) return 0;
     return Math.max(...series.map((p) => p.mg));
 };
+
+export const getCurrentBloodCaffeineMg = (
+    entries: CaffeineEntry[],
+    at: Date = new Date(),
+): number => {
+    let mg = 0;
+    for (const entry of entries) {
+        const consumedAt = new Date(entry.consumedAt);
+        if (consumedAt <= at) {
+            mg += remainingCaffeineMg(entry.amountMg, consumedAt, at);
+        }
+    }
+    return Math.round(mg * 10) / 10;
+};
+
+export const getTodayConsumedMg = (entries: CaffeineEntry[]): number =>
+    entries.reduce((sum, entry) => sum + entry.amountMg, 0);
 
 export const caffeineComment = (peakMg: number): string => {
     if (peakMg <= 0) return "Noch kein Koffein geloggt. Mutig – oder einfach noch nicht wach genug zum Klicken.";

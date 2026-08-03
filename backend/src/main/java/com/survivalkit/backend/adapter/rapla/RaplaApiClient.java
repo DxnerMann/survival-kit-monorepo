@@ -5,6 +5,7 @@ import com.survivalkit.backend.shared.Lecture;
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -251,10 +252,14 @@ public class RaplaApiClient implements RaplaApiPort {
                 .queryParam("year",  monday.getYear())
                 .toUriString();
 
-        return restClient.get()
-                .uri(uri)
-                .retrieve()
-                .body(String.class);
+        try {
+            return restClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .body(String.class);
+        } catch (RestClientException e) {
+            throw new RuntimeException(ErrorCode.RAPLA_REQUEST_FAILED.getCode(), e);
+        }
     }
 
     private Lecture parseWeekBlock(Element cell, int dayCount) {

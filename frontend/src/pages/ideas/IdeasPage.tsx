@@ -1,16 +1,14 @@
-import './IdeasPage.css';
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import FeedbackItem from "../../components/FeedbackItem.tsx";
+import "@/pages/ideas/IdeasPage.css";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
+import FeedbackItem from "@/components/feedback/FeedbackItem.tsx";
 import {useEffect, useState} from "react";
 import {MessageSquareText} from "lucide-react";
-import FeedbackDialog from "../../components/shared/dialog/FeedbackDialog.tsx";
-import {getFeedback, submitFeedback} from "../../services/feedbackService.tsx";
-import Button from "../../components/shared/Button.tsx";
-import type {Feedback, FeedbackType} from "../../models/Feedback.tsx";
-import {getUserRole} from "../../services/tokenService.tsx";
-import {getUsername} from "../../services/userService.tsx";
-import Footer from "../../components/Footer.tsx";
-
+import FeedbackDialog from "@/components/dialog/FeedbackDialog.tsx";
+import {getFeedback, submitFeedback} from "@/services/feedbackService.tsx";
+import Button from "@/components/ui/Button.tsx";
+import type {Feedback, FeedbackType} from "@/models/Feedback.tsx";
+import {getUserRole} from "@/services/tokenService.tsx";
+import {getUsername} from "@/services/userService.tsx";
 const IdeasPage = () => {
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
     const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -115,7 +113,6 @@ const IdeasPage = () => {
             { continuation !== null && <Button text="Mehr Laden" onClick={() => loadMore()} variant="primary" disabled={continuation === null} /> }
             { feedbacks.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Beiträge</h4> }
         </div>
-        <Footer />
     </div>
 }
 

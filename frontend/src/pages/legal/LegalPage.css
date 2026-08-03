@@ -1,8 +1,6 @@
 .legal-page {
-    height: fit-content;
     padding: calc(var(--header-height) + 2rem) 2rem 2rem;
     box-sizing: border-box;
-    overflow: auto;
     width: 100%;
 }
 .legal-section {

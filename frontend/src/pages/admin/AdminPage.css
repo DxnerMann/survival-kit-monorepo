@@ -1,9 +1,7 @@
 .admin-page {
-    height: fit-content;
-    min-height: 100vh;
+    flex: 1 1 auto;
     padding-top: var(--header-height);
     box-sizing: border-box;
-    overflow: auto;
     width: 100%;
 }
 

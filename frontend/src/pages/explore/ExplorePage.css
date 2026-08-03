@@ -1,7 +1,5 @@
 .explore-page {
-    height: 100vh;
     box-sizing: border-box;
-    overflow: auto;
     width: 100%;
     padding: 2rem;
     padding-top: calc(2rem + var(--header-height));

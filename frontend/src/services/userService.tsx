@@ -1,7 +1,7 @@
-import type {LoginResponse} from "../models/LoginResponse.tsx";
-import {getUsernameFromToken} from "./tokenService.tsx";
-import type {ProfileSettings} from "../models/ProfileSettings.tsx";
-import {api, apiFetch, checkResponse} from "./api.tsx";
+import type {LoginResponse} from "@/models/LoginResponse.tsx";
+import {getUsernameFromToken} from "@/services/tokenService.tsx";
+import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
 
 let user: LoginResponse;
 const API_URL = api.baseUrl;

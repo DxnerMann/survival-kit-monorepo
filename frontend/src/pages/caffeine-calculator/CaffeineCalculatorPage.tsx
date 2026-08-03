@@ -1,10 +1,9 @@
 import {useEffect, useMemo, useState} from "react";
 import {Trash2} from "lucide-react";
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import Footer from "../../components/Footer.tsx";
-import Info from "../../components/shared/Info.tsx";
-import Button from "../../components/shared/Button.tsx";
-import CaffeineChart from "../../components/CaffeineChart.tsx";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
+import Info from "@/components/ui/Info.tsx";
+import Button from "@/components/ui/Button.tsx";
+import CaffeineChart from "@/components/caffeine/CaffeineChart.tsx";
 import {
     addCaffeine,
     buildHalfLifeSeries,
@@ -15,11 +14,11 @@ import {
     getTodayCaffeine,
     sourceLabel,
     toDateTimeLocalValue,
-} from "../../services/caffeineService.tsx";
-import type {CaffeineEntry, CaffeineSource} from "../../models/CaffeineEntry.tsx";
-import {snackbarService} from "../../services/snackBarService.tsx";
-import {formatTimestamp} from "../../services/utils.tsx";
-import './CaffeineCalculatorPage.css';
+} from "@/services/caffeineService.tsx";
+import type {CaffeineEntry, CaffeineSource} from "@/models/CaffeineEntry.tsx";
+import {snackbarService} from "@/services/snackBarService.tsx";
+import {formatTimestamp} from "@/services/utils.tsx";
+import "@/pages/caffeine-calculator/CaffeineCalculatorPage.css";
 
 const CaffeineCalculatorPage = () => {
     const [source, setSource] = useState<CaffeineSource>("MONSTER");
@@ -233,7 +232,6 @@ const CaffeineCalculatorPage = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </div>
     );
 };

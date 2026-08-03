@@ -1,7 +1,5 @@
 .caffeine-calc-page {
-    min-height: calc(100vh - var(--footer-height));
     box-sizing: border-box;
-    overflow: auto;
     width: 100%;
     padding: calc(var(--header-height) + 2rem) 2rem 2rem;
 }

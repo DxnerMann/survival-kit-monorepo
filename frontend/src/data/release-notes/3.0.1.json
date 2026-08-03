@@ -1,0 +1,27 @@
+{
+  "version": "3.0.1",
+  "date": "2026-07-31",
+  "sections": [
+    {
+      "title": "Fehlerbehandlung",
+      "items": [
+        "Erweiterte Fehlercodes und strukturierte API-Fehlerantworten",
+        "Externe Dienstfehler (z. B. Rapla, Cat as a Service) werden klar von internen Fehlern unterschieden",
+        "Verbesserte Fehlermeldungen im Frontend"
+      ]
+    },
+    {
+      "title": "Performance & Stabilität",
+      "items": [
+        "Kleine Performance-Verbesserungen bei API-Aufrufen und Widget-Ladevorgängen",
+        "Diverse Bugfixes in Widgets und Seiten"
+      ]
+    },
+    {
+      "title": "Rate Limiting",
+      "items": [
+        "Rate Limiting für API-Endpunkte zum Schutz vor Missbrauch"
+      ]
+    }
+  ]
+}

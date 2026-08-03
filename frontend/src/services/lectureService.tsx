@@ -1,11 +1,12 @@
-import type {ApiError} from '../models/ApiError.tsx'
-import {api, apiFetch, checkResponse, resolveError} from "./api.tsx";
-import type {DayOfWeek, Lecture} from "../models/Lecture.tsx";
+import type {ApiError} from "@/models/ApiError.tsx"
+import {api, apiFetch, checkResponse, getErrorText, resolveError} from "@/services/api.tsx";
+import type {DayOfWeek, Lecture} from "@/models/Lecture.tsx";
 import {useCallback, useEffect, useRef, useState} from "react";
 
 const API_URL = api.baseUrl;
 
 const lectureCache = new Map<string, Promise<Lecture[]>>();
+const lectureNamesCache = new Map<string, Promise<string[]>>();
 
 const DEBUG_TIME_OFFSET: { day: number; hours: number; minutes: number } =
     {
@@ -71,9 +72,9 @@ const getLecturesForWeek = async (weekOffset: number, course: string): Promise<L
         )
             .then(async res => {
                 if (!res.ok) {
-                    lectureCache.delete(cacheKey);
                     const apiError: ApiError = await res.json();
                     resolveError(apiError);
+                    throw apiError;
                 }
                 return res.json() as Promise<Lecture[]>;
             });
@@ -136,6 +137,8 @@ const getCurrentAndNextLecture = async (course: string): Promise<CurrentLectureI
 const useCurrentAndNextLecture = (course: string | null) => {
     const [current, setCurrent] = useState<Lecture | null>(null);
     const [next, setNext] = useState<Lecture[] | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const refreshRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -144,32 +147,44 @@ const useCurrentAndNextLecture = (course: string | null) => {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setCurrent(null);
             setNext(null);
+            setLoading(false);
+            setError(null);
             return;
         }
 
         const refresh = async () => {
-            const { current, next } = await getCurrentAndNextLecture(course);
-            setCurrent(current);
-            setNext(next);
+            setLoading(true);
+            setError(null);
+            try {
+                const { current, next } = await getCurrentAndNextLecture(course);
+                setCurrent(current);
+                setNext(next);
 
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-            if (current) {
-                const now = getNow()
-                const [hours, minutes] = current.endTime.split(":").map(Number);
-                const currentEnd = new Date(now);
-                currentEnd.setHours(hours, minutes, 0, 0);
+                if (current) {
+                    const now = getNow()
+                    const [hours, minutes] = current.endTime.split(":").map(Number);
+                    const currentEnd = new Date(now);
+                    currentEnd.setHours(hours, minutes, 0, 0);
 
-                const msUntilEnd = currentEnd.getTime() - now.getTime();
-                timeoutRef.current = setTimeout(() => refreshRef.current?.(), msUntilEnd);
-            } else if (next && next[0] !== undefined && next[0].day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : new Date().getDay() - 1]) {
-                const now = getNow()
-                const [hours, minutes] = next[0].startTime.split(":").map(Number);
-                const nextStart = new Date(now);
-                nextStart.setHours(hours, minutes, 0, 0);
+                    const msUntilEnd = currentEnd.getTime() - now.getTime();
+                    timeoutRef.current = setTimeout(() => refreshRef.current?.(), msUntilEnd);
+                } else if (next && next[0] !== undefined && next[0].day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : new Date().getDay() - 1]) {
+                    const now = getNow()
+                    const [hours, minutes] = next[0].startTime.split(":").map(Number);
+                    const nextStart = new Date(now);
+                    nextStart.setHours(hours, minutes, 0, 0);
 
-                const msUntilNext = nextStart.getTime() - now.getTime();
-                timeoutRef.current = setTimeout(() => refreshRef.current?.(), msUntilNext);
+                    const msUntilNext = nextStart.getTime() - now.getTime();
+                    timeoutRef.current = setTimeout(() => refreshRef.current?.(), msUntilNext);
+                }
+            } catch (err: unknown) {
+                setCurrent(null);
+                setNext(null);
+                setError(getErrorText(err));
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -183,27 +198,32 @@ const useCurrentAndNextLecture = (course: string | null) => {
 
     const refresh = useCallback(() => refreshRef.current?.() ?? Promise.resolve(), []);
 
-    return { current, next, refresh };
+    return { current, next, loading, error, refresh };
 };
 
-const getLectureNamesForSemester = async (course: string): Promise<string[]> => {
+const getLectureNamesForSemester = (course: string): Promise<string[]> => {
     if (course === "") {
-        return [];
+        return Promise.resolve([]);
     }
 
-    const response = await apiFetch(
-        `${API_URL}/lecture/all?course=${course}`,
-        {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }
-    );
+    if (!lectureNamesCache.has(course)) {
+        lectureNamesCache.set(course, (async () => {
+            const response = await apiFetch(
+                `${API_URL}/lecture/all?course=${course}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
 
-    await checkResponse(response);
+            await checkResponse(response);
+            return await response.json();
+        })());
+    }
 
-    return await response.json();
+    return lectureNamesCache.get(course)!;
 }
 
 const isToday = (day: string) =>

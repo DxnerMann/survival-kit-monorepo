@@ -1,0 +1,138 @@
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 1rem;
+
+    background: var(--color-transparent-primary);
+    backdrop-filter: blur(4px);
+}
+
+.dialog-container {
+    width: min(600px, 100%);
+    max-height: calc(100vh - 2rem);
+
+    overflow-y: auto;
+
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+
+    box-shadow: 0 10px 30px var(--color-shadow);
+}
+
+.dialog-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.dialog-header h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: 1.4rem;
+}
+
+.dialog-subheading {
+    margin: 0.5rem 0 0;
+    color: var(--color-text-secondary);
+}
+
+.dialog-footer {
+    padding: 0 1.5rem 1.5rem;
+}
+
+.dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.dialog-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dialog-form .form-group label {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.dialog-form .form-group input,
+.dialog-form .form-group textarea,
+.dialog-form .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text-primary);
+    box-sizing: border-box;
+}
+
+.dialog-form .form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.dialog-form .form-group input:focus,
+.dialog-form .form-group textarea:focus,
+.dialog-form .form-group select:focus {
+    outline: none;
+    border-color: var(--color-primary-accent);
+}
+
+.dialog-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.dialog-footer .dialog-actions {
+    margin-top: 0;
+}
+
+.dialog-select {
+    width: 100%;
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+    box-sizing: border-box;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+}
+
+.dialog-select:focus {
+    outline: none;
+    border-color: var(--color-primary-accent);
+}
+
+.dialog-select option {
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+}
+
+.dialog-cookie-body {
+    padding: 1.5rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.dialog-cookie-body p {
+    margin: 0 0 1rem;
+}
+
+.dialog-cookie-body a {
+    color: var(--color-primary-accent);
+}

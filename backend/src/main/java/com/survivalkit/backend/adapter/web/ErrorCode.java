@@ -41,6 +41,8 @@ public enum ErrorCode {
     // EXTERNAL SERVICE (04x)
     COURSE_EXTRACTION_FAILED("04x00000000", "Failed to extract course from provided Rapla URL", HttpStatus.BAD_GATEWAY, ErrorCategory.EXTERNAL),
     RAPLA_URL_NOT_ALLOWED("04x00000001", "Rapla URL host is not allowed", HttpStatus.BAD_REQUEST, ErrorCategory.EXTERNAL),
+    RAPLA_REQUEST_FAILED("04x00000002", "Failed to request data from Rapla", HttpStatus.BAD_GATEWAY, ErrorCategory.EXTERNAL),
+    CATAAS_REQUEST_FAILED("04x00000003", "Failed to request data from Cat as a Service", HttpStatus.BAD_GATEWAY, ErrorCategory.EXTERNAL),
 
     // QUICKLINK (05x)
     QUICKLINK_TITLE_CANNOT_BE_EMPTY("05x00000000", "Quicklink title cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.QUICKLINK),
