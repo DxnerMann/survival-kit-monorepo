@@ -13,19 +13,23 @@ import StatsPage from "@/pages/stats/StatsPage.tsx";
 import ProtectedRoute from "@/router/ProtectedRoute.tsx";
 import Exmatriculation from "@/pages/exmatriculation-simulator/Exmatriculation.tsx";
 import CaffeineCalculatorPage from "@/pages/caffeine-calculator/CaffeineCalculatorPage.tsx";
+import PresentationGameLobbyPage from "@/pages/presentation-game/PresentationGameLobbyPage.tsx";
+import PresentationGameRoomPage from "@/pages/presentation-game/PresentationGameRoomPage.tsx";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy.tsx";
 import Imprint from "@/pages/legal/Imprint.tsx";
 import ReleaseNotesPage from "@/pages/release-notes/ReleaseNotesPage.tsx";
 import MaintananceInfoPage from "@/pages/maintenance/MaintananceInfoPage.tsx";
 
 const HIDDEN_HEADER_ROUTES = ['/login']
-const HIDDEN_FOOTER_ROUTES = ['/login', '/chat']
+const HIDDEN_FOOTER_ROUTES = ['/login', '/chat', '/presentation-game']
 const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
 
 const Layout = () => {
     const { pathname } = useLocation()
     const showHeader = !HIDDEN_HEADER_ROUTES.includes(pathname)
-    const showFooter = !HIDDEN_FOOTER_ROUTES.includes(pathname)
+    const showFooter = !HIDDEN_FOOTER_ROUTES.some(route =>
+        pathname === route || pathname.startsWith(`${route}/`)
+    );
 
     if (MAINTENANCE_MODE === true) return <MaintananceInfoPage />
 
@@ -43,6 +47,8 @@ const Layout = () => {
                     <Route path="/stats" element={<StatsPage />} />
                     <Route path="/exmatriculation" element={<Exmatriculation />} />
                     <Route path="/caffeine-calculator" element={<ProtectedRoute> <CaffeineCalculatorPage /> </ProtectedRoute>} />
+                    <Route path="/presentation-game" element={<ProtectedRoute> <PresentationGameLobbyPage /> </ProtectedRoute>} />
+                    <Route path="/presentation-game/:code" element={<ProtectedRoute> <PresentationGameRoomPage /> </ProtectedRoute>} />
                     <Route path="/imprint" element={<Imprint />} />
                     <Route path="/privacypolicy" element={<PrivacyPolicy />} />
                     <Route path="/release-notes" element={<ReleaseNotesPage />} />

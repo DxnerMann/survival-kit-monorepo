@@ -33,6 +33,7 @@ const ALL_ACTIONS: TrackActionType[] = [
     "GAME_SUGGESTED",
     "IDEA_SUBMITTED",
     "LOGGED_IN",
+    "PRESENTATION_GAME_PLAYED",
 ];
 
 const ALL_FILTERS: StatsFilter[] = [...ALL_ACTIONS, "CAFFEINE"];
@@ -44,6 +45,7 @@ const translateFilter = (filter: StatsFilter) => {
         case "GAME_SUGGESTED": return "Spiele Vorgeschlagen"
         case "IDEA_SUBMITTED": return "Feedback abgegeben"
         case "LOGGED_IN": return "Anzahl Lecture-Survival-Kit geöffnet"
+        case "PRESENTATION_GAME_PLAYED": return "Präsi-Spiel gespielt"
         case "CAFFEINE": return "Durchschnittliche Koffein-Dosis"
     }
 }
@@ -205,6 +207,12 @@ const StatsPage = () => {
                         title={`${translateFilter("LOGGED_IN")} (${userActionSums["LOGGED_IN"] ?? 0} in den letzten 7 Tagen)`}
                     />
                 )}
+                {getUserRole() !== "GUEST" && showAction("PRESENTATION_GAME_PLAYED") && (
+                    <ActionChart
+                        actions={userActions.filter((a) => a.type === "PRESENTATION_GAME_PLAYED")}
+                        title={`${translateFilter("PRESENTATION_GAME_PLAYED")} (${userActionSums["PRESENTATION_GAME_PLAYED"] ?? 0} in den letzten 7 Tagen)`}
+                    />
+                )}
                 {getUserRole() !== "GUEST" && showCaffeine && (
                     <CaffeineDailyChart
                         entries={userCaffeine}
@@ -246,6 +254,12 @@ const StatsPage = () => {
                         title={`${translateFilter("LOGGED_IN")} (${courseActionSums["LOGGED_IN"] ?? 0} in den letzten 7 Tagen)`}
                     />
                 )}
+                {getUserRole() !== "GUEST" && courseActions.some((a) => selectedFilter.includes(a.type)) && showAction("PRESENTATION_GAME_PLAYED") && (
+                    <ActionChart
+                        actions={courseActions.filter((a) => a.type === "PRESENTATION_GAME_PLAYED")}
+                        title={`${translateFilter("PRESENTATION_GAME_PLAYED")} (${courseActionSums["PRESENTATION_GAME_PLAYED"] ?? 0} in den letzten 7 Tagen)`}
+                    />
+                )}
                 {getUserRole() !== "GUEST" && showCaffeine && (
                     <CaffeineDailyChart
                         entries={courseCaffeine}
@@ -284,6 +298,12 @@ const StatsPage = () => {
                     <ActionChart
                         actions={globalActions.filter((a) => a.type === "LOGGED_IN")}
                         title={`${translateFilter("LOGGED_IN")} (${globalActionSums["LOGGED_IN"] ?? 0} in den letzten 7 Tagen)`}
+                    />
+                )}
+                {showAction("PRESENTATION_GAME_PLAYED") && (
+                    <ActionChart
+                        actions={globalActions.filter((a) => a.type === "PRESENTATION_GAME_PLAYED")}
+                        title={`${translateFilter("PRESENTATION_GAME_PLAYED")} (${globalActionSums["PRESENTATION_GAME_PLAYED"] ?? 0} in den letzten 7 Tagen)`}
                     />
                 )}
                 {showCaffeine && (

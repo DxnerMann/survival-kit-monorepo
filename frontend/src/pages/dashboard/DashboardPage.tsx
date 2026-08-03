@@ -114,7 +114,7 @@ const DashboardPage = () => {
                 />
                 <WidgetGrid editMode={editMode} closeEditMode={() => setEditMode(false)} />
                 <SectionHeading
-                    heading={"Die <a class='important-text'>beliebtesten</a> Spiele"}
+                    heading={"Die <a class='important-text'>beliebtesten</a> Browserspiele"}
                     subheading={"Weil ganz ehrlich, in der Vorlesung aufpassen? Nö!"}
                     actions={[
                         { icon: LayersPlus, text: "Spiel Vorschlagen", link: () => setShowGameSuggestionDialog(true) },
@@ -135,7 +135,7 @@ const DashboardPage = () => {
                 />
                 <UsefulLinks />
                 <SectionHeading
-                    heading={"Survival-Kit <a class='important-text'>Klassiker</a> und <a class='important-text'>Tools</a>"}
+                    heading={"Survival-Kit <a class='important-text'>Spiele</a> und <a class='important-text'>Tools</a>"}
                     subheading={"Manchmal hilft nur noch die Exmatrikulation, oder ein Minigame für die Vorlesung."}
                     centered={false}
                 />

@@ -4,6 +4,24 @@ import type {RegisterRequest} from "@/models/RegisterRequest.tsx"
 import {api, apiFetch, checkResponse} from "@/services/api.tsx";
 import {setUserContext} from "@/services/userService.tsx";
 import {clearSessionMeta, hasSessionMeta, setSessionMeta} from "@/services/tokenService.tsx";
+import {websocketService} from "@/services/websocketService.tsx";
+import {trackActivity} from "@/services/statisticsService.tsx";
+
+const APP_OPEN_TRACKED_KEY = "lsk_app_open_tracked";
+
+const trackAppOpen = async () => {
+    if (sessionStorage.getItem(APP_OPEN_TRACKED_KEY)) {
+        return;
+    }
+
+    sessionStorage.setItem(APP_OPEN_TRACKED_KEY, "1");
+
+    try {
+        await trackActivity("LOGGED_IN");
+    } catch {
+        sessionStorage.removeItem(APP_OPEN_TRACKED_KEY);
+    }
+};
 
 const API_URL = api.baseUrl;
 
@@ -12,7 +30,9 @@ export const validatePassword = (pw: string) => {
 }
 
 const clearSession = () => {
+    websocketService.disconnect();
     clearSessionMeta();
+    sessionStorage.removeItem(APP_OPEN_TRACKED_KEY);
 }
 
 const login = async (
@@ -32,6 +52,8 @@ const login = async (
     setSessionMeta(data.role, data.username);
     setUserContext(data);
     localStorage.removeItem('guest');
+    websocketService.connect();
+    void trackAppOpen();
 
     return data
 }
@@ -63,6 +85,8 @@ const validate = async (): Promise<boolean> => {
     const data: LoginResponse = await response.json();
     setSessionMeta(data.role, data.username);
     setUserContext(data);
+    websocketService.connect();
+    void trackAppOpen();
     return true;
 }
 

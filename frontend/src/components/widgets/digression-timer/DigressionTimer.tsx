@@ -273,14 +273,14 @@ const DigressionTimer = ({title, isPreview}: WidgetProps) => {
                     text={running ? "Pause" : "Start"}
                     onClick={togglePlay}
                     type="submit"
-                    variant="secondary"
+                    variant="primary"
                     fullWidth={true}
                 />
                 <Button
                     text={"Reset"}
                     onClick={handleReset}
                     type="reset"
-                    variant="primary"
+                    variant="secondary"
                     fullWidth={true}
                 />
             </div>

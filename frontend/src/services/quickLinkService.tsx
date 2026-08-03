@@ -85,3 +85,44 @@ export const approveLink = async (data: {
 
     return;
 };
+
+export const markAsFavourite = async (quickLinkId: string, fav: boolean): Promise<void> => {
+    const params = new URLSearchParams();
+    params.set("quickLinkId", quickLinkId);
+    params.set("fav", String(fav));
+
+    const response = await apiFetch(`${API_URL}/link/favourite?${params.toString()}`, {
+        method: "POST",
+    });
+
+    await checkResponse(response);
+};
+
+export const getFavourites = async (
+    pageSize?: number,
+    continuation?: string | null
+): Promise<{ data: QuickLink[]; continuation: string | null }> => {
+    const params = new URLSearchParams();
+
+    if (pageSize !== undefined) params.set("pageSize", String(pageSize));
+    if (continuation) params.set("continuation", continuation);
+
+    const response = await apiFetch(`${API_URL}/link/favourite?${params.toString()}`);
+
+    await checkResponse(response);
+
+    return response.json();
+};
+
+export const getAllFavourites = async (): Promise<QuickLink[]> => {
+    const all: QuickLink[] = [];
+    let continuation: string | null = null;
+
+    do {
+        const page = await getFavourites(50, continuation);
+        all.push(...page.data);
+        continuation = page.continuation;
+    } while (continuation);
+
+    return all;
+};

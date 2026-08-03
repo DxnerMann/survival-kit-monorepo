@@ -1,14 +1,24 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, type MouseEvent} from "react";
+import {Star} from "lucide-react";
 import {getPreviewImage, onLinkClick} from "@/services/quickLinkService.tsx";
 import type {QuickLink} from "@/models/QuickLink.tsx";
 import "@/components/explore/QuickLinkCard.css";
 
 interface QuickLinkCardProps {
     quickLink: QuickLink,
-    showClickedThisMonth: boolean
+    showClickedThisMonth: boolean,
+    isFavourite?: boolean,
+    onToggleFavourite?: (id: string) => void,
+    showFavouriteButton?: boolean,
 }
 
-const QuickLinkCard = ({quickLink, showClickedThisMonth} : QuickLinkCardProps) => {
+const QuickLinkCard = ({
+    quickLink,
+    showClickedThisMonth,
+    isFavourite = false,
+    onToggleFavourite,
+    showFavouriteButton = false,
+} : QuickLinkCardProps) => {
     const [img, setImg] = useState<string | null>(null);
     const [localClickUpdate, setLocalClickUpdate] = useState(0);
     // eslint-disable-next-line react-hooks/purity
@@ -33,6 +43,11 @@ const QuickLinkCard = ({quickLink, showClickedThisMonth} : QuickLinkCardProps) =
         window.open(quickLink.url, "_blank", "noopener,noreferrer");
     };
 
+    const onFavouriteClick = (event: MouseEvent) => {
+        event.stopPropagation();
+        onToggleFavourite?.(quickLink.id);
+    };
+
     return (
         <div className="quick-link-card" onClick={onClick}>
             {isNew && <span className="quick-link-badge-new">NEW</span>}
@@ -42,6 +57,16 @@ const QuickLinkCard = ({quickLink, showClickedThisMonth} : QuickLinkCardProps) =
                 }
             </div>
             <div className="quick-link-info">
+                {showFavouriteButton && (
+                    <button
+                        type="button"
+                        className={`quick-link-fav-button ${isFavourite ? "is-favourite" : ""}`}
+                        onClick={onFavouriteClick}
+                        aria-label={isFavourite ? "Aus Favoriten entfernen" : "Zu Favoriten hinzufügen"}
+                    >
+                        <Star size={24} fill={isFavourite ? "currentColor" : "none"} />
+                    </button>
+                )}
                 <div className="quick-link-info-1">
                     <h2 className="quick-link-title">{quickLink.title}</h2>
                     <h3

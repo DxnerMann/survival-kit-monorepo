@@ -1,7 +1,8 @@
 import "@/components/widgets/current-caffeine/CurrentCaffeine.css";
 import {useEffect, useState} from "react";
 import {createPortal} from "react-dom";
-import {Fullscreen} from "lucide-react";
+import {Calculator, Fullscreen} from "lucide-react";
+import {useNavigate} from "react-router-dom";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
 import {
     getCurrentBloodCaffeineMg,
@@ -16,6 +17,7 @@ import WidgetStatus from "@/components/ui/WidgetStatus.tsx";
 const REFRESH_MS = 60_000;
 
 const CurrentCaffeine = ({title, isPreview}: WidgetProps) => {
+    const navigate = useNavigate();
     const [inFullscreen, setInFullscreen] = useState(false);
     const [bloodMg, setBloodMg] = useState<number | null>(null);
     const [consumedMg, setConsumedMg] = useState<number | null>(null);
@@ -80,6 +82,11 @@ const CurrentCaffeine = ({title, isPreview}: WidgetProps) => {
     const getWidgetContent = () => (
         <div className={`current-caffeine-widget ${inFullscreen ? "fullscreen" : ""}`}>
             <div className="widget-header">
+                <Calculator
+                    className="widget-header-icon"
+                    size={20}
+                    onClick={() => navigate("/caffeine-calculator")}
+                />
                 <Fullscreen
                     className="widget-header-icon"
                     size={20}

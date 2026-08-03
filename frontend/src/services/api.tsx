@@ -50,6 +50,20 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "08x00000001": { text: "Ungültige Koffein-Quelle.", type: "warning" },
     "08x00000002": { text: "Ungültiger Zeitpunkt (max. 7 Tage zurück).", type: "warning" },
     "08x00000003": { text: "Koffein-Eintrag wurde nicht gefunden.", type: "error" },
+
+    "09x00000000": { text: "Der Raumname darf nicht leer sein.", type: "warning" },
+    "09x00000001": { text: "Raum nicht gefunden.", type: "error" },
+    "09x00000002": { text: "Ungültiger Raumcode.", type: "error" },
+    "09x00000003": { text: "Lege zuerst deinen Kurs im Profil fest, um öffentliche Räume zu erstellen.", type: "warning" },
+    "09x00000004": { text: "Du kannst diesem Raum nicht beitreten.", type: "error" },
+    "09x00000005": { text: "Dieser Raum hat bereits begonnen.", type: "warning" },
+    "09x00000006": { text: "Nur der Host kann diese Aktion ausführen.", type: "error" },
+    "09x00000007": { text: "Der Raum ist nicht mehr in der Lobby.", type: "warning" },
+    "09x00000008": { text: "Das Spiel läuft gerade nicht.", type: "warning" },
+    "09x00000009": { text: "Überspringen ist im Schwer-Modus nicht erlaubt.", type: "warning" },
+    "09x00000010": { text: "Nur die Jury kann bestätigen.", type: "error" },
+    "09x00000011": { text: "Du hast für dieses Wort bereits abgestimmt.", type: "warning" },
+    "09x00000012": { text: "Keine Wörter mehr in diesem Spiel.", type: "info" },
 };
 
 export function getErrorText(error: ApiError | unknown): string {

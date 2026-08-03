@@ -62,7 +62,22 @@ public enum ErrorCode {
     CAFFEINE_AMOUNT_INVALID("08x00000000", "Caffeine amount must be between 1 and 1000 mg", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
     CAFFEINE_SOURCE_INVALID("08x00000001", "Caffeine source is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
     CAFFEINE_TIMESTAMP_INVALID("08x00000002", "Caffeine timestamp is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
-    CAFFEINE_ENTRY_NOT_FOUND("08x00000003", "Caffeine entry not found", HttpStatus.NOT_FOUND, ErrorCategory.CAFFEINE);
+    CAFFEINE_ENTRY_NOT_FOUND("08x00000003", "Caffeine entry not found", HttpStatus.NOT_FOUND, ErrorCategory.CAFFEINE),
+
+    // PRESENTATION GAME (09x)
+    PRESENTATION_ROOM_NAME_EMPTY("09x00000000", "Room name cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_NOT_FOUND("09x00000001", "Room not found", HttpStatus.NOT_FOUND, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_CODE_INVALID("09x00000002", "Invalid room code", HttpStatus.NOT_FOUND, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_COURSE_REQUIRED("09x00000003", "Set your course before creating a public room", HttpStatus.BAD_REQUEST, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_ACCESS_DENIED("09x00000004", "You cannot join this room", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_ALREADY_STARTED("09x00000005", "This room has already started", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_NOT_HOST("09x00000006", "Only the host can perform this action", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_NOT_IN_LOBBY("09x00000007", "The room is not in lobby state", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_NOT_IN_PROGRESS("09x00000008", "The game is not running", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_SKIP_NOT_ALLOWED("09x00000009", "Skipping is not allowed in hard mode", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_NOT_JURY("09x00000010", "Only jury members can approve", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ALREADY_VOTED("09x00000011", "You already voted on this word", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_NO_WORDS_LEFT("09x00000012", "No words left in this game", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME);
 
     private final String code;
     private final String message;
@@ -103,7 +118,8 @@ public enum ErrorCode {
         WIDGET,
         COURSE,
         FEEDBACK,
-        CAFFEINE
+        CAFFEINE,
+        PRESENTATION_GAME
     }
 
     private static final Map<String, ErrorCode> BY_CODE = Arrays.stream(values())

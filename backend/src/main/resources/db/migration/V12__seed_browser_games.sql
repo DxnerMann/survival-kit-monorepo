@@ -1,0 +1,92 @@
+INSERT INTO quicklinks (
+    id,
+    title,
+    description,
+    url,
+    clickedThisMonth,
+    clickedOverall,
+    favouriteCount,
+    approvedByAdmin,
+    addedAt,
+    lastUpdated,
+    lastReset
+) VALUES
+    (
+        'codenames',
+        'Codenames',
+        'Das beliebte Wort-Assoziationsspiel für zwei Teams – online im Browser spielen.',
+        'https://codenames.game/',
+        0,
+        0,
+        0,
+        true,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        'wordle',
+        'Wordle',
+        'Errate das tägliche Fünf-Buchstaben-Wort in maximal sechs Versuchen.',
+        'https://www.nytimes.com/games/wordle/index.html',
+        0,
+        0,
+        0,
+        true,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        'hexcodle',
+        'Hexcodle',
+        'Wordle für Farben – errate den Hex-Farbcode des Tages in fünf Versuchen.',
+        'https://hexcodle.com/',
+        0,
+        0,
+        0,
+        true,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        'murdoku',
+        'Murdoku',
+        'Murder Mystery trifft Sudoku – löse Krimi-Rätsel im Gitter.',
+        'https://murdoku.com/play',
+        0,
+        0,
+        0,
+        true,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        'poople',
+        'Poople',
+        'Tägliches Wortleiter-Spiel – verwandle das Startwort Schritt für Schritt in POOP.',
+        'https://poople.io/',
+        0,
+        0,
+        0,
+        true,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        'waffle',
+        'Waffle',
+        'Fülle das Waffel-Gitter und finde alle Wörter in 15 Zügen.',
+        'https://wafflegame.net/',
+        0,
+        0,
+        0,
+        true,
+        NOW(),
+        NOW(),
+        NOW()
+    )
+ON CONFLICT (id) DO NOTHING;

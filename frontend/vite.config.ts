@@ -16,6 +16,7 @@ export default defineConfig({
       '/v1': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        ws: true,
       },
       '/swagger-ui': {
         target: 'http://localhost:8080',
