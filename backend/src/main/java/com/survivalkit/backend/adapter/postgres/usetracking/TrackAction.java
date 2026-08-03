@@ -14,6 +14,7 @@ public record TrackAction(
         GAME_PLAYED,
         GAME_SUGGESTED,
         IDEA_SUBMITTED,
-        LOGGED_IN
+        LOGGED_IN,
+        PRESENTATION_GAME_PLAYED
     }
 }

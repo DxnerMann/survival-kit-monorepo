@@ -1,0 +1,33 @@
+{
+  "version": "3.1.0",
+  "date": "2026-08-03",
+  "sections": [
+    {
+      "title": "Das Präsi-Spiel",
+      "items": [
+        "Neues Minigame unter /presentation-game – Zufallswörter während der Präsentation einbauen",
+        "Lobby mit Raum erstellen (öffentlich/privat), per Code beitreten und Liste beendeter Spiele",
+        "Raum-Lobby unter /presentation-game/{code} mit Spielerliste und Host-Start",
+        "Live-Spiel: große Wortkarte, Skip/Bestätigen per Button oder Leertaste, Punkte-Animation",
+        "Jury braucht 10 % Zustimmung pro Wort; allein spielender Host kann selbst bestätigen",
+        "Deutsche Zufallswörter nach Schwierigkeit (kurz → lang/Komposita), Batch-Prefetch à 50 Wörter",
+        "Echtzeit-Sync über WebSocket; Räume und Ergebnisse werden täglich um Mitternacht gelöscht"
+      ]
+    },
+    {
+      "title": "Quicklinks & Spiele",
+      "items": [
+        "Quicklinks als Favoriten markieren (goldener Stern)",
+        "Neues Dashboard-Widget „Lieblingsspiele“ für favorisierte Browser-Games",
+        "Weitere Browser-Games in der Explore-Liste (Codenames, Wordle, u. a.)"
+      ]
+    },
+    {
+      "title": "Infrastruktur",
+      "items": [
+        "WebSocket-Basis (/v1/ws) mit kurs- und spielraum-spezifischen Kanälen",
+        "User-Tracking für erstellte und betretene Präsi-Räume in den Statistiken"
+      ]
+    }
+  ]
+}

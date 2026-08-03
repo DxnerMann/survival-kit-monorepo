@@ -1,0 +1,321 @@
+.presentation-game-lobby {
+    box-sizing: border-box;
+    width: 100%;
+    padding: calc(var(--header-height) + 2rem) 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.presentation-game-manual {
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.presentation-game-manual__title {
+    margin: 0;
+    font-size: 1.35rem;
+    color: var(--color-primary-accent);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.presentation-game-manual__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.presentation-game-manual__heading {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--color-text-primary);
+    border-left: 3px solid var(--color-primary-accent);
+    padding-left: 0.65rem;
+}
+
+.presentation-game-manual__section p,
+.presentation-game-manual__steps {
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.presentation-game-manual__steps {
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.presentation-game-manual__steps li::marker {
+    color: var(--color-primary-accent);
+    font-weight: 700;
+}
+
+.presentation-game-manual__highlight {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.presentation-game-manual__accent {
+    color: var(--color-primary-accent);
+    font-weight: 600;
+}
+
+.presentation-game-manual__role-presenter {
+    color: var(--color-warning);
+    font-weight: 600;
+}
+
+.presentation-game-manual__roles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.presentation-game-manual__role-card {
+    border-radius: calc(var(--border-radius) * 0.65);
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--color-border);
+}
+
+.presentation-game-manual__role-card h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+}
+
+.presentation-game-manual__role-card p {
+    font-size: 0.9rem;
+}
+
+.presentation-game-manual__role-card--presenter {
+    background: color-mix(in srgb, var(--color-warning) 12%, var(--color-background-primary));
+    border-color: color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
+}
+
+.presentation-game-manual__role-card--presenter h4 {
+    color: var(--color-warning);
+}
+
+.presentation-game-manual__role-card--voter {
+    background: color-mix(in srgb, var(--color-success) 12%, var(--color-background-primary));
+    border-color: color-mix(in srgb, var(--color-success) 45%, var(--color-border));
+}
+
+.presentation-game-manual__role-card--voter h4 {
+    color: var(--color-success);
+}
+
+.presentation-game-manual__table-wrap {
+    overflow-x: auto;
+    border-radius: calc(var(--border-radius) * 0.65);
+    border: 1px solid var(--color-border);
+}
+
+.presentation-game-manual__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.presentation-game-manual__table thead {
+    background: var(--color-background-secondary);
+}
+
+.presentation-game-manual__table th,
+.presentation-game-manual__table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.presentation-game-manual__table th {
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.presentation-game-manual__table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.presentation-game-manual__row--easy {
+    background: color-mix(in srgb, var(--color-success) 6%, transparent);
+}
+
+.presentation-game-manual__row--medium {
+    background: color-mix(in srgb, var(--color-warning) 6%, transparent);
+}
+
+.presentation-game-manual__row--hard {
+    background: color-mix(in srgb, var(--color-primary-accent) 6%, transparent);
+}
+
+.presentation-game-manual__badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+}
+
+.presentation-game-manual__badge--easy {
+    background: color-mix(in srgb, var(--color-success) 22%, transparent);
+    color: var(--color-success);
+}
+
+.presentation-game-manual__badge--medium {
+    background: color-mix(in srgb, var(--color-warning) 22%, transparent);
+    color: var(--color-warning);
+}
+
+.presentation-game-manual__badge--hard {
+    background: color-mix(in srgb, var(--color-primary-accent) 22%, transparent);
+    color: var(--color-primary-accent);
+}
+
+.presentation-game-manual__points {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.presentation-game-manual__points--positive {
+    color: var(--color-success);
+}
+
+.presentation-game-manual__points--negative {
+    color: var(--color-primary-accent);
+}
+
+.presentation-game-rooms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.presentation-game-rooms__empty {
+    grid-column: 1 / -1;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: var(--color-text-secondary);
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+    border: 1px dashed var(--color-border);
+}
+
+.presentation-game-room-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+}
+
+.presentation-game-room-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.presentation-game-room-card__name {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--color-text-primary);
+    word-break: break-word;
+}
+
+.presentation-game-room-card__meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.presentation-game-room-card__meta div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.presentation-game-room-card__meta dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+}
+
+.presentation-game-room-card__meta dd {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.presentation-game-finished-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.presentation-game-finished-item {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr auto auto;
+    gap: 0.75rem 1rem;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    background: var(--color-background-primary);
+    border-radius: calc(var(--border-radius) * 0.65);
+    border: 1px solid var(--color-border);
+}
+
+.presentation-game-finished-item__name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.presentation-game-finished-item__host,
+.presentation-game-finished-item__date {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.presentation-game-finished-item__points {
+    font-weight: 700;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+    .presentation-game-manual {
+        padding: 1.25rem;
+    }
+
+    .presentation-game-manual__table th,
+    .presentation-game-manual__table td {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.82rem;
+    }
+
+    .presentation-game-finished-item {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .presentation-game-finished-item__points {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+}
