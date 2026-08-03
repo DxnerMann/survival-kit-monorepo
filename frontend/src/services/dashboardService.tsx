@@ -5,6 +5,7 @@ import LectureTimer from "@/components/widgets/lecture-timer/LectureTimer.tsx";
 import Clock from "@/components/widgets/clock/Clock.tsx";
 import DigressionTimer from "@/components/widgets/digression-timer/DigressionTimer.tsx";
 import DailyCat from "@/components/widgets/cat/DailyCat.tsx";
+import CurrentCaffeine from "@/components/widgets/current-caffeine/CurrentCaffeine.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -96,6 +97,15 @@ const getDefaultToolbox = (): UserWidget[] => {
             x: 0,
             y: 0,
             data: ""
+        },
+        {
+            id: "default-current-caffeine",
+            type: "CURRENT_CAFFEINE",
+            height: 1,
+            width: 2,
+            x: 0,
+            y: 0,
+            data: ""
         }
     ]
 }
@@ -112,6 +122,8 @@ const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
             return <DigressionTimer title={"Schwurbeltimer"} data={widget.data} id={widget.id} isPreview={isPreview} />
         case "DAILY_CAT":
             return <DailyCat title={"Tägliche Katze"} data={widget.data} id={widget.id} isPreview={isPreview} />
+        case "CURRENT_CAFFEINE":
+            return <CurrentCaffeine title={"Aktuelles Koffein"} data={widget.data} id={widget.id} isPreview={isPreview} />
     }
 }
 

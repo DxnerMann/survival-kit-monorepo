@@ -15,6 +15,7 @@ import Exmatriculation from "@/pages/exmatriculation-simulator/Exmatriculation.t
 import CaffeineCalculatorPage from "@/pages/caffeine-calculator/CaffeineCalculatorPage.tsx";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy.tsx";
 import Imprint from "@/pages/legal/Imprint.tsx";
+import ReleaseNotesPage from "@/pages/release-notes/ReleaseNotesPage.tsx";
 import MaintananceInfoPage from "@/pages/maintenance/MaintananceInfoPage.tsx";
 
 const HIDDEN_HEADER_ROUTES = ['/login']
@@ -44,6 +45,7 @@ const Layout = () => {
                     <Route path="/caffeine-calculator" element={<ProtectedRoute> <CaffeineCalculatorPage /> </ProtectedRoute>} />
                     <Route path="/imprint" element={<Imprint />} />
                     <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+                    <Route path="/release-notes" element={<ReleaseNotesPage />} />
                     <Route
                         path="/"
                         element={

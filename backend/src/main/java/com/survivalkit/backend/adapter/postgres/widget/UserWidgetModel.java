@@ -16,6 +16,7 @@ public record UserWidgetModel(
         DIGRESSION_TIMER,
         FAV_GAMES,
         DAILY_CAT,
+        CURRENT_CAFFEINE,
         EMPTY,
         EMPTY_DASHBOARD
     }

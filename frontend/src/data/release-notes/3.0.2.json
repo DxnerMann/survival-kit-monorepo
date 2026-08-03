@@ -1,0 +1,40 @@
+{
+  "version": "3.0.2",
+  "date": "2026-08-03",
+  "sections": [
+    {
+      "title": "Koffein",
+      "items": [
+        "Neues Dashboard-Widget „Aktuelles Koffein“ mit Blutwert und heutigem Konsum",
+        "CaffeineChart im Koffeinrechner: Halbwertszeit-Verlauf über den Tag",
+        "CaffeineDailyChart in den Statistiken für Nutzer, Kurs und global"
+      ]
+    },
+    {
+      "title": "Widgets & UI",
+      "items": [
+        "Widgets zeigen Lade- und Fehlerzustände statt hängendem „Loading…“",
+        "Schwurbeltimer: Speichert Fortschritt beim Seitenwechsel, Vollbild-Video, Karussell zwischen zwei Videos",
+        "Digression-Timer: Caption und Timer skalieren mit Widget-Größe",
+        "Themed Scrollbars und einheitliches Seiten-Scrollverhalten (Footer am Seitenende)"
+      ]
+    },
+    {
+      "title": "Dialoge & Layout",
+      "items": [
+        "Dialog-System überarbeitet (DialogActions, ConfirmDialog, Cookie-Hinweis beim ersten Besuch)",
+        "Hintergrund scrollt nicht mehr, wenn ein Dialog offen ist",
+        "Footer zentral im Layout, Logo repariert, Chat ohne Footer",
+        "Release Notes unter /release-notes"
+      ]
+    },
+    {
+      "title": "Stabilität",
+      "items": [
+        "Externe Dienste (Rapla, Cat as a Service) werden als EXTERNAL-Fehler kategorisiert",
+        "Weniger doppelte API-Aufrufe durch Caching in Widgets",
+        "Frontend-Struktur aufgeräumt (@/ Alias, feature-basierte Ordner)"
+      ]
+    }
+  ]
+}

@@ -12,12 +12,21 @@ const Header = () => {
     const isGuest = getUserRole() == "GUEST";
 
     return <div className="header">
-        <img
-            src="/images/icon2.png"
-            className="header-logo"
-            alt="Logo"
-            onClick={() => navigate('/')}
-        />
+        <div className="header-brand">
+            <img
+                src="/images/icon2.png"
+                className="header-logo"
+                alt="Logo"
+                onClick={() => navigate('/')}
+            />
+            <button
+                type="button"
+                className="header-whats-new"
+                onClick={() => navigate('/release-notes')}
+            >
+                What's new?
+            </button>
+        </div>
         <div className="header-links">
             <NavIcon icon={<Compass size={20} />} label="Entdecken" path="/explore" />
             {!isGuest && <NavIcon icon={<MessageSquare size={20} />} label="Chat" path="/chat" />}

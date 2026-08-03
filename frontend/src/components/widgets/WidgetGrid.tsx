@@ -13,12 +13,13 @@ import type {UserWidget} from "@/models/UserWidget.tsx";
 import {getUserRole} from "@/services/tokenService.tsx";
 import {dashboardService} from "@/services/dashboardService.tsx";
 
-const widgetConstraints: Record< string, { minW: number; minH: number; defaultW: number; defaultH: number }> = {
+const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: number; maxH?: number; defaultW: number; defaultH: number }> = {
     LECTURE_PLAN: { minW: 3, minH: 4, defaultW: 5, defaultH: 4 },
     LECTURE_TIMER: { minW: 3, minH: 4, defaultW: 5, defaultH: 4  },
     CLOCK: { minW: 2, minH : 1, defaultW: 2, defaultH: 2},
     DIGRESSION_TIMER: {minW: 4, minH: 3, defaultW: 4, defaultH: 3},
     DAILY_CAT: {minW: 2, minH: 2, defaultW: 2, defaultH: 2},
+    CURRENT_CAFFEINE: { minW: 2, minH: 1, maxW: 4, maxH: 2, defaultW: 2, defaultH: 1 },
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
@@ -229,6 +230,8 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                                     h: constraints.defaultH,
                                     minW: constraints.minW,
                                     minH: constraints.minH,
+                                    maxW: constraints.maxW,
+                                    maxH: constraints.maxH,
                                 }]);
                                 setToolboxPool(prev => prev.filter(w => w.id !== widget.id));
                                 setLayoutWidgets(prev => [...prev, widget]);
@@ -254,14 +257,18 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
 function toGridLayout(widgets: UserWidget[]): Layout {
     return widgets.map((widget) => {
         const constraints = getWidgetConstraints(widget.type);
+        const w = Math.max(widget.width, constraints.minW);
+        const h = Math.max(widget.height, constraints.minH);
         return {
             i: widget.id,
             x: widget.x,
             y: widget.y,
-            w: Math.max(widget.width, constraints.minW),
-            h: Math.max(widget.height, constraints.minH),
+            w: constraints.maxW != null ? Math.min(w, constraints.maxW) : w,
+            h: constraints.maxH != null ? Math.min(h, constraints.maxH) : h,
             minW: constraints.minW,
             minH: constraints.minH,
+            maxW: constraints.maxW,
+            maxH: constraints.maxH,
         };
     });
 }
