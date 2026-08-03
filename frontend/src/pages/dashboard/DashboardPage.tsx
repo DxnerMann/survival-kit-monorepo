@@ -17,12 +17,8 @@ const DashboardPage = () => {
     const username = getUsername();
 
     const onLinkSubmit = async (data : {title: string, description: string, url: string}) => {
-        try {
-            await suggestLink(data);
-            setShowGameSuggestionDialog(false);
-        } finally {
-            setShowGameSuggestionDialog(false);
-        }
+        await suggestLink(data);
+        setShowGameSuggestionDialog(false);
     }
 
     const welcomePhrases = [

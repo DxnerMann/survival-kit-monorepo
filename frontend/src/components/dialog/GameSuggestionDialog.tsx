@@ -10,7 +10,7 @@ interface GameSuggestionDialogProps {
         title: string;
         description: string;
         url: string;
-    }) => void;
+    }) => void | Promise<void>;
 }
 
 export default function GameSuggestionDialog({
@@ -21,8 +21,20 @@ export default function GameSuggestionDialog({
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [url, setUrl] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = () => {
+    const resetForm = () => {
+        setTitle("");
+        setDescription("");
+        setUrl("");
+        setSubmitting(false);
+    };
+
+    const handleSubmit = async () => {
+        if (submitting) {
+            return;
+        }
+
         if (title === null || title === "") {
             snackbarService.showSnackbar({type: "error", text: "Titel kann nicht leer sein", showIcon: true});
             return;
@@ -53,11 +65,22 @@ export default function GameSuggestionDialog({
             return;
         }
 
-        onSubmit({
-            title: title,
-            description: description,
-            url,
-        });
+        setSubmitting(true);
+        try {
+            await onSubmit({
+                title: title,
+                description: description,
+                url,
+            });
+            resetForm();
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleCancel = () => {
+        resetForm();
+        onCancel();
     };
 
     return (
@@ -65,13 +88,13 @@ export default function GameSuggestionDialog({
             isOpen={isOpen}
             title="Neues Spiel vorschlagen"
             subtitle="Dein Vorschlag wird im Anschluss von einem Admin geprüft und gegebenenfalls zur Liste hinzugefügt."
-            onClose={onCancel}
+            onClose={handleCancel}
         >
             <form
                 className="dialog-form"
                 onSubmit={(e) => {
                     e.preventDefault();
-                    handleSubmit();
+                    void handleSubmit();
                 }}
             >
                 <div className="form-group">
@@ -105,8 +128,8 @@ export default function GameSuggestionDialog({
                 </div>
 
                 <DialogActions
-                    cancel={{text: "Abbrechen", onClick: onCancel}}
-                    confirm={{text: "Absenden", onClick: handleSubmit, type: "submit"}}
+                    cancel={{text: "Abbrechen", onClick: handleCancel, disabled: submitting}}
+                    confirm={{text: "Absenden", type: "submit", disabled: submitting}}
                 />
             </form>
         </Dialog>

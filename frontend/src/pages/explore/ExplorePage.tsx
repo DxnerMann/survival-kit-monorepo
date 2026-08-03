@@ -63,8 +63,8 @@ const ExplorePage = () => {
             <GameSuggestionDialog
                 isOpen={showGameSuggestionDialog}
                 onCancel={() => setShowGameSuggestionDialog(false)}
-                onSubmit={(data) => {
-                    suggestLink(data);
+                onSubmit={async (data) => {
+                    await suggestLink(data);
                     setShowGameSuggestionDialog(false);
                 }}
             />

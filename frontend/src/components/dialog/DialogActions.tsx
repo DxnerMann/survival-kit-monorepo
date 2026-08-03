@@ -3,7 +3,7 @@ import Button from "@/components/ui/Button.tsx";
 
 export interface DialogAction {
     text: string;
-    onClick: () => void;
+    onClick?: () => void;
     variant?: "primary" | "secondary" | "transparent";
     type?: "button" | "submit" | "reset";
     disabled?: boolean;

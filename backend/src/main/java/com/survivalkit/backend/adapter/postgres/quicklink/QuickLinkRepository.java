@@ -59,6 +59,17 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
     }
 
     @Override
+    public void approveQuickLink(String id, String title, String description) {
+        jdbcClient.sql(Statements.APPROVE.sql)
+                .paramSource(new MapSqlParameterSource("id", id)
+                        .addValue("title", title, Types.VARCHAR)
+                        .addValue("description", description, Types.VARCHAR)
+                        .addValue("lastUpdated", toTimestamp(java.time.Instant.now()))
+                ).update();
+        securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("Quicklink %s approved", id));
+    }
+
+    @Override
     public void upsertquickLink(QuickLink quickLink) {
         jdbcClient.sql(Statements.UPSERT.sql)
                 .paramSource(new MapSqlParameterSource("id", quickLink.id())
@@ -124,6 +135,17 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                       END DESC,
                       id ASC
                     LIMIT :pageSize;
+                    """
+        ),
+        // language=sql
+        APPROVE(
+                """
+                    UPDATE quicklinks
+                    SET approvedByAdmin = TRUE,
+                        title = COALESCE(:title, title),
+                        description = COALESCE(:description, description),
+                        lastUpdated = :lastUpdated
+                    WHERE id = :id
                     """
         ),
         // language=sql

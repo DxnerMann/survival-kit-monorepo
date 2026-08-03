@@ -1,5 +1,5 @@
 import "@/pages/admin/AdminPage.css";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import type {QuickLink} from "@/models/QuickLink.tsx";
 import {approveLink, getQuickLinksFiltered} from "@/services/quickLinkService.tsx";
@@ -36,6 +36,60 @@ const AdminPage = () => {
     const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
     const [users, setUsers] = useState<ProfileSettings[]>([]);
     const [userContinuation, setUserContinuation] = useState<string | null>(null);
+    const suggestionsFetchId = useRef(0);
+    const [pendingLinkIds, setPendingLinkIds] = useState<Set<string>>(() => new Set());
+
+    const mergeUniqueById = (existing: QuickLink[], incoming: QuickLink[]): QuickLink[] => {
+        const seen = new Set(existing.map((link) => link.id));
+        return [...existing, ...incoming.filter((link) => !seen.has(link.id))];
+    };
+
+    const applySuggestions = (data: QuickLink[], nextContinuation: string | null, fetchId: number) => {
+        if (fetchId !== suggestionsFetchId.current) {
+            return;
+        }
+        setSuggestedGames(data);
+        setContinuation(nextContinuation);
+    };
+
+    const refreshSuggestions = async () => {
+        const fetchId = ++suggestionsFetchId.current;
+        setLoading(true);
+
+        try {
+            const res = await getQuickLinksFiltered(false, false, 50);
+            if (fetchId !== suggestionsFetchId.current) {
+                return;
+            }
+
+            applySuggestions(
+                res.data,
+                res.data.length < 50 ? null : res.continuation,
+                fetchId,
+            );
+        } finally {
+            if (fetchId === suggestionsFetchId.current) {
+                setLoading(false);
+            }
+        }
+    };
+
+    const loadSuggestions = async (continuationToken?: string | null) => {
+        const fetchId = ++suggestionsFetchId.current;
+
+        const res = await getQuickLinksFiltered(
+            false,
+            false,
+            50,
+            continuationToken ?? undefined
+        );
+
+        if (fetchId !== suggestionsFetchId.current) {
+            return null;
+        }
+
+        return { ...res, fetchId };
+    };
 
     const tabs : string[] = [
         "GENERAL",
@@ -58,18 +112,18 @@ const AdminPage = () => {
 
         setLoading(true);
 
-        const res = await getQuickLinksFiltered(
-            false,
-            false,
-            50,
-            continuation
-        );
+        const res = await loadSuggestions(continuation);
+        if (!res) {
+            setLoading(false);
+            return;
+        }
 
-        setSuggestedGames(prev =>
-            [...prev, ...res.data]
-        );
+        setSuggestedGames(prev => mergeUniqueById(prev, res.data));
 
         setContinuation(res.continuation);
+        if (res.data.length < 50) {
+            setContinuation(null);
+        }
         setLoading(false);
     };
 
@@ -116,82 +170,112 @@ const AdminPage = () => {
     };
 
     const handleApprove = async (game: QuickLink, approved: boolean) => {
+        if (pendingLinkIds.has(game.id)) {
+            return;
+        }
+
         const edited = editedGames[game.id];
+        const linkId = game.id;
 
-        await approveLink({
-            linkId: game.id,
-            approved: approved,
-            improvedTitle: edited?.title ?? game.title,
-            improvedDescription: edited?.description ?? game.description,
-        });
+        setPendingLinkIds((prev) => new Set(prev).add(linkId));
+        suggestionsFetchId.current++;
+        setSuggestedGames((prev) => prev.filter((g) => g.id !== linkId));
 
-        setSuggestedGames(prev => prev.filter(g => g.id !== game.id));
-        snackbarService.showSnackbar({ type: "success",   text: "Bestätigung gesendet", showIcon: true });
+        try {
+            await approveLink({
+                linkId,
+                approved,
+                improvedTitle: edited?.title ?? game.title,
+                improvedDescription: edited?.description ?? game.description,
+            });
+
+            setEditedGames((prev) => {
+                const next = { ...prev };
+                delete next[linkId];
+                return next;
+            });
+
+            await refreshSuggestions();
+            snackbarService.showSnackbar({ type: "success", text: "Bestätigung gesendet", showIcon: true });
+        } catch {
+            await refreshSuggestions();
+        } finally {
+            setPendingLinkIds((prev) => {
+                const next = new Set(prev);
+                next.delete(linkId);
+                return next;
+            });
+        }
     };
 
     useEffect(() => {
+        let cancelled = false;
 
         const loadSuggestionsInit = async () => {
-            if (loading) return;
-
             setLoading(true);
 
-            const res = await getQuickLinksFiltered(
-                false,
-                false,
-                50
-            );
-
-            setSuggestedGames(res.data);
-
-            setContinuation(res.continuation);
-            if (res.data.length < 50) {
-                setContinuation(null);
+            const res = await loadSuggestions();
+            if (!res || cancelled || res.fetchId !== suggestionsFetchId.current) {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+                return;
             }
+
+            applySuggestions(
+                res.data,
+                res.data.length < 50 ? null : res.continuation,
+                res.fetchId,
+            );
             setLoading(false);
         };
 
-        loadSuggestionsInit();
-
-        refreshLogs();
+        void loadSuggestionsInit();
+        void refreshLogs();
 
         const loadUsersInit = async () => {
-            if (loading) return;
-
-            setLoading(true);
-
-            const res = await fetchUsers(
-                50
-            );
+            const res = await fetchUsers(50);
+            if (cancelled) {
+                return;
+            }
 
             setUsers(res.data);
-
             setUserContinuation(res.continuation);
             if (res.data.length < 50) {
                 setUserContinuation(null);
             }
-            setLoading(false);
         };
 
-        loadUsersInit();
+        void loadUsersInit();
 
+        return () => {
+            cancelled = true;
+            suggestionsFetchId.current++;
+        };
     }, []);
 
     useEffect(() => {
-        const initial: Record<string, {
-            title: string;
-            description: string;
-        }> = {};
+        setEditedGames((prev) => {
+            const next = { ...prev };
+            const activeIds = new Set(suggestedGames.map((game) => game.id));
 
-        suggestedGames.forEach(g => {
-            initial[g.id] = {
-                title: g.title,
-                description: g.description
-            };
+            for (const id of Object.keys(next)) {
+                if (!activeIds.has(id)) {
+                    delete next[id];
+                }
+            }
+
+            for (const game of suggestedGames) {
+                if (!next[game.id]) {
+                    next[game.id] = {
+                        title: game.title,
+                        description: game.description,
+                    };
+                }
+            }
+
+            return next;
         });
-
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setEditedGames(initial);
     }, [suggestedGames]);
 
     const TabBar = () => {
@@ -236,7 +320,10 @@ const AdminPage = () => {
             )}
 
             {suggestedGames.map(game => (
-                <div className="suggested-games-table-item" key={game.id}>
+                <div
+                    className={`suggested-games-table-item ${pendingLinkIds.has(game.id) ? "pending" : ""}`}
+                    key={game.id}
+                >
 
                     {/* ID */}
                     <div className="cell mono" title={game.id}>
@@ -278,22 +365,12 @@ const AdminPage = () => {
                         <ThumbsUp
                             size={25}
                             className="icon-button approve"
-                            onClick={() =>
-                                handleApprove(
-                                    game,
-                                    true
-                                )
-                            }
+                            onClick={() => void handleApprove(game, true)}
                         />
                         <ThumbsDown
                             size={25}
                             className="icon-button reject"
-                            onClick={() =>
-                                handleApprove(
-                                    game,
-                                    false
-                                )
-                            }
+                            onClick={() => void handleApprove(game, false)}
                         />
                     </div>
                 </div>

@@ -2,7 +2,7 @@ import "@/components/ui/Button.css";
 
 interface ButtonProps {
     text: string;
-    onClick: () => void;
+    onClick?: () => void;
     variant?: "primary" | "secondary" | "transparent";
     disabled?: boolean;
     type?: "button" | "submit" | "reset";

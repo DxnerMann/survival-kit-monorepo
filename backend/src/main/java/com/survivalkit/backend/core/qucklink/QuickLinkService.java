@@ -93,20 +93,13 @@ public class QuickLinkService implements QuickLinkPort {
             quickLinkPersistancePort.deleteQuickLink(request.linkId());
             return;
         }
-        var newLink = new QuickLink(
-                request.linkId(),
-                request.improvedTitle().isEmpty() ? null : request.improvedTitle(),
-                request.improvedDescription().isEmpty() ? null : request.improvedDescription(),
-                "",
-                0,
-                0,
-                0,
-                true,
-                null,
-                Instant.now(),
-                Instant.now()
-        );
-        quickLinkPersistancePort.upsertquickLink(newLink);
+
+        var improvedTitle = request.improvedTitle();
+        var improvedDescription = request.improvedDescription();
+        var title = improvedTitle == null || improvedTitle.isBlank() ? null : improvedTitle.trim();
+        var description = improvedDescription == null || improvedDescription.isBlank() ? null : improvedDescription.trim();
+
+        quickLinkPersistancePort.approveQuickLink(request.linkId(), title, description);
     }
 
     @Override
