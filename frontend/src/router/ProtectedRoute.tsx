@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { authService } from '../services/authService'
-import { isAdmin } from '../services/tokenService'
+import { authService } from "@/services/authService"
+import { isAdmin } from "@/services/tokenService"
 
 type Props = {
     children: ReactNode

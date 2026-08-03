@@ -1,4 +1,4 @@
-import {api, apiFetch, checkResponse} from "./api.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
 
 const API_URL = api.baseUrl;
 

@@ -1,11 +1,11 @@
-import "./Exmatriculation.css";
+import "@/pages/exmatriculation-simulator/Exmatriculation.css";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import Button from "../../components/shared/Button.tsx";
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import {trackActivity} from "../../services/staticsService.tsx";
-import Info from "../../components/shared/Info.tsx";
+import Button from "@/components/ui/Button.tsx";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
+import {trackActivity} from "@/services/statisticsService.tsx";
+import Info from "@/components/ui/Info.tsx";
 const Exmatriculation = () => {
     const [submitted, setSubmitted] = useState(false);
     const navigate = useNavigate();

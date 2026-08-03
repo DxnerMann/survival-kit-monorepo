@@ -1,14 +1,14 @@
-import './ExplorePage.css';
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
+import "@/pages/explore/ExplorePage.css";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import {useEffect, useState} from "react";
-import type {QuickLink} from "../../models/QuickLink.tsx";
-import {getQuickLinksFiltered, suggestLink} from "../../services/quickLinkService.tsx";
-import QuickLinkCard from "../../components/QuickLinkCard.tsx";
-import Button from "../../components/shared/Button.tsx";
+import type {QuickLink} from "@/models/QuickLink.tsx";
+import {getQuickLinksFiltered, suggestLink} from "@/services/quickLinkService.tsx";
+import QuickLinkCard from "@/components/explore/QuickLinkCard.tsx";
+import Button from "@/components/ui/Button.tsx";
 import {LayersPlus} from "lucide-react";
-import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionDialog.tsx";
-import Minigames from "../../components/Minigames.tsx";
-import Separator from "../../components/shared/Seperator.tsx";
+import GameSuggestionDialog from "@/components/dialog/GameSuggestionDialog.tsx";
+import Minigames from "@/components/explore/Minigames.tsx";
+import Separator from "@/components/ui/Separator.tsx";
 
 const ExplorePage = () => {
     const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);

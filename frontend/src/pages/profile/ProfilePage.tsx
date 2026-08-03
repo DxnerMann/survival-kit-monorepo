@@ -1,29 +1,29 @@
-import './ProfilePage.css';
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
+import "@/pages/profile/ProfilePage.css";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import {useEffect, useState} from "react";
 import {LockKeyhole, SettingsIcon, Skull, Upload} from "lucide-react";
-import Info from "../../components/shared/Info.tsx";
-import CourseSelection from "../../components/shared/CourseSelection.tsx";
-import type {ProfileSettings} from "../../models/ProfileSettings.tsx";
-import {getUserRole} from "../../services/tokenService.tsx";
+import Info from "@/components/ui/Info.tsx";
+import CourseSelection from "@/components/ui/CourseSelection.tsx";
+import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
+import {getUserRole} from "@/services/tokenService.tsx";
 import {
     fetchProfileSettings,
     setUserCourse,
     updateUsernameAndColor,
     uploadProfileImage
-} from "../../services/userService.tsx";
-import {api} from "../../services/api.tsx";
-import {lectureService} from "../../services/lectureService.tsx";
-import ProfilePictureDialog from "../../components/shared/dialog/ProfilePictureDialog.tsx";
-import ColorPicker from "../../components/shared/ColorPicker.tsx";
-import Button from "../../components/shared/Button.tsx";
-import Separator from "../../components/shared/Seperator.tsx";
-import {authService, validatePassword} from "../../services/authService.tsx";
-import {snackbarService} from "../../services/snackBarService.tsx";
+} from "@/services/userService.tsx";
+import {api} from "@/services/api.tsx";
+import {lectureService} from "@/services/lectureService.tsx";
+import ProfilePictureDialog from "@/components/dialog/ProfilePictureDialog.tsx";
+import ColorPicker from "@/components/ui/ColorPicker.tsx";
+import Button from "@/components/ui/Button.tsx";
+import Separator from "@/components/ui/Separator.tsx";
+import {authService, validatePassword} from "@/services/authService.tsx";
+import {snackbarService} from "@/services/snackBarService.tsx";
 import {useNavigate} from "react-router-dom";
-import ConfirmDialog from "../../components/shared/dialog/ConfirmDialog.tsx";
-import ChangeEmailDialog from "../../components/shared/dialog/ChangeEmailDialog.tsx";
-import {useCountdownTimer} from "../../services/utils.tsx";
+import ConfirmDialog from "@/components/dialog/ConfirmDialog.tsx";
+import ChangeEmailDialog from "@/components/dialog/ChangeEmailDialog.tsx";
+import {useCountdownTimer} from "@/services/utils.tsx";
 
 const API_URL = api.baseUrl;
 

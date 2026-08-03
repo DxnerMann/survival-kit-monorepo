@@ -1,5 +1,5 @@
-import type {QuickLink} from "../models/QuickLink.tsx";
-import {api, apiFetch, checkResponse} from "./api.tsx";
+import type {QuickLink} from "@/models/QuickLink.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
 
 const API_URL = api.baseUrl;
 

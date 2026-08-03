@@ -1,20 +1,20 @@
-import './StatsPage.css';
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import {getUserRole} from "../../services/tokenService.tsx";
+import "@/pages/stats/StatsPage.css";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
+import {getUserRole} from "@/services/tokenService.tsx";
 import { useEffect, useState } from "react";
-import type {TrackAction, TrackActionType} from "../../models/TrackAction.tsx";
-import type {Page} from "../../models/Page.tsx";
+import type {TrackAction, TrackActionType} from "@/models/TrackAction.tsx";
+import type {Page} from "@/models/Page.tsx";
 import {
     getCourseActions,
     getCourseActionSum,
     getGlobalActions, getGlobalActionSum,
     getUserActions,
     getUserActionSum
-} from "../../services/staticsService.tsx";
-import ActionChart from "../../components/ActionChart.tsx";
-import CaffeineDailyChart from "../../components/CaffeineDailyChart.tsx";
-import FilterDropdown from "../../components/shared/FilterDropdown.tsx";
-import type {CaffeineEntry} from "../../models/CaffeineEntry.tsx";
+} from "@/services/statisticsService.tsx";
+import ActionChart from "@/components/stats/ActionChart.tsx";
+import CaffeineDailyChart from "@/components/caffeine/CaffeineDailyChart.tsx";
+import FilterDropdown from "@/components/ui/FilterDropdown.tsx";
+import type {CaffeineEntry} from "@/models/CaffeineEntry.tsx";
 import {
     getCourseCaffeineAverage,
     getCourseCaffeineEntries,
@@ -22,7 +22,7 @@ import {
     getGlobalCaffeineEntries,
     getUserCaffeineAverage,
     getUserCaffeineEntries,
-} from "../../services/caffeineService.tsx";
+} from "@/services/caffeineService.tsx";
 
 type ActionSumMap = Partial<Record<TrackActionType, number>>;
 type StatsFilter = TrackActionType | "CAFFEINE";

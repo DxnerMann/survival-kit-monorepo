@@ -1,5 +1,5 @@
-import './ChatPage.css';
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
+import "@/pages/chat/ChatPage.css";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
 
 const ChatPage = () => {
     return <div className="survival-kit-page">

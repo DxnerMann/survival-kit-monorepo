@@ -1,16 +1,16 @@
-import './DashboardPage.css'
-import WidgetGrid from "../../components/widget/WidgetGrid.tsx";
-import {getUserRole} from "../../services/tokenService.tsx";
-import {getUsername} from "../../services/userService.tsx";
-import PopularLinks from "../../components/PopularLinks.tsx";
-import SectionHeading from "../../components/shared/SectionHeading.tsx";
+import "@/pages/dashboard/DashboardPage.css"
+import WidgetGrid from "@/components/widgets/WidgetGrid.tsx";
+import {getUserRole} from "@/services/tokenService.tsx";
+import {getUsername} from "@/services/userService.tsx";
+import PopularLinks from "@/components/explore/PopularLinks.tsx";
+import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import {LayersPlus, LayoutGrid, Pencil} from "lucide-react";
 import {useState} from "react";
-import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionDialog.tsx";
-import {suggestLink} from "../../services/quickLinkService.tsx";
-import LinkCard from "../../components/LinkCard/LinkCard.tsx";
-import UsefullLinks from "../../components/UsefullLinks.tsx";
-import Minigames from "../../components/Minigames.tsx";
+import GameSuggestionDialog from "@/components/dialog/GameSuggestionDialog.tsx";
+import {suggestLink} from "@/services/quickLinkService.tsx";
+import LinkCard from "@/components/explore/LinkCard/LinkCard.tsx";
+import UsefulLinks from "@/components/explore/UsefulLinks.tsx";
+import Minigames from "@/components/explore/Minigames.tsx";
 
 const DashboardPage = () => {
 
@@ -137,7 +137,7 @@ const DashboardPage = () => {
                     subheading={"Falls du tatsächlich mal etwas ''Produktives'' machen willst"}
                     centered={false}
                 />
-                <UsefullLinks />
+                <UsefulLinks />
                 <SectionHeading
                     heading={"Survival-Kit <a class='important-text'>Klassiker</a> und <a class='important-text'>Tools</a>"}
                     subheading={"Manchmal hilft nur noch die Exmatrikulation, oder ein Minigame für die Vorlesung."}

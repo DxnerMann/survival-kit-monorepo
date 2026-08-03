@@ -1,5 +1,5 @@
-import {api, apiFetch, checkResponse} from "./api.tsx";
-import type {CaffeineEntry, CaffeineSource} from "../models/CaffeineEntry.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
+import type {CaffeineEntry, CaffeineSource} from "@/models/CaffeineEntry.tsx";
 
 const API_URL = api.baseUrl;
 

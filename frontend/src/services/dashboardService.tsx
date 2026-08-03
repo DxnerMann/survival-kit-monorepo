@@ -1,10 +1,10 @@
-import {api, apiFetch, checkResponse} from "./api.tsx";
-import type {UserWidget} from "../models/UserWidget.tsx";
-import LecturePlan from "../components/widget/lecture-plan/LecturePlan.tsx";
-import LectureTimer from "../components/widget/lecture-timer/LectureTimer.tsx";
-import Clock from "../components/widget/clock/Clock.tsx";
-import DigressionTimer from "../components/widget/digression-timer/DigressionTimer.tsx";
-import DailyCat from "../components/widget/cat/DailyCat.tsx";
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
+import type {UserWidget} from "@/models/UserWidget.tsx";
+import LecturePlan from "@/components/widgets/lecture-plan/LecturePlan.tsx";
+import LectureTimer from "@/components/widgets/lecture-timer/LectureTimer.tsx";
+import Clock from "@/components/widgets/clock/Clock.tsx";
+import DigressionTimer from "@/components/widgets/digression-timer/DigressionTimer.tsx";
+import DailyCat from "@/components/widgets/cat/DailyCat.tsx";
 
 const API_URL = api.baseUrl;
 

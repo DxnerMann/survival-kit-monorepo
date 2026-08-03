@@ -1,6 +1,6 @@
-import type {ApiError} from '../models/ApiError.tsx'
-import {api, apiFetch, checkResponse, getErrorText, resolveError} from "./api.tsx";
-import type {DayOfWeek, Lecture} from "../models/Lecture.tsx";
+import type {ApiError} from "@/models/ApiError.tsx"
+import {api, apiFetch, checkResponse, getErrorText, resolveError} from "@/services/api.tsx";
+import type {DayOfWeek, Lecture} from "@/models/Lecture.tsx";
 import {useCallback, useEffect, useRef, useState} from "react";
 
 const API_URL = api.baseUrl;

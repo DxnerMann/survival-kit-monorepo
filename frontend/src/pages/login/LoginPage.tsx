@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {authService, validatePassword} from '../../services/authService'
+import {authService, validatePassword} from "@/services/authService"
 
-import ThemeToggle from '../../components/ThemeToggle'
+import ThemeToggle from "@/components/layout/ThemeToggle"
 
-import './LoginPage.css'
-import {snackbarService} from "../../services/snackBarService.tsx";
+import "@/pages/login/LoginPage.css"
+import {snackbarService} from "@/services/snackBarService.tsx";
 
 type Mode = 'login' | 'register' | 'verify';
 

@@ -1,5 +1,5 @@
-import {snackbarService} from "./snackBarService.tsx";
-import type {ApiError} from "../models/ApiError.tsx";
+import {snackbarService} from "@/services/snackBarService.tsx";
+import type {ApiError} from "@/models/ApiError.tsx";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || "";
 

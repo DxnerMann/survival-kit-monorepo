@@ -1,9 +1,9 @@
-import type {LoginRequest} from '../models/LoginRequest.tsx'
-import type {LoginResponse} from '../models/LoginResponse.tsx'
-import type {RegisterRequest} from '../models/RegisterRequest.tsx'
-import {api, apiFetch, checkResponse} from "./api.tsx";
-import {setUserContext} from "./userService.tsx";
-import {clearSessionMeta, hasSessionMeta, setSessionMeta} from "./tokenService.tsx";
+import type {LoginRequest} from "@/models/LoginRequest.tsx"
+import type {LoginResponse} from "@/models/LoginResponse.tsx"
+import type {RegisterRequest} from "@/models/RegisterRequest.tsx"
+import {api, apiFetch, checkResponse} from "@/services/api.tsx";
+import {setUserContext} from "@/services/userService.tsx";
+import {clearSessionMeta, hasSessionMeta, setSessionMeta} from "@/services/tokenService.tsx";
 
 const API_URL = api.baseUrl;
 
