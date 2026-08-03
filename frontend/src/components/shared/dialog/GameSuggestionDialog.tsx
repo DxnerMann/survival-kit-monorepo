@@ -1,7 +1,6 @@
-import { useState } from "react";
+import {useState} from "react";
 import Dialog from "./Dialog";
-import "./GameSuggestionDialog.css";
-import Button from "../Button.tsx";
+import DialogActions from "./DialogActions";
 import {snackbarService} from "../../../services/snackBarService.tsx";
 
 interface GameSuggestionDialogProps {
@@ -15,40 +14,43 @@ interface GameSuggestionDialogProps {
 }
 
 export default function GameSuggestionDialog({
-                                                 isOpen,
-                                                 onCancel,
-                                                 onSubmit,
-                                             }: GameSuggestionDialogProps) {
+    isOpen,
+    onCancel,
+    onSubmit,
+}: GameSuggestionDialogProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [url, setUrl] = useState("");
 
     const handleSubmit = () => {
-
         if (title === null || title === "") {
-            snackbarService.showSnackbar({type: "error", text:"Titel kann nicht leer sein", showIcon: true });
-            return
+            snackbarService.showSnackbar({type: "error", text: "Titel kann nicht leer sein", showIcon: true});
+            return;
         }
 
         if (description === null || description === "") {
-            snackbarService.showSnackbar({type: "error", text:"Beschreibung kann nicht leer sein", showIcon: true });
-            return
+            snackbarService.showSnackbar({type: "error", text: "Beschreibung kann nicht leer sein", showIcon: true});
+            return;
         }
 
         if (url === null || url === "") {
-            snackbarService.showSnackbar({type: "error", text:"Url kann nicht leer sein", showIcon: true });
-            return
+            snackbarService.showSnackbar({type: "error", text: "Url kann nicht leer sein", showIcon: true});
+            return;
         }
 
         try {
             const parsed = new URL(url);
-            if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-                snackbarService.showSnackbar({type: "error", text:"Url muss mit http:// oder https:// beginnen", showIcon: true });
-                return
+            if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+                snackbarService.showSnackbar({
+                    type: "error",
+                    text: "Url muss mit http:// oder https:// beginnen",
+                    showIcon: true,
+                });
+                return;
             }
         } catch {
-            snackbarService.showSnackbar({type: "error", text:"Url ist ungültig", showIcon: true });
-            return
+            snackbarService.showSnackbar({type: "error", text: "Url ist ungültig", showIcon: true});
+            return;
         }
 
         onSubmit({
@@ -66,7 +68,7 @@ export default function GameSuggestionDialog({
             onClose={onCancel}
         >
             <form
-                className="game-suggestion-form"
+                className="dialog-form"
                 onSubmit={(e) => {
                     e.preventDefault();
                     handleSubmit();
@@ -83,16 +85,12 @@ export default function GameSuggestionDialog({
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="description">
-                        Beschreibung
-                    </label>
+                    <label htmlFor="description">Beschreibung</label>
                     <textarea
                         id="description"
                         rows={5}
                         value={description}
-                        onChange={(e) =>
-                            setDescription(e.target.value)
-                        }
+                        onChange={(e) => setDescription(e.target.value)}
                     />
                 </div>
 
@@ -106,21 +104,10 @@ export default function GameSuggestionDialog({
                     />
                 </div>
 
-                <div className="dialog-actions">
-                    <Button
-                        text={"Abbrechen"}
-                        onClick={onCancel}
-                        variant="secondary"
-                        fullWidth={true}
-                    />
-
-                    <Button
-                        text={"Absenden"}
-                        onClick={handleSubmit}
-                        variant="primary"
-                        fullWidth={true}
-                    />
-                </div>
+                <DialogActions
+                    cancel={{text: "Abbrechen", onClick: onCancel}}
+                    confirm={{text: "Absenden", onClick: handleSubmit, type: "submit"}}
+                />
             </form>
         </Dialog>
     );

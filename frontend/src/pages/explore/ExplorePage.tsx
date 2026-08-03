@@ -7,7 +7,6 @@ import QuickLinkCard from "../../components/QuickLinkCard.tsx";
 import Button from "../../components/shared/Button.tsx";
 import {LayersPlus} from "lucide-react";
 import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionDialog.tsx";
-import Footer from "../../components/Footer.tsx";
 import Minigames from "../../components/Minigames.tsx";
 import Separator from "../../components/shared/Seperator.tsx";
 
@@ -86,7 +85,6 @@ const ExplorePage = () => {
             <SectionHeading heading="Weitere <a class='important-text'>Survival-Kit-Minigames</a>" centered={false} />
             <Minigames />
         </div>
-        <Footer />
     </div>
 }
 

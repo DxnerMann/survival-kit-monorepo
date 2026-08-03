@@ -1,5 +1,4 @@
 .profile-page {
-    min-height: calc(100vh - var(--footer-height));
     padding: calc(var(--header-height) + 2rem) 2rem 2rem;
     box-sizing: border-box;
     width: 100%;

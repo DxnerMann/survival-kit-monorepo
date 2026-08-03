@@ -6,7 +6,7 @@ import {getUserRole} from "../services/tokenService.tsx";
 import {answerFeedback, deleteFeedback, hasAlreadyVoted, rateFeedback} from "../services/feedbackService.tsx";
 import {snackbarService} from "../services/snackBarService.tsx";
 import FeedbackAnswerDialog from "./shared/dialog/FeedbackAnswerDialog.tsx";
-import DeleteDialog from "./shared/dialog/DeleteDialog.tsx";
+import ConfirmDialog from "./shared/dialog/ConfirmDialog.tsx";
 import DOMPurify from "dompurify";
 
 type FeedbackItemProps = {
@@ -177,10 +177,10 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                     }}
                     previousAnswer={answer}
                 />
-                <DeleteDialog
+                <ConfirmDialog
                     isOpen={showDeleteDialog}
                     onCancel={() => setShowDeleteDialog(false)}
-                    onSubmit={() => {
+                    onConfirm={() => {
                         onFeedbackDelete();
                     }}
                     title="Beitrag Löschen"

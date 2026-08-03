@@ -1,6 +1,5 @@
 import Dialog from "./Dialog";
-import "./FeedbackAnswerDialog.css";
-import Button from "../Button.tsx";
+import DialogActions from "./DialogActions";
 import {useState} from "react";
 import {snackbarService} from "../../../services/snackBarService.tsx";
 
@@ -8,25 +7,23 @@ interface ChangeEmailDialogProps {
     isOpen: boolean;
     onCancel: () => void;
     onSubmit: (newEmail: string) => void;
-    title: string,
-    subtitle: string,
-    oldEmail: string,
+    title: string;
+    subtitle?: string;
+    oldEmail: string;
 }
 
 export default function ChangeEmailDialog({
-                                    isOpen,
-                                    onCancel,
-                                    onSubmit,
-                                    title,
-                                    subtitle,
-                                    oldEmail,
-                                     }: ChangeEmailDialogProps) {
-
+    isOpen,
+    onCancel,
+    onSubmit,
+    title,
+    subtitle,
+    oldEmail,
+}: ChangeEmailDialogProps) {
     const [newEmail, setNewEmail] = useState(oldEmail);
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const handleSubmit = () => {
-
         if (newEmail === oldEmail) {
             onCancel();
             return;
@@ -35,10 +32,9 @@ export default function ChangeEmailDialog({
         if (newEmail.match(EMAIL_REGEX)) {
             onSubmit(newEmail);
         } else {
-            snackbarService.showSnackbar({type: "error", text:"Die eingegebene Email ist ungültig", showIcon: true });
+            snackbarService.showSnackbar({type: "error", text: "Die eingegebene Email ist ungültig", showIcon: true});
         }
     };
-
 
     return (
         <Dialog
@@ -48,38 +44,25 @@ export default function ChangeEmailDialog({
             onClose={onCancel}
         >
             <form
-                className="feedback-form"
+                className="dialog-form"
                 onSubmit={(e) => {
                     e.preventDefault();
                     handleSubmit();
                 }}
             >
                 <div className="form-group">
-                    <label htmlFor="titel">Neue Email Adresse</label>
+                    <label htmlFor="new-email">Neue Email Adresse</label>
                     <input
-                        id="titel"
+                        id="new-email"
                         type="text"
                         placeholder={oldEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
                     />
                 </div>
-                <div className="dialog-actions">
-                    <Button
-                        text={"Abbrechen"}
-                        onClick={onCancel}
-                        variant="secondary"
-                        type="reset"
-                        fullWidth={true}
-                    />
-
-                    <Button
-                        text={"Bestätigen"}
-                        onClick={handleSubmit}
-                        variant="primary"
-                        type="submit"
-                        fullWidth={true}
-                    />
-                </div>
+                <DialogActions
+                    cancel={{text: "Abbrechen", onClick: onCancel, type: "reset"}}
+                    confirm={{text: "Bestätigen", onClick: handleSubmit, type: "submit"}}
+                />
             </form>
         </Dialog>
     );

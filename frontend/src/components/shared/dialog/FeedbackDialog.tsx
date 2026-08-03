@@ -1,7 +1,6 @@
-import { useState } from "react";
+import {useState} from "react";
 import Dialog from "./Dialog";
-import "./FeedbackDialog.css";
-import Button from "../Button.tsx";
+import DialogActions from "./DialogActions";
 import type {FeedbackType} from "../../../models/Feedback.tsx";
 import {RichTextEditor} from "../RichTextEditor.tsx";
 import {snackbarService} from "../../../services/snackBarService.tsx";
@@ -17,30 +16,29 @@ interface FeedbackDialogProps {
 }
 
 export default function FeedbackDialog({
-                                                 isOpen,
-                                                 onCancel,
-                                                 onSubmit,
-                                             }: FeedbackDialogProps) {
+    isOpen,
+    onCancel,
+    onSubmit,
+}: FeedbackDialogProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [type, setType] = useState<FeedbackType>("OTHER");
 
     const handleSubmit = () => {
-
         if (title === null || title === "") {
-            snackbarService.showSnackbar({type: "error", text:"Titel kann nicht leer sein", showIcon: true });
-            return
+            snackbarService.showSnackbar({type: "error", text: "Titel kann nicht leer sein", showIcon: true});
+            return;
         }
 
         if (description === null || description === "") {
-            snackbarService.showSnackbar({type: "error", text:"Beschreibung kann nicht leer sein", showIcon: true });
-            return
+            snackbarService.showSnackbar({type: "error", text: "Beschreibung kann nicht leer sein", showIcon: true});
+            return;
         }
 
         onSubmit({
             title: title,
             description: description,
-            type: type
+            type: type,
         });
     };
 
@@ -51,16 +49,14 @@ export default function FeedbackDialog({
             subtitle="Dein Beitrag wird öffentlich mit angabe deines Benutzernamens gepostet."
             onClose={onCancel}
         >
-            <form
-                className="feedback-form"
-            >
+            <form className="dialog-form">
                 <div className="form-group">
                     <label htmlFor="type">Typ</label>
                     <select
                         id="type"
                         value={type}
                         onChange={(e) => setType(e.target.value as FeedbackType)}
-                        className="feedback-select"
+                        className="dialog-select"
                     >
                         <option value="OTHER">ALLGEMEIN</option>
                         <option value="FEEDBACK">FEEDBACK</option>
@@ -80,21 +76,10 @@ export default function FeedbackDialog({
 
                 <RichTextEditor value={description} onChange={setDescription} />
 
-                <div className="dialog-actions">
-                    <Button
-                        text={"Abbrechen"}
-                        onClick={onCancel}
-                        variant="secondary"
-                        fullWidth={true}
-                    />
-
-                    <Button
-                        text={"Absenden"}
-                        onClick={handleSubmit}
-                        variant="primary"
-                        fullWidth={true}
-                    />
-                </div>
+                <DialogActions
+                    cancel={{text: "Abbrechen", onClick: onCancel}}
+                    confirm={{text: "Absenden", onClick: handleSubmit}}
+                />
             </form>
         </Dialog>
     );

@@ -18,7 +18,6 @@ import {snackbarService} from "../../services/snackBarService.tsx";
 import type {SecurityLog} from "../../models/SecurityLog.tsx";
 import {fetchUsers, getLatestLogs, setUserRole} from "../../services/adminService.tsx";
 import {formatTimestamp} from "../../services/utils.tsx";
-import Footer from "../../components/Footer.tsx";
 import type {ProfileSettings} from "../../models/ProfileSettings.tsx";
 import Seperator from "../../components/shared/Seperator.tsx";
 
@@ -391,7 +390,6 @@ const AdminPage = () => {
                 {TabBar()}
                 {TabContent()}
             </div>
-            <Footer />
     </div>
 
     function getRoleActionButton(isAdmin : boolean, onClick : () => void) {

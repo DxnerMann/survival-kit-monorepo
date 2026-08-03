@@ -6,8 +6,6 @@ import Button from "../../components/shared/Button.tsx";
 import SectionHeading from "../../components/shared/SectionHeading.tsx";
 import {trackActivity} from "../../services/staticsService.tsx";
 import Info from "../../components/shared/Info.tsx";
-import Footer from "../../components/Footer.tsx";
-
 const Exmatriculation = () => {
     const [submitted, setSubmitted] = useState(false);
     const navigate = useNavigate();
@@ -262,7 +260,6 @@ const Exmatriculation = () => {
                 </div>
                 <Button text={"Abschicken"} onClick={handleSubmit} variant={"primary"} />
             </div>
-            <Footer />
         </div>
     );
 }

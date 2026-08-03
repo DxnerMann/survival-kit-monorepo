@@ -1,7 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {Trash2} from "lucide-react";
 import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import Footer from "../../components/Footer.tsx";
 import Info from "../../components/shared/Info.tsx";
 import Button from "../../components/shared/Button.tsx";
 import CaffeineChart from "../../components/CaffeineChart.tsx";
@@ -233,7 +232,6 @@ const CaffeineCalculatorPage = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </div>
     );
 };

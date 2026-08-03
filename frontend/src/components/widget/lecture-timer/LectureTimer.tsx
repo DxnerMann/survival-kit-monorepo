@@ -9,6 +9,7 @@ import {lectureService, useTimerCourse} from "../../../services/lectureService.t
 import ProgressBar from 'react-customizable-progressbar';
 import ColorPicker from "../../shared/ColorPicker.tsx";
 import Button from "../../shared/Button.tsx";
+import WidgetStatus from "../../shared/WidgetStatus.tsx";
 
 interface LectureTimerData {
     strokeColor: string,
@@ -48,7 +49,7 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
         }
     });
     const course = useTimerCourse();
-    const { current, next } = lectureService.useCurrentAndNextLecture(course);
+    const { current, next, loading, error } = lectureService.useCurrentAndNextLecture(isPreview ? null : course);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const useContainerSize = (ref: RefObject<HTMLElement | null>, dep?: unknown) => {
@@ -210,47 +211,51 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
                     </div>
                     : <div className="widget-content">
                         {
-                            current
-                            ? <div className="lecture-timer-current-lecture">
-                                    <div className="lecture-timer-lecture-title" style={{ fontSize: inFullscreen ? (size / 30) : (size / 15) }}> {current.title}</div>
-                                    <div className="lecture-timer-lecture-info" style={{ fontSize: inFullscreen ? (size / 35) : (size / 20) }}> {current.lecturer}</div>
-                                    <div className="lecture-timer-lecture-info" style={{ fontSize: inFullscreen ? (size / 35) : (size / 20) }}> {current.rooms.join(",")}</div>
-                                    <ProgressBar
-                                        className="progress-bar"
-                                        radius={inFullscreen ? (size / 5) : (size / 3)}
-                                        strokeWidth={inFullscreen ? 50 : 25}
-                                        trackStrokeWidth={inFullscreen ? 45 : 20}
-                                        progress={percentage}
-                                        strokeColor={decodedData.strokeColor}
-                                    >
-                                        <div className="progress-bar-center">
-                                            {decodedData.showPercentage && (
-                                                <div className="percentage" style={{ fontSize: inFullscreen ? (size / 30) : (size / 15) }}>{Math.floor(percentage)}%</div>
-                                            )}
-                                            {decodedData.showCountdown && (
-                                                <div className="countdown" style={{ fontSize: inFullscreen ? (size / 35) : (size / 20) }}>{countdown}</div>
-                                            )}
-                                        </div>
-                                    </ProgressBar>
-                            </div>
-                            : <><span className="no-lecture-heading">Aktuell keine Vorlesung.</span>
-                                {next && next.length === 0 && <span className="no-lecture-heading-2">Keine Weiteren Vorlesungen in dieser Woche</span>}
-                                {next && next.length !== 0 && <div className="lecture-timer-no-lecture">
-                                    {Object.entries(groupedLectures ?? {}).map(([label, lectures]) => (
-                                        <div key={label} className="lecture-timer-day-group">
-                                            <span className="day-label">{label}</span>
-                                            {lectures.map(lecture => (
-                                                <div key={lecture.title + "-" + lecture.startTime} className="lecture-timer-next-lecture-info">
-                                                    <span className="title">{lecture.title}</span>
-                                                    <div className="meta">
-                                                        {lecture.startTime} – {lecture.endTime}
+                            loading
+                                ? <WidgetStatus status="loading" />
+                                : error
+                                    ? <WidgetStatus status="error" message={error} />
+                                    : current
+                                        ? <div className="lecture-timer-current-lecture">
+                                                <div className="lecture-timer-lecture-title" style={{ fontSize: inFullscreen ? (size / 30) : (size / 15) }}> {current.title}</div>
+                                                <div className="lecture-timer-lecture-info" style={{ fontSize: inFullscreen ? (size / 35) : (size / 20) }}> {current.lecturer}</div>
+                                                <div className="lecture-timer-lecture-info" style={{ fontSize: inFullscreen ? (size / 35) : (size / 20) }}> {current.rooms.join(",")}</div>
+                                                <ProgressBar
+                                                    className="progress-bar"
+                                                    radius={inFullscreen ? (size / 5) : (size / 3)}
+                                                    strokeWidth={inFullscreen ? 50 : 25}
+                                                    trackStrokeWidth={inFullscreen ? 45 : 20}
+                                                    progress={percentage}
+                                                    strokeColor={decodedData.strokeColor}
+                                                >
+                                                    <div className="progress-bar-center">
+                                                        {decodedData.showPercentage && (
+                                                            <div className="percentage" style={{ fontSize: inFullscreen ? (size / 30) : (size / 15) }}>{Math.floor(percentage)}%</div>
+                                                        )}
+                                                        {decodedData.showCountdown && (
+                                                            <div className="countdown" style={{ fontSize: inFullscreen ? (size / 35) : (size / 20) }}>{countdown}</div>
+                                                        )}
                                                     </div>
-                                                    <span className="rooms">{lecture.rooms}</span>
-                                                </div>
-                                            ))}
+                                                </ProgressBar>
                                         </div>
-                                    ))}
-                                </div>}</>
+                                        : <><span className="no-lecture-heading">Aktuell keine Vorlesung.</span>
+                                            {next && next.length === 0 && <span className="no-lecture-heading-2">Keine Weiteren Vorlesungen in dieser Woche</span>}
+                                            {next && next.length !== 0 && <div className="lecture-timer-no-lecture">
+                                                {Object.entries(groupedLectures ?? {}).map(([label, lectures]) => (
+                                                    <div key={label} className="lecture-timer-day-group">
+                                                        <span className="day-label">{label}</span>
+                                                        {lectures.map(lecture => (
+                                                            <div key={lecture.title + "-" + lecture.startTime} className="lecture-timer-next-lecture-info">
+                                                                <span className="title">{lecture.title}</span>
+                                                                <div className="meta">
+                                                                    {lecture.startTime} – {lecture.endTime}
+                                                                </div>
+                                                                <span className="rooms">{lecture.rooms}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                            </div>}</>
                         }
                     </div>
             }

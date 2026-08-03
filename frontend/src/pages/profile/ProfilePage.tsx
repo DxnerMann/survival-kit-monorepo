@@ -1,5 +1,4 @@
 import './ProfilePage.css';
-import Footer from "../../components/Footer.tsx";
 import SectionHeading from "../../components/shared/SectionHeading.tsx";
 import {useEffect, useState} from "react";
 import {LockKeyhole, SettingsIcon, Skull, Upload} from "lucide-react";
@@ -22,7 +21,7 @@ import Separator from "../../components/shared/Seperator.tsx";
 import {authService, validatePassword} from "../../services/authService.tsx";
 import {snackbarService} from "../../services/snackBarService.tsx";
 import {useNavigate} from "react-router-dom";
-import DeleteDialog from "../../components/shared/dialog/DeleteDialog.tsx";
+import ConfirmDialog from "../../components/shared/dialog/ConfirmDialog.tsx";
 import ChangeEmailDialog from "../../components/shared/dialog/ChangeEmailDialog.tsx";
 import {useCountdownTimer} from "../../services/utils.tsx";
 
@@ -318,7 +317,13 @@ const ProfilePage = () => {
                 <Button text="Konto Löschen" onClick={() => setShowDeleteDialog(true)} />
                 <Info text={"Die Löschung deines Kontos mit all deinen Daten ist unwiederuflich."} type={"ERROR"} />
             </div>
-            <DeleteDialog isOpen={showDeleteDialog} onCancel={() => setShowDeleteDialog(false)} onSubmit={() => handleAccountDeletion() } title={"Konto Löschen"} subtitle={"Bist du sicher? Alle deine Daten werden unwiederuflich gelöscht."} />
+            <ConfirmDialog
+                isOpen={showDeleteDialog}
+                onCancel={() => setShowDeleteDialog(false)}
+                onConfirm={() => handleAccountDeletion()}
+                title={"Konto Löschen"}
+                subtitle={"Bist du sicher? Alle deine Daten werden unwiederuflich gelöscht."}
+            />
         </div>
     }
 
@@ -334,7 +339,6 @@ const ProfilePage = () => {
                 }
             </div>
         </div>
-        <Footer />
     </div>
 }
 

@@ -1,8 +1,6 @@
 .stats-page {
-    height: 100vh;
     padding: calc(var(--header-height) + 2rem) 2rem 2rem;
     box-sizing: border-box;
-    overflow: auto;
     width: 100%;
 }
 

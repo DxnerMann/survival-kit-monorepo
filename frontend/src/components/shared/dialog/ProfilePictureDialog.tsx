@@ -3,7 +3,7 @@ import "./ProfilePictureDialog.css";
 import Cropper from "react-easy-crop";
 import type { Area, Point } from "react-easy-crop";
 import Dialog from "./Dialog";
-import Button from "../Button.tsx";
+import DialogActions from "./DialogActions";
 import { getCroppedImageBlob } from "../../../services/cropImageUtil.tsx";
 import {snackbarService} from "../../../services/snackBarService.tsx";
 
@@ -183,22 +183,15 @@ export default function ProfilePictureDialog({
                 )}
 
                 {imageSrc && (
-                    <div className="dialog-actions">
-                        <Button
-                            text="Abbrechen"
-                            onClick={handleClose}
-                            variant="secondary"
-                            type="button"
-                            fullWidth={true}
-                        />
-                        <Button
-                            text={isSubmitting ? "Lädt hoch..." : "Bestätigen"}
-                            onClick={handleConfirm}
-                            variant="primary"
-                            type="button"
-                            fullWidth={true}
-                        />
-                    </div>
+                    <DialogActions
+                        cancel={{text: "Abbrechen", onClick: handleClose, type: "button"}}
+                        confirm={{
+                            text: isSubmitting ? "Lädt hoch..." : "Bestätigen",
+                            onClick: handleConfirm,
+                            type: "button",
+                            disabled: isSubmitting,
+                        }}
+                    />
                 )}
             </div>
         </Dialog>

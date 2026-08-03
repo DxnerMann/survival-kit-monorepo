@@ -6,7 +6,6 @@ import PopularLinks from "../../components/PopularLinks.tsx";
 import SectionHeading from "../../components/shared/SectionHeading.tsx";
 import {LayersPlus, LayoutGrid, Pencil} from "lucide-react";
 import {useState} from "react";
-import Footer from "../../components/Footer.tsx";
 import GameSuggestionDialog from "../../components/shared/dialog/GameSuggestionDialog.tsx";
 import {suggestLink} from "../../services/quickLinkService.tsx";
 import LinkCard from "../../components/LinkCard/LinkCard.tsx";
@@ -170,7 +169,6 @@ const DashboardPage = () => {
                     />
                 </div>
             </div>
-            <Footer />
         </div>
     )
 }

@@ -1,7 +1,5 @@
 import "./LegalPage.css"
 import SectionHeading from "../../components/shared/SectionHeading.tsx";
-import Footer from "../../components/Footer.tsx";
-
 const PrivacyPolicy = () => {
     return <div className="survival-kit-page">
         <div className="legal-page">
@@ -148,7 +146,6 @@ const PrivacyPolicy = () => {
                 </p>
             </div>
         </div>
-        <Footer />
     </div>
 }
 

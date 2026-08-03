@@ -6,12 +6,14 @@ import {Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "../../../services/tokenService.tsx";
 import {lectureService, setTimerCourse} from "../../../services/lectureService.tsx";
+import {getErrorText} from "../../../services/api.tsx";
 import CourseSelection from "../../shared/CourseSelection.tsx";
 import Button from "../../shared/Button.tsx";
 import type {Lecture} from "../../../models/Lecture.tsx";
 import LectureCalendar from "../../LectureCalendar.tsx";
 import ColorPicker from "../../shared/ColorPicker.tsx";
 import SelectionDropdown from "../../shared/SelectionDropdown.tsx";
+import WidgetStatus from "../../shared/WidgetStatus.tsx";
 
 interface LecturePlanData {
     lectureColor: string,
@@ -37,6 +39,8 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [inSettings, setInSettings] = useState(false);
     const [weekOffset, setWeekOffset] = useState(0);
     const [lectures, setLectures] = useState<Lecture[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const [decodedData, setDecodedData] = useState<LecturePlanData>(() => {
         try {
@@ -68,10 +72,14 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     );
 
     useEffect(() => {
-        if (selectedCourse === "") {
+        if (isPreview || selectedCourse === "") {
+            setLoading(false);
+            setError(null);
             return;
         }
         (async () => {
+            setLoading(true);
+            setError(null);
             try {
                 const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
                 setLectures(data.filter(lecture => {
@@ -80,27 +88,40 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                     );
                     return !isHidden;
                 }));
-            } catch (error) {
-                console.error(error);
+            } catch (err: unknown) {
+                setLectures([]);
+                setError(getErrorText(err));
+            } finally {
+                setLoading(false);
             }
         })();
-    }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset]);
+    }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset, isPreview]);
 
     useEffect(() => {
+        if (isPreview || decodedData.course === "") {
+            return;
+        }
         async function load() {
-            const lectures = await lectureService.getLectureNamesForSemester(decodedData.course);
-            setAllLectures(lectures);
+            try {
+                const lectures = await lectureService.getLectureNamesForSemester(decodedData.course);
+                setAllLectures(lectures);
 
-            const initialSelected = lectures.filter(l => !hiddenLectures.includes(l));
-            setSelectedLectures(initialSelected);
+                const initialSelected = lectures.filter(l => !hiddenLectures.includes(l));
+                setSelectedLectures(initialSelected);
+            } catch {
+                setAllLectures([]);
+            }
         }
         load();
-    }, [decodedData.course, hiddenLectures]);
+    }, [decodedData.course, hiddenLectures, isPreview]);
 
     useEffect(() => {
+        if (isPreview) {
+            return;
+        }
         setTimerCourse(decodedData.course);
         lectureService.setHiddenLectures(decodedData.hiddenLectures);
-    }, [decodedData.course, decodedData.hiddenLectures]);
+    }, [decodedData.course, decodedData.hiddenLectures, isPreview]);
 
     const updateData = (partial: Partial<LecturePlanData>) => {
         setDecodedData(prev => ({ ...prev, ...partial }));
@@ -233,21 +254,25 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                                     Du hast noch keinen Kurs angegeben, der angezeigt werden soll.
                                     <a className="important-text" onClick={() => setInSettings(true)}>Einstellungen</a>
                                 </div>
-                                :  <>
-                                    <h4 className="lecture-plan-heading">{decodedData.course}</h4>
-                                    <LectureCalendar
-                                        key={`${weekOffset}`}
-                                        weekOffset={weekOffset}
-                                        lectures={lectures}
-                                        colorLecture={decodedData.lectureColor}
-                                        colorExam={decodedData.examColor}
-                                        colorOther={decodedData.otherColor}
-                                    />
-                                    <div className="lecture-plan-footer">
-                                        <Button text="Vorherige Woche" onClick={() => setWeekOffset(weekOffset - 1)} variant="transparent" fullWidth={true} />
-                                        <Button text="Nächste Woche" onClick={() => setWeekOffset(weekOffset + 1)} variant="transparent" fullWidth={true} />
-                                    </div>
-                                </>
+                                : loading
+                                    ? <WidgetStatus status="loading" />
+                                    : error
+                                        ? <WidgetStatus status="error" message={error} />
+                                        : <>
+                                            <h4 className="lecture-plan-heading">{decodedData.course}</h4>
+                                            <LectureCalendar
+                                                key={`${weekOffset}`}
+                                                weekOffset={weekOffset}
+                                                lectures={lectures}
+                                                colorLecture={decodedData.lectureColor}
+                                                colorExam={decodedData.examColor}
+                                                colorOther={decodedData.otherColor}
+                                            />
+                                            <div className="lecture-plan-footer">
+                                                <Button text="Vorherige Woche" onClick={() => setWeekOffset(weekOffset - 1)} variant="transparent" fullWidth={true} />
+                                                <Button text="Nächste Woche" onClick={() => setWeekOffset(weekOffset + 1)} variant="transparent" fullWidth={true} />
+                                            </div>
+                                        </>
                         }
                     </div>
             }

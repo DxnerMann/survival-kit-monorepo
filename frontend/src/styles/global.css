@@ -11,12 +11,20 @@
     --border-radius: 2rem;
     --dwg-cols: 10;
     --dwg-gap: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-primary-accent) 70%, transparent)
+        color-mix(in srgb, var(--color-background-secondary) 45%, transparent);
 }
 
 html,
 body,
 #root {
-    min-height: 100%;
+    min-height: 100vh;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
 }
 
 body {
@@ -34,6 +42,21 @@ body {
     padding: 0;
     min-height: 100vh;
     position: relative;
+}
+
+.app-shell {
+    flex: 1 1 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.app-main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 
 body::before {
@@ -112,5 +135,39 @@ a {
 .survival-kit-page {
     display: flex;
     flex-direction: column;
-    height: fit-content;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+/* Scrollbars — Chromium / Safari */
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--color-background-secondary) 35%, transparent);
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-primary-accent) 85%, transparent),
+        color-mix(in srgb, var(--color-secondary-accent) 80%, var(--color-primary-accent))
+    );
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary-accent) 25%, transparent);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-accent);
+    background-clip: padding-box;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary-accent) 45%, transparent);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
 }

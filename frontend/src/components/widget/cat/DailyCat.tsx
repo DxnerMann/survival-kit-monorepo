@@ -3,25 +3,56 @@ import {useEffect, useState} from "react";
 import {createPortal} from "react-dom";
 import type {WidgetProps} from "../../../models/WidgetProps.tsx";
 import {getDailyCat} from "../../../services/dailyEventService.tsx";
+import {getErrorText} from "../../../services/api.tsx";
 import {Fullscreen} from "lucide-react";
+import WidgetStatus from "../../shared/WidgetStatus.tsx";
 
 const DailyCat = ({title, isPreview} : WidgetProps) => {
 
     const [inFullscreen, setInFullscreen] = useState(false);
     const [catUrl, setCatUrl] = useState<string>();
+    const [loading, setLoading] = useState(!isPreview);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (isPreview) {
+            return;
+        }
+        let cancelled = false;
+        let objectUrl: string | undefined;
+        setLoading(true);
+        setError(null);
         getDailyCat()
             .then(blob => {
-                setCatUrl(URL.createObjectURL(blob));
+                if (cancelled) {
+                    return;
+                }
+                objectUrl = URL.createObjectURL(blob);
+                setCatUrl(objectUrl);
             })
-            .catch(console.error);
-    }, []);
+            .catch((err: unknown) => {
+                if (!cancelled) {
+                    setError(getErrorText(err));
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [isPreview]);
 
     if (isPreview) {
         return <>
             <div className="lecture-plan-widget-preview">
-                { catUrl ? <img src={catUrl} alt="Daily cat" /> : <p>Loading...</p> }
+                <p>Tägliche Katze</p>
             </div>
             <h3 className="widget-title-preview">{title}</h3>
         </>
@@ -37,7 +68,11 @@ const DailyCat = ({title, isPreview} : WidgetProps) => {
                 />
             </div>
             <div className="daily-cat-img-wrapper">
-                { catUrl ? <img className="daily-cat-img" src={catUrl} alt="Daily cat" /> : <p>Loading...</p> }
+                {loading && <WidgetStatus status="loading" />}
+                {!loading && error && <WidgetStatus status="error" message={error} />}
+                {!loading && !error && catUrl && (
+                    <img className="daily-cat-img" src={catUrl} alt="Daily cat" />
+                )}
             </div>
         </div>
     );

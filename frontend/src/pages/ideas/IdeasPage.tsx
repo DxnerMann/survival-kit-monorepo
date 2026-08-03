@@ -9,8 +9,6 @@ import Button from "../../components/shared/Button.tsx";
 import type {Feedback, FeedbackType} from "../../models/Feedback.tsx";
 import {getUserRole} from "../../services/tokenService.tsx";
 import {getUsername} from "../../services/userService.tsx";
-import Footer from "../../components/Footer.tsx";
-
 const IdeasPage = () => {
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
     const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -115,7 +113,6 @@ const IdeasPage = () => {
             { continuation !== null && <Button text="Mehr Laden" onClick={() => loadMore()} variant="primary" disabled={continuation === null} /> }
             { feedbacks.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Beiträge</h4> }
         </div>
-        <Footer />
     </div>
 }
 

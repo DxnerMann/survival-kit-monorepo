@@ -1,6 +1,6 @@
 footer {
     background: var(--color-background-secondary);
-    height: var(--footer-height);
+    min-height: var(--footer-height);
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -8,6 +8,7 @@ footer {
     padding: 2rem;
     z-index: 9998;
     margin: 0;
+    flex-shrink: 0;
 }
 
 .footer-info {
@@ -23,7 +24,9 @@ footer {
 
 .footer-info .footer-info-img img {
     height: 100%;
-    aspect-ratio: 1/1;
+    width: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .footer-info .footer-info-text {
