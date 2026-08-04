@@ -71,12 +71,13 @@ export const joinPresentationRoomByCode = async (code: string): Promise<Presenta
     return response.json();
 };
 
-export const startPresentationRoom = async (code: string): Promise<void> => {
+export const startPresentationRoom = async (code: string): Promise<PresentationGameState> => {
     const response = await apiFetch(
         `${API_URL}/presentation-game/rooms/code/${encodeURIComponent(code)}/start`,
         {method: "POST"}
     );
     await checkResponse(response);
+    return response.json();
 };
 
 export const finishPresentationRoom = async (code: string): Promise<void> => {

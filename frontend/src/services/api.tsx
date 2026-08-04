@@ -61,9 +61,9 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "09x00000007": { text: "Der Raum ist nicht mehr in der Lobby.", type: "warning" },
     "09x00000008": { text: "Das Spiel läuft gerade nicht.", type: "warning" },
     "09x00000009": { text: "Überspringen ist im Schwer-Modus nicht erlaubt.", type: "warning" },
-    "09x00000010": { text: "Nur die Jury kann bestätigen.", type: "error" },
-    "09x00000011": { text: "Du hast für dieses Wort bereits abgestimmt.", type: "warning" },
-    "09x00000012": { text: "Keine Wörter mehr in diesem Spiel.", type: "info" },
+    "09x0000000A": { text: "Nur die Jury kann bestätigen.", type: "error" },
+    "09x0000000B": { text: "Du hast für dieses Wort bereits abgestimmt.", type: "warning" },
+    "09x0000000C": { text: "Keine Wörter mehr in diesem Spiel.", type: "info" },
 };
 
 export function getErrorText(error: ApiError | unknown): string {

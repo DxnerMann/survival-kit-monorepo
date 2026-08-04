@@ -23,6 +23,9 @@ import {
     PRESENTATION_DIFFICULTY_LABELS,
     PRESENTATION_STATUS_LABELS,
 } from "@/models/PresentationGameRoom.tsx";
+import PresentationGameFinishedDialog, {
+    type PresentationGameFinishedSummary,
+} from "@/components/dialog/PresentationGameFinishedDialog.tsx";
 import "@/pages/presentation-game/PresentationGameRoomPage.css";
 
 const LOBBY_REFRESH_MS = 3000;
@@ -45,13 +48,66 @@ const PresentationGameRoomPage = () => {
     const [thumbsUpUserIds, setThumbsUpUserIds] = useState<Set<string>>(new Set());
     const [floatingPoints, setFloatingPoints] = useState<FloatingPoints | null>(null);
     const floatingIdRef = useRef(0);
+    const loadRoomSeqRef = useRef(0);
+    const roomRef = useRef(room);
+    const gameStateRef = useRef(gameState);
+    const finishedDialogShownRef = useRef(false);
+    const [finishedSummary, setFinishedSummary] = useState<PresentationGameFinishedSummary | null>(null);
+    const [showFinishedDialog, setShowFinishedDialog] = useState(false);
+
+    useEffect(() => {
+        roomRef.current = room;
+    }, [room]);
+
+    useEffect(() => {
+        gameStateRef.current = gameState;
+    }, [gameState]);
+
+    const openFinishedDialog = useCallback((action: PresentationGameAction) => {
+        if (finishedDialogShownRef.current) {
+            return;
+        }
+
+        const currentRoom = roomRef.current;
+        if (!currentRoom) {
+            return;
+        }
+
+        finishedDialogShownRef.current = true;
+        const members = gameStateRef.current?.members ?? currentRoom.members;
+
+        setFinishedSummary({
+            roomName: currentRoom.name,
+            hostUsername: currentRoom.hostUsername,
+            difficulty: currentRoom.difficulty,
+            presenterPoints: action.presenterPoints,
+            wordIndex: action.wordIndex,
+            totalWords: action.totalWords,
+            members,
+        });
+        setShowFinishedDialog(true);
+        setGameState(null);
+        setRoom({...currentRoom, status: "FINISHED"});
+    }, []);
+
+    const closeFinishedDialog = useCallback(() => {
+        finishedDialogShownRef.current = false;
+        setShowFinishedDialog(false);
+        setFinishedSummary(null);
+        navigate("/presentation-game", {replace: true});
+    }, [navigate]);
 
     const loadRoom = useCallback(async () => {
         if (!code) {
             return null;
         }
 
+        const seq = ++loadRoomSeqRef.current;
         const detail = await getPresentationRoomByCode(code, true);
+        if (seq !== loadRoomSeqRef.current) {
+            return null;
+        }
+
         setRoom(detail);
 
         if (detail.status === "FINISHED") {
@@ -61,6 +117,9 @@ const PresentationGameRoomPage = () => {
 
         if (detail.status === "IN_PROGRESS") {
             const state = await getPresentationGameState(code);
+            if (seq !== loadRoomSeqRef.current) {
+                return null;
+            }
             setGameState(state);
         } else {
             setGameState(null);
@@ -113,7 +172,13 @@ const PresentationGameRoomPage = () => {
 
     const applyGameAction = useCallback((action: PresentationGameAction) => {
         if (action.event === "FINISHED") {
-            navigate("/presentation-game");
+            openFinishedDialog(action);
+            return;
+        }
+
+        if (action.event === "STARTED") {
+            setRoom(prev => prev ? {...prev, status: "IN_PROGRESS"} : prev);
+            void refreshGameState();
             return;
         }
 
@@ -121,12 +186,27 @@ const PresentationGameRoomPage = () => {
             if (!prev) {
                 return prev;
             }
+
+            if (action.event === "APPROVE" || action.event === "SKIP") {
+                const canVote = (!prev.isHost && prev.jurySize > 0) || (prev.isHost && prev.jurySize === 0);
+                return {
+                    ...prev,
+                    currentWord: action.currentWord,
+                    wordIndex: action.wordIndex,
+                    totalWords: action.totalWords,
+                    presenterPoints: action.presenterPoints,
+                    currentApprovals: 0,
+                    approvalThreshold: action.approvalThreshold,
+                    approvingUserIds: [],
+                    hasVotedCurrentWord: false,
+                    canApprove: canVote && action.wordIndex < action.totalWords,
+                };
+            }
+
             const approvingUserIds =
-                action.event === "APPROVE"
-                    ? []
-                    : action.event === "APPROVE_VOTE" && action.userId
-                        ? [...new Set([...prev.approvingUserIds, action.userId])]
-                        : prev.approvingUserIds;
+                action.event === "APPROVE_VOTE" && action.userId
+                    ? [...new Set([...(prev.approvingUserIds ?? []), action.userId])]
+                    : prev.approvingUserIds ?? [];
 
             return {
                 ...prev,
@@ -137,7 +217,7 @@ const PresentationGameRoomPage = () => {
                 currentApprovals: action.currentApprovals,
                 approvalThreshold: action.approvalThreshold,
                 approvingUserIds,
-                status: action.event === "STARTED" ? "IN_PROGRESS" : prev.status,
+                status: prev.status,
             };
         });
 
@@ -148,11 +228,7 @@ const PresentationGameRoomPage = () => {
         if (action.event === "SKIP" || action.event === "APPROVE") {
             showPointsFloat(action.pointsDelta);
         }
-
-        if (action.event === "STARTED" || action.event === "APPROVE" || action.event === "SKIP") {
-            void refreshGameState();
-        }
-    }, [navigate, refreshGameState]);
+    }, [openFinishedDialog, refreshGameState]);
 
     useEffect(() => {
         const init = async () => {
@@ -173,7 +249,7 @@ const PresentationGameRoomPage = () => {
     }, [loadRoom]);
 
     useEffect(() => {
-        if (!room || room.status !== "LOBBY") {
+        if (!room || room.status !== "LOBBY" || actionLoading) {
             return;
         }
 
@@ -182,10 +258,10 @@ const PresentationGameRoomPage = () => {
         }, LOBBY_REFRESH_MS);
 
         return () => clearInterval(interval);
-    }, [room?.status, loadRoom]);
+    }, [room?.status, loadRoom, actionLoading]);
 
     useEffect(() => {
-        if (!room?.id || room.status !== "IN_PROGRESS") {
+        if (!room?.id) {
             return;
         }
 
@@ -203,7 +279,7 @@ const PresentationGameRoomPage = () => {
             unsubscribe();
             websocketService.leaveChannel(channel);
         };
-    }, [room?.id, room?.status, applyGameAction]);
+    }, [room?.id, applyGameAction]);
 
     const handleSkip = useCallback(async () => {
         if (!code || !gameState?.canSkip) {
@@ -230,7 +306,9 @@ const PresentationGameRoomPage = () => {
         try {
             const action = await approvePresentationWord(code);
             applyGameAction(action);
-            setGameState(prev => prev ? {...prev, hasVotedCurrentWord: true, canApprove: false} : prev);
+            if (action.event === "APPROVE_VOTE") {
+                setGameState(prev => prev ? {...prev, hasVotedCurrentWord: true, canApprove: false} : prev);
+            }
         } catch (err: unknown) {
             snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
         } finally {
@@ -280,9 +358,11 @@ const PresentationGameRoomPage = () => {
 
         setActionLoading(true);
         try {
-            await startPresentationRoom(code);
+            const state = await startPresentationRoom(code);
+            loadRoomSeqRef.current += 1;
+            setRoom(prev => prev ? {...prev, status: state.status, members: state.members} : prev);
+            setGameState(state);
             snackbarService.showSnackbar({type: "success", text: "Spiel gestartet.", showIcon: true});
-            await loadRoom();
         } catch (err: unknown) {
             snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
         } finally {
@@ -297,8 +377,22 @@ const PresentationGameRoomPage = () => {
 
         setActionLoading(true);
         try {
+            const snapshot = gameStateRef.current;
             await finishPresentationRoom(code);
-            navigate("/presentation-game");
+            if (snapshot) {
+                openFinishedDialog({
+                    event: "FINISHED",
+                    pointsDelta: 0,
+                    userId: null,
+                    username: null,
+                    presenterPoints: snapshot.presenterPoints,
+                    currentWord: snapshot.currentWord,
+                    wordIndex: snapshot.wordIndex,
+                    totalWords: snapshot.totalWords,
+                    currentApprovals: 0,
+                    approvalThreshold: snapshot.approvalThreshold,
+                });
+            }
         } catch (err: unknown) {
             snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
         } finally {
@@ -332,6 +426,11 @@ const PresentationGameRoomPage = () => {
 
     return (
         <div className="survival-kit-page presentation-game-room-page-shell">
+            <PresentationGameFinishedDialog
+                isOpen={showFinishedDialog}
+                summary={finishedSummary}
+                onClose={closeFinishedDialog}
+            />
             <div className={`presentation-game-room-page ${isPlaying ? "is-playing" : ""}`}>
                 <div className="presentation-game-room-page__stage">
                     {room.status === "LOBBY" && (
@@ -456,14 +555,14 @@ const PresentationGameRoomPage = () => {
                             {members.map(member => (
                                 <li
                                     key={member.userId}
-                                    className={`presentation-game-room-page__player ${member.host ? "is-host" : ""} ${thumbsUpUserIds.has(member.userId) || gameState?.approvingUserIds.includes(member.userId) ? "has-thumbs-up" : ""}`}
+                                    className={`presentation-game-room-page__player ${member.host ? "is-host" : ""} ${thumbsUpUserIds.has(member.userId) || (gameState?.approvingUserIds?.includes(member.userId) ?? false) ? "has-thumbs-up" : ""}`}
                                 >
                                     <span>{member.username}</span>
                                     <span className="presentation-game-room-page__player-badges">
                                         {member.host && (
                                             <span className="presentation-game-room-page__host-badge">Presenter</span>
                                         )}
-                                        {(thumbsUpUserIds.has(member.userId) || gameState?.approvingUserIds.includes(member.userId)) && (
+                                        {(thumbsUpUserIds.has(member.userId) || (gameState?.approvingUserIds?.includes(member.userId) ?? false)) && (
                                             <span className="presentation-game-room-page__thumbs-up" aria-hidden="true">
                                                 <ThumbsUp size={16} />
                                             </span>
