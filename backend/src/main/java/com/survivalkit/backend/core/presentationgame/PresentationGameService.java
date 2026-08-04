@@ -238,10 +238,11 @@ public class PresentationGameService implements PresentationGamePort {
     }
 
     @Override
-    public void startRoom(String code) {
+    public PresentationGameStateResponse startRoom(String code) {
         requireVerification();
 
         var room = findRoomByCode(code);
+        var user = currentUser();
         assertHost(room);
 
         if (room.status() != PresentationGameRoom.Status.LOBBY) {
@@ -256,7 +257,10 @@ public class PresentationGameService implements PresentationGamePort {
         persistancePort.startRoom(room.id(), Instant.now());
         persistancePort.saveWords(room.id(), words);
 
-        broadcastGameEvent(room.id(), buildStateEvent("STARTED", room.id(), null, reloadRoom(room.id())));
+        var startedRoom = reloadRoom(room.id());
+        broadcastGameEvent(room.id(), buildStateEvent("STARTED", room.id(), null, startedRoom));
+
+        return buildGameState(startedRoom, user);
     }
 
     @Override
@@ -388,11 +392,6 @@ public class PresentationGameService implements PresentationGamePort {
     }
 
     private PresentationGameStateResponse buildGameState(PresentationGameRoom room, com.survivalkit.backend.adapter.postgres.user.UserModel user) {
-        if (room.status() == PresentationGameRoom.Status.IN_PROGRESS) {
-            ensureWordsPrefetched(room);
-            room = reloadRoom(room.id());
-        }
-
         var members = persistancePort.findMembers(room.id()).stream()
                 .map(member -> new PresentationGameRoomMemberResponse(
                         member.userId(),
@@ -496,23 +495,22 @@ public class PresentationGameService implements PresentationGamePort {
     }
 
     private void ensureWordsPrefetched(PresentationGameRoom room) {
-        var totalWords = persistancePort.countWords(room.id());
-        var remaining = totalWords - room.currentWordIndex();
-        if (remaining > PresentationGameRules.WORD_PREFETCH_REMAINING) {
-            return;
-        }
+        while (true) {
+            var totalWords = persistancePort.countWords(room.id());
+            var remaining = totalWords - room.currentWordIndex();
+            if (remaining > PresentationGameRules.WORD_PREFETCH_REMAINING) {
+                return;
+            }
 
-        var existing = persistancePort.findAllWordTexts(room.id());
-        var newWords = germanWordPort.fetchWords(
-                PresentationGameRules.WORD_PREFETCH_BATCH,
-                room.difficulty(),
-                existing
-        );
-        if (newWords.isEmpty()) {
-            return;
+            var existing = persistancePort.findAllWordTexts(room.id());
+            var newWords = germanWordPort.fetchWords(
+                    PresentationGameRules.WORD_PREFETCH_BATCH,
+                    room.difficulty(),
+                    existing
+            );
+            persistancePort.appendWords(room.id(), newWords, totalWords);
+            room = reloadRoom(room.id());
         }
-
-        persistancePort.appendWords(room.id(), newWords, totalWords);
     }
 
     private String currentWord(PresentationGameRoom room) {

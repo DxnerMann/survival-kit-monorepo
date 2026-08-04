@@ -74,9 +74,8 @@ public class PresentationGameController {
 
     @Role(RoleLevel.USER)
     @PostMapping("/code/{code}/start")
-    public ResponseEntity<Void> startRoom(@PathVariable String code) {
-        presentationGamePort.startRoom(code);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<PresentationGameStateResponse> startRoom(@PathVariable String code) {
+        return ResponseEntity.ok(presentationGamePort.startRoom(code));
     }
 
     @Role(RoleLevel.USER)

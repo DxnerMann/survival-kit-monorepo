@@ -25,7 +25,7 @@ public interface PresentationGamePort {
 
     PresentationGameRoomDetailResponse getRoomByCode(String code, boolean autoJoin);
 
-    void startRoom(String code);
+    PresentationGameStateResponse startRoom(String code);
 
     void finishRoom(String code);
 

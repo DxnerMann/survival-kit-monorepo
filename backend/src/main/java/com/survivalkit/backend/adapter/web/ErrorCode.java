@@ -75,9 +75,9 @@ public enum ErrorCode {
     PRESENTATION_ROOM_NOT_IN_LOBBY("09x00000007", "The room is not in lobby state", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_ROOM_NOT_IN_PROGRESS("09x00000008", "The game is not running", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_SKIP_NOT_ALLOWED("09x00000009", "Skipping is not allowed in hard mode", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
-    PRESENTATION_NOT_JURY("09x00000010", "Only jury members can approve", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
-    PRESENTATION_ALREADY_VOTED("09x00000011", "You already voted on this word", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
-    PRESENTATION_NO_WORDS_LEFT("09x00000012", "No words left in this game", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME);
+    PRESENTATION_NOT_JURY("09x0000000A", "Only jury members can approve", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ALREADY_VOTED("09x0000000B", "You already voted on this word", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_NO_WORDS_LEFT("09x0000000C", "No words left in this game", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME);
 
     private final String code;
     private final String message;

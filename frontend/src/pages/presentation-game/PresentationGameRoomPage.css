@@ -131,7 +131,6 @@
 
 .presentation-game-room-page__player.has-thumbs-up {
     background: color-mix(in srgb, var(--color-success) 14%, var(--color-background-secondary));
-    transform: scale(1.01);
 }
 
 .presentation-game-room-page__player-badges {
