@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,16 +49,6 @@ class RaplaAdapterRegistryTest {
 
 class RaplaUrlResolverTest {
 
-    private RaplaUrlResolver resolver;
-
-    @BeforeEach
-    void setUp() {
-        resolver = new RaplaUrlResolver(new RaplaAdapterRegistry(java.util.List.of(
-                new RaplaAdapterV1(),
-                new RaplaAdapterV2()
-        )));
-    }
-
     @Test
     void usesV1BeforeCutoff() {
         var resolved = resolverWithDate(LocalDate.of(2026, 9, 30)).resolve(configWithBothUrls());
@@ -94,17 +83,7 @@ class RaplaUrlResolverTest {
 
     @Test
     void directV1UrlAfterCutoffShowsNotice() {
-        var adapter = new RaplaAdapterV1() {
-            @Override
-            public Optional<String> deprecationNoticeWhenUsedAt(LocalDate date) {
-                return Optional.of(RaplaMigration.LEGACY_IN_USE_NOTICE);
-            }
-        };
-
-        var resolved = new RaplaUrlResolver(new RaplaAdapterRegistry(java.util.List.of(
-                adapter,
-                new RaplaAdapterV2()
-        ))).resolveDirectUrl(
+        var resolved = resolverWithDate(LocalDate.of(2026, 10, 1)).resolveDirectUrl(
                 "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
         );
 
@@ -125,28 +104,13 @@ class RaplaUrlResolverTest {
     }
 
     private RaplaUrlResolver resolverWithDate(LocalDate date) {
-        var v1 = new RaplaAdapterV1() {
-            @Override
-            public int preferenceOrderAt(LocalDate currentDate) {
-                return currentDate.isBefore(date) ? 0 : 100;
-            }
-
-            @Override
-            public Optional<String> deprecationNoticeWhenUsedAt(LocalDate currentDate) {
-                return !currentDate.isBefore(date)
-                        ? Optional.of(RaplaMigration.LEGACY_IN_USE_NOTICE)
-                        : Optional.empty();
-            }
-        };
-
-        var v2 = new RaplaAdapterV2() {
-            @Override
-            public int preferenceOrderAt(LocalDate currentDate) {
-                return currentDate.isBefore(date) ? 100 : 0;
-            }
-        };
-
-        return new RaplaUrlResolver(new RaplaAdapterRegistry(java.util.List.of(v1, v2)));
+        return new RaplaUrlResolver(
+                new RaplaAdapterRegistry(java.util.List.of(
+                        new RaplaAdapterV1(),
+                        new RaplaAdapterV2()
+                )),
+                () -> date
+        );
     }
 }
 

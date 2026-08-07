@@ -5,6 +5,7 @@ import com.survivalkit.backend.adapter.web.ErrorCode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -87,6 +88,10 @@ public final class RaplaUrlSupport {
         } catch (URISyntaxException e) {
             return raplaUrl;
         }
+    }
+
+    public static String encodeQueryParam(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     public static String courseNameFromDocument(org.jsoup.nodes.Document document) {

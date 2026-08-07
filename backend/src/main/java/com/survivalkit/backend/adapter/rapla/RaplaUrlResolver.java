@@ -7,14 +7,21 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Component
 public class RaplaUrlResolver {
 
     private final RaplaAdapterRegistry adapterRegistry;
+    private final Supplier<LocalDate> todaySupplier;
 
     public RaplaUrlResolver(RaplaAdapterRegistry adapterRegistry) {
+        this(adapterRegistry, () -> LocalDate.now(RaplaMigration.ZONE));
+    }
+
+    RaplaUrlResolver(RaplaAdapterRegistry adapterRegistry, Supplier<LocalDate> todaySupplier) {
         this.adapterRegistry = adapterRegistry;
+        this.todaySupplier = todaySupplier;
     }
 
     public ResolvedRaplaUrl resolve(CourseRaplaConfig config) {
@@ -40,7 +47,7 @@ public class RaplaUrlResolver {
     }
 
     private LocalDate today() {
-        return LocalDate.now(RaplaMigration.ZONE);
+        return todaySupplier.get();
     }
 
     private record VersionCandidate(RaplaAdapter adapter, String url) {}
