@@ -153,3 +153,16 @@
 .no-course-set-info a {
     cursor: pointer;
 }
+
+.lecture-plan-notice {
+    width: 100%;
+    margin: 0 0 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--color-primary-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary-accent) 35%, transparent);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-align: left;
+}

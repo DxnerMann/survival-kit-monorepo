@@ -66,11 +66,6 @@ public class RandomGermanWordApiClient implements RandomGermanWordPort {
 
             return List.copyOf(words);
         } catch (RestClientException | com.fasterxml.jackson.core.JsonProcessingException exception) {
-            log.warn(
-                    "Random word API request failed ({}). Using local fallback words. "
-                            + "Corporate TLS inspection often causes this in Java; browsers use a different trust store.",
-                    exception.toString()
-            );
             return List.of();
         }
     }

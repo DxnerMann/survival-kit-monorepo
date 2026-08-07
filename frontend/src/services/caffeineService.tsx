@@ -1,7 +1,14 @@
 import {api, apiFetch, checkResponse} from "@/services/api.tsx";
 import type {CaffeineEntry, CaffeineSource} from "@/models/CaffeineEntry.tsx";
+import {getUserRole} from "@/services/tokenService.tsx";
 
 const API_URL = api.baseUrl;
+const GUEST_CAFFEINE_STORAGE_KEY = "guest-caffeine-today";
+
+type GuestCaffeineStore = {
+    date: string;
+    entries: CaffeineEntry[];
+};
 
 export const CAFFEINE_PRESETS: { source: CaffeineSource; label: string; amountMg: number | null }[] = [
     { source: "MONSTER", label: "Monster Energy (0.5l, 180mg)", amountMg: 180 },
@@ -32,6 +39,100 @@ export const deleteCaffeine = async (id: string): Promise<void> => {
         method: "DELETE",
     });
     await checkResponse(response);
+};
+
+const getBerlinDateKey = (): string => {
+    const berlin = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${berlin.getFullYear()}-${pad(berlin.getMonth() + 1)}-${pad(berlin.getDate())}`;
+};
+
+const readGuestStore = (): GuestCaffeineStore => {
+    const today = getBerlinDateKey();
+
+    try {
+        const raw = localStorage.getItem(GUEST_CAFFEINE_STORAGE_KEY);
+        if (!raw) {
+            return { date: today, entries: [] };
+        }
+
+        const parsed = JSON.parse(raw) as GuestCaffeineStore;
+        if (parsed.date !== today) {
+            return { date: today, entries: [] };
+        }
+
+        return parsed;
+    } catch {
+        return { date: today, entries: [] };
+    }
+};
+
+const writeGuestStore = (entries: CaffeineEntry[]): void => {
+    localStorage.setItem(GUEST_CAFFEINE_STORAGE_KEY, JSON.stringify({
+        date: getBerlinDateKey(),
+        entries,
+    } satisfies GuestCaffeineStore));
+};
+
+const resolveAmountMg = (source: CaffeineSource, amountMg?: number): number => {
+    if (source === "OTHER") {
+        return amountMg ?? 0;
+    }
+
+    return CAFFEINE_PRESETS.find((preset) => preset.source === source)?.amountMg ?? 0;
+};
+
+export const getGuestTodayCaffeine = (): CaffeineEntry[] => readGuestStore().entries;
+
+export const addGuestCaffeine = (
+    source: CaffeineSource,
+    amountMg: number,
+    consumedAt: string,
+): CaffeineEntry => {
+    const entry: CaffeineEntry = {
+        id: crypto.randomUUID(),
+        userId: "guest",
+        source,
+        amountMg,
+        consumedAt,
+    };
+
+    const store = readGuestStore();
+    writeGuestStore([...store.entries, entry]);
+    return entry;
+};
+
+export const deleteGuestCaffeine = (id: string): void => {
+    const store = readGuestStore();
+    writeGuestStore(store.entries.filter((entry) => entry.id !== id));
+};
+
+export const isGuestCaffeineMode = (): boolean => getUserRole() === "GUEST";
+
+export const loadTodayCaffeineEntries = async (): Promise<CaffeineEntry[]> => {
+    if (isGuestCaffeineMode()) {
+        return getGuestTodayCaffeine();
+    }
+    return getTodayCaffeine();
+};
+
+export const addTodayCaffeineEntry = async (
+    source: CaffeineSource,
+    amountMg: number | undefined,
+    consumedAt: string,
+): Promise<CaffeineEntry> => {
+    if (isGuestCaffeineMode()) {
+        return addGuestCaffeine(source, resolveAmountMg(source, amountMg), consumedAt);
+    }
+    return addCaffeine(source, amountMg, consumedAt);
+};
+
+export const removeTodayCaffeineEntry = async (id: string): Promise<void> => {
+    if (isGuestCaffeineMode()) {
+        deleteGuestCaffeine(id);
+        return;
+    }
+    await deleteCaffeine(id);
 };
 
 export const sourceLabel = (source: CaffeineSource): string => {

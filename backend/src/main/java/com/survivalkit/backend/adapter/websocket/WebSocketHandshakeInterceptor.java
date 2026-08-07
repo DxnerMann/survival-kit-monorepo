@@ -17,7 +17,6 @@ import java.util.Map;
 public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
 
     public static final String USER_CONTEXT_ATTRIBUTE = "wsUserContext";
-
     private final SessionCookieService sessionCookieService;
     private final TokenService tokenService;
     private final UserPersistancePort userPersistancePort;

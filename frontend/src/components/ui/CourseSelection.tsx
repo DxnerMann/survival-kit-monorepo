@@ -127,7 +127,7 @@ const CourseSelection = ({ selectedCourse, onCourseChanged, onLinkChanged }: Cou
                                     <input
                                         className={`course-selection__url-input${urlError ? " course-selection__url-input--error" : ""}`}
                                         type="url"
-                                        placeholder="https://rapla.dhbw-karlsruhe.de/rapla?…"
+                                        placeholder="https://rapla.dhbw.de/rapla/calendar?…"
                                         value={raplaUrl}
                                         onChange={e => { setRaplaUrl(e.target.value); setUrlError(""); }}
                                         onKeyDown={e => e.key === "Enter" && handleUrlSubmit()}

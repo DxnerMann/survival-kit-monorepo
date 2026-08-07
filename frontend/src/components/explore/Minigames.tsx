@@ -21,34 +21,32 @@ const Minigames = () => {
             alingRight={false}
             previewImagePath={"/images/Exmatriculation-Simulator-Preview.png"}
         />
+        <LinkCard
+            href={"/caffeine-calculator"}
+            heading={"Der Koffeinrechner"}
+            description={
+                "Wie lange hält dich der Energy Drink noch wach?\n" +
+                "\n" +
+                "Gib deine Koffein-Dosis ein und sieh, wie der Blutspiegel über die Zeit abfällt – " +
+                "mit Halbwertszeit-Berechnung für den restlichen Vorlesungstag.\n" +
+                "\n" +
+                "Perfekt, um den nächsten Monster zeitlich richtig zu planen."
+            }
+            alingRight={true}
+            previewImagePath={"/images/white-monster.png"}
+        />
         {getUserRole() !== "GUEST" && (
-            <>
-                <LinkCard
-                    href={"/caffeine-calculator"}
-                    heading={"Der Koffeinrechner"}
-                    description={
-                        "Wie lange hält dich der Energy Drink noch wach?\n" +
-                        "\n" +
-                        "Gib deine Koffein-Dosis ein und sieh, wie der Blutspiegel über die Zeit abfällt – " +
-                        "mit Halbwertszeit-Berechnung für den restlichen Vorlesungstag.\n" +
-                        "\n" +
-                        "Perfekt, um den nächsten Monster zeitlich richtig zu planen."
+            <LinkCard
+                href={"/presentation-game"}
+                heading={"Das Präsi-Spiel"}
+                description={
+                    "Während du im Kurs Presentierst, erscheinen Zufallswörter auf dem Bildschirm. – Baue sie unauffällig in deine Präsentation ein, ohne dass der/die Dozent*in es merkt um Punkte zu gewinnen.\n" + "\n" +
+                    "Der Lobby-Host ist Presenter und kann Wörter nur überspringen. Mitspieler genehmigen eingebaute Wörter und sammeln Punkte." + "\n" +
+                    "Es gibt mehrere Schwierigkeitsstufen"
                     }
-                    alingRight={true}
-                    previewImagePath={"/images/white-monster.png"}
-                />
-                <LinkCard
-                    href={"/presentation-game"}
-                    heading={"Das Präsi-Spiel"}
-                    description={
-                        "Während du im Kurs Presentierst, erscheinen Zufallswörter auf dem Bildschirm. – Baue sie unauffällig in deine Präsentation ein, ohne dass der/die Dozent*in es merkt um Punkte zu gewinnen.\n" + "\n" +
-                        "Der Lobby-Host ist Presenter und kann Wörter nur überspringen. Mitspieler genehmigen eingebaute Wörter und sammeln Punkte." + "\n" +
-                        "Es gibt mehrere Schwierigkeitsstufen"
-                        }
-                    alingRight={false}
-                    previewImagePath={"/images/dice.png"}
-                />
-            </>
+                alingRight={false}
+                previewImagePath={"/images/dice.png"}
+            />
         )}
     </div>
 }
