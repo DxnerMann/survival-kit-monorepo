@@ -104,13 +104,16 @@ class RaplaUrlResolverTest {
     }
 
     private RaplaUrlResolver resolverWithDate(LocalDate date) {
-        return new RaplaUrlResolver(
-                new RaplaAdapterRegistry(java.util.List.of(
-                        new RaplaAdapterV1(),
-                        new RaplaAdapterV2()
-                )),
-                () -> date
-        );
+        var registry = new RaplaAdapterRegistry(java.util.List.of(
+                new RaplaAdapterV1(),
+                new RaplaAdapterV2()
+        ));
+        return new RaplaUrlResolver(registry) {
+            @Override
+            protected LocalDate today() {
+                return date;
+            }
+        };
     }
 }
 
