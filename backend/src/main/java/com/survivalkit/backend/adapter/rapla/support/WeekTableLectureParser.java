@@ -1,6 +1,5 @@
 package com.survivalkit.backend.adapter.rapla.support;
 
-import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.shared.Lecture;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,9 +7,14 @@ import org.jsoup.nodes.Element;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class WeekTableLectureParser {
+
+    private static final Pattern ANCHOR_TIME_TITLE = Pattern.compile(
+            "^(\\d{1,2}:\\d{2})-(\\d{1,2}:\\d{2})(?:\\s+(.*))?$"
+    );
 
     private WeekTableLectureParser() {}
 
@@ -74,17 +78,20 @@ public final class WeekTableLectureParser {
 
         var textNodes = anchor.textNodes();
         if (!textNodes.isEmpty()) {
-            var timeLine = textNodes.get(0).text().trim()
-                    .replace("\u00a0", "")
-                    .replace(" ", "");
-
-            var timeParts = timeLine.split("-");
-            if (timeParts.length == 2) {
-                startTime = timeParts[0].trim();
-                endTime = timeParts[1].trim();
+            var normalized = textNodes.get(0).text().trim()
+                    .replace('\u00a0', ' ')
+                    .replaceAll("\\s+", " ")
+                    .trim();
+            var matcher = ANCHOR_TIME_TITLE.matcher(normalized);
+            if (matcher.matches()) {
+                startTime = matcher.group(1);
+                endTime = matcher.group(2);
+                if (matcher.group(3) != null && !matcher.group(3).isBlank()) {
+                    title = matcher.group(3).trim();
+                }
             }
         }
-        if (textNodes.size() > 1) {
+        if (textNodes.size() > 1 && title.isEmpty()) {
             title = textNodes.get(1).text().trim();
         }
 

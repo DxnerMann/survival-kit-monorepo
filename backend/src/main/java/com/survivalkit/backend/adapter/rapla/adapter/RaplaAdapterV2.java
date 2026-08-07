@@ -58,13 +58,13 @@ public class RaplaAdapterV2 implements RaplaAdapter {
             query.append("&key=").append(key);
         } else {
             if (user != null) {
-                query.append("user=").append(user);
+                query.append("user=").append(RaplaUrlSupport.encodeQueryParam(user));
             }
             if (file != null) {
                 if (!query.isEmpty()) {
                     query.append("&");
                 }
-                query.append("file=").append(file);
+                query.append("file=").append(RaplaUrlSupport.encodeQueryParam(file));
             }
         }
 
