@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,7 +31,7 @@ class RaplaAdapterRegistryTest {
     }
 
     @Test
-    void resolvesLegacyKarlsruheUrl() {
+    void resolvesV1KarlsruheUrl() {
         var adapter = registry.resolveForUrl(
                 "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
         );
@@ -40,7 +39,7 @@ class RaplaAdapterRegistryTest {
     }
 
     @Test
-    void resolvesCentralUrl() {
+    void resolvesV2Url() {
         var adapter = registry.resolveForUrl(
                 "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6"
         );
@@ -49,16 +48,6 @@ class RaplaAdapterRegistryTest {
 }
 
 class RaplaUrlResolverTest {
-
-    private RaplaUrlResolver resolver;
-
-    @BeforeEach
-    void setUp() {
-        resolver = new RaplaUrlResolver(new RaplaAdapterRegistry(java.util.List.of(
-                new RaplaAdapterV1(),
-                new RaplaAdapterV2()
-        )));
-    }
 
     @Test
     void usesV1BeforeCutoff() {
@@ -94,17 +83,7 @@ class RaplaUrlResolverTest {
 
     @Test
     void directV1UrlAfterCutoffShowsNotice() {
-        var adapter = new RaplaAdapterV1() {
-            @Override
-            public Optional<String> deprecationNoticeWhenUsedAt(LocalDate date) {
-                return Optional.of(RaplaMigration.LEGACY_IN_USE_NOTICE);
-            }
-        };
-
-        var resolved = new RaplaUrlResolver(new RaplaAdapterRegistry(java.util.List.of(
-                adapter,
-                new RaplaAdapterV2()
-        ))).resolveDirectUrl(
+        var resolved = resolverWithDate(LocalDate.of(2026, 10, 1)).resolveDirectUrl(
                 "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
         );
 
@@ -125,39 +104,27 @@ class RaplaUrlResolverTest {
     }
 
     private RaplaUrlResolver resolverWithDate(LocalDate date) {
-        var v1 = new RaplaAdapterV1() {
+        var registry = new RaplaAdapterRegistry(java.util.List.of(
+                new RaplaAdapterV1(),
+                new RaplaAdapterV2()
+        ));
+        return new RaplaUrlResolver(registry) {
             @Override
-            public int preferenceOrderAt(LocalDate currentDate) {
-                return currentDate.isBefore(date) ? 0 : 100;
-            }
-
-            @Override
-            public Optional<String> deprecationNoticeWhenUsedAt(LocalDate currentDate) {
-                return !currentDate.isBefore(date)
-                        ? Optional.of(RaplaMigration.LEGACY_IN_USE_NOTICE)
-                        : Optional.empty();
+            protected LocalDate today() {
+                return date;
             }
         };
-
-        var v2 = new RaplaAdapterV2() {
-            @Override
-            public int preferenceOrderAt(LocalDate currentDate) {
-                return currentDate.isBefore(date) ? 100 : 0;
-            }
-        };
-
-        return new RaplaUrlResolver(new RaplaAdapterRegistry(java.util.List.of(v1, v2)));
     }
 }
 
 class RaplaAdapterFormattingTest {
 
-    private final RaplaAdapter legacyAdapter = new RaplaAdapterV1();
-    private final RaplaAdapter centralAdapter = new RaplaAdapterV2();
+    private final RaplaAdapter v1Adapter = new RaplaAdapterV1();
+    private final RaplaAdapter v2Adapter = new RaplaAdapterV2();
 
     @Test
-    void legacyFormatToBaseUrlStripsWeekParams() {
-        var formatted = legacyAdapter.formatToBaseUrl(
+    void v1FormatToBaseUrlStripsWeekParams() {
+        var formatted = v1Adapter.formatToBaseUrl(
                 "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6&day=3&month=8&year=2026"
         );
 
@@ -168,8 +135,8 @@ class RaplaAdapterFormattingTest {
     }
 
     @Test
-    void centralFormatToBaseUrlStripsWeekParams() {
-        var formatted = centralAdapter.formatToBaseUrl(
+    void v2FormatToBaseUrlStripsWeekParams() {
+        var formatted = v2Adapter.formatToBaseUrl(
                 "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6&day=3&month=8&year=2026"
         );
 
@@ -183,7 +150,7 @@ class RaplaAdapterFormattingTest {
 class WeekTableLectureParserTest {
 
     @Test
-    void parsesLegacyWeekHtml() throws IOException {
+    void parsesV1WeekHtml() throws IOException {
         var html = loadResource("rapla/legacy-week.html");
         var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
 
@@ -194,7 +161,7 @@ class WeekTableLectureParserTest {
     }
 
     @Test
-    void parsesNewWeekHtml() throws IOException {
+    void parsesV2WeekHtml() throws IOException {
         var html = loadResource("rapla/new-week.html");
         var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
 
@@ -205,7 +172,7 @@ class WeekTableLectureParserTest {
     }
 
     @Test
-    void centralAdapterExtractsCourseFromTitle() throws IOException {
+    void v2AdapterExtractsCourseFromTitle() throws IOException {
         var html = loadResource("rapla/new-week.html");
         var course = new RaplaAdapterV2().extractCourse(
                 Jsoup.parse(html),
@@ -216,7 +183,7 @@ class WeekTableLectureParserTest {
     }
 
     @Test
-    void legacyAdapterPrefersTitleOverFileParam() throws IOException {
+    void v1AdapterPrefersTitleOverFileParam() throws IOException {
         var html = loadResource("rapla/legacy-week.html");
         var course = new RaplaAdapterV1().extractCourse(
                 Jsoup.parse(html),

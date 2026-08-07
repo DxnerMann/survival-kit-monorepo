@@ -39,7 +39,7 @@ public class RaplaUrlResolver {
         return new ResolvedRaplaUrl(url, adapter.id(), adapter.deprecationNoticeWhenUsedAt(today));
     }
 
-    private LocalDate today() {
+    protected LocalDate today() {
         return LocalDate.now(RaplaMigration.ZONE);
     }
 
