@@ -1,26 +1,36 @@
 import type {ApiError} from "@/models/ApiError.tsx"
+import type {LecturePlanResponse} from "@/models/LecturePlanResponse.tsx";
 import {api, apiFetch, checkResponse, getErrorText, resolveError} from "@/services/api.tsx";
 import type {DayOfWeek, Lecture} from "@/models/Lecture.tsx";
 import {useCallback, useEffect, useRef, useState} from "react";
 
 const API_URL = api.baseUrl;
 
-const lectureCache = new Map<string, Promise<Lecture[]>>();
+const lectureCache = new Map<string, Promise<LecturePlanResponse>>();
 const lectureNamesCache = new Map<string, Promise<string[]>>();
 
-const DEBUG_TIME_OFFSET: { day: number; hours: number; minutes: number } =
-    {
-        day: 0,
-        hours: 0,
-        minutes: 0,
-    };
+const DEBUG_TIME: string | null = null; //"2026-10-01T09:30"
+
+const parseDebugTime = (value: string): Date => {
+    const normalized = value.trim().replace(" ", "T");
+    const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (!match) {
+        throw new Error(`Invalid DEBUG_TIME "${value}". Use YYYY-MM-DDTHH:mm`);
+    }
+
+    const [, year, month, day, hours, minutes, seconds = "0"] = match;
+    const debug = new Date();
+    debug.setFullYear(Number(year), Number(month) - 1, Number(day));
+    debug.setHours(Number(hours), Number(minutes), Number(seconds), 0);
+    return debug;
+};
 
 const getNow = (): Date => {
-    const real = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
-    const debug = new Date(real);
-    debug.setDate(real.getDate() + DEBUG_TIME_OFFSET.day);
-    debug.setHours(real.getHours() + DEBUG_TIME_OFFSET.hours, real.getMinutes() + DEBUG_TIME_OFFSET.minutes, real.getSeconds(), real.getMilliseconds());
-    return debug;
+    if (DEBUG_TIME) {
+        return parseDebugTime(DEBUG_TIME);
+    }
+
+    return new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
 };
 
 const getAvailableCourses = async (): Promise<string[]> => {
@@ -57,7 +67,7 @@ const extractCourse = async (raplaUrl: string): Promise<string> => {
     return await response.text();
 }
 
-const getLecturesForWeek = async (weekOffset: number, course: string): Promise<Lecture[]> => {
+const getLecturesForWeek = async (weekOffset: number, course: string): Promise<LecturePlanResponse> => {
     const cacheKey = `${weekOffset}-${course}`;
 
     if (!lectureCache.has(cacheKey)) {
@@ -76,7 +86,7 @@ const getLecturesForWeek = async (weekOffset: number, course: string): Promise<L
                     resolveError(apiError);
                     throw apiError;
                 }
-                return res.json() as Promise<Lecture[]>;
+                return res.json() as Promise<LecturePlanResponse>;
             });
 
         lectureCache.set(cacheKey, promise);
@@ -103,9 +113,11 @@ const getCurrentAndNextLecture = async (course: string): Promise<CurrentLectureI
     let lectures: Lecture[];
 
     if (lectureCache.has(cacheKey)) {
-        lectures = await lectureCache.get(cacheKey)!;
+        const response = await lectureCache.get(cacheKey)!;
+        lectures = response.lectures;
     } else {
-        lectures = await getLecturesForWeek(0, course);
+        const response = await getLecturesForWeek(0, course);
+        lectures = response.lectures;
     }
 
     const todaysLectures = lectures
@@ -170,7 +182,7 @@ const useCurrentAndNextLecture = (course: string | null) => {
 
                     const msUntilEnd = currentEnd.getTime() - now.getTime();
                     timeoutRef.current = setTimeout(() => refreshRef.current?.(), msUntilEnd);
-                } else if (next && next[0] !== undefined && next[0].day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : new Date().getDay() - 1]) {
+                } else if (next && next[0] !== undefined && next[0].day === DAYS_OF_WEEK[getNow().getDay() === 0 ? 6 : getNow().getDay() - 1]) {
                     const now = getNow()
                     const [hours, minutes] = next[0].startTime.split(":").map(Number);
                     const nextStart = new Date(now);

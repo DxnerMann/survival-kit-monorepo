@@ -1,8 +1,8 @@
 package com.survivalkit.backend.adapter.web.lecture;
 
 import com.survivalkit.backend.core.course.CoursePort;
+import com.survivalkit.backend.core.lecture.LecturePlanResult;
 import com.survivalkit.backend.core.lecture.LecturePort;
-import com.survivalkit.backend.shared.Lecture;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,12 +24,12 @@ public class LecturePlanController {
 
     public LecturePlanController(LecturePort lecturePort, CoursePort coursePort) {
         this.lecturePort = lecturePort;
-		this.coursePort = coursePort;
+        this.coursePort = coursePort;
     }
 
     @Role(RoleLevel.GUEST)
     @GetMapping("/week")
-    public ResponseEntity<List<Lecture>> getLecturesForWeek(
+    public ResponseEntity<LecturePlanResult> getLecturesForWeek(
             @RequestParam int weekOffset,
             @RequestParam(required = false) String course,
             @RequestParam(required = false) String raplaUrl

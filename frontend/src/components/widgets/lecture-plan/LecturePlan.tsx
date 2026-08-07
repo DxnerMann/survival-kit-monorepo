@@ -39,6 +39,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [inSettings, setInSettings] = useState(false);
     const [weekOffset, setWeekOffset] = useState(0);
     const [lectures, setLectures] = useState<Lecture[]>([]);
+    const [raplaNotice, setRaplaNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +76,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
         if (isPreview || selectedCourse === "") {
             setLoading(false);
             setError(null);
+            setRaplaNotice(null);
             return;
         }
         (async () => {
@@ -82,7 +84,8 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
             setError(null);
             try {
                 const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
-                setLectures(data.filter(lecture => {
+                setRaplaNotice(data.notice);
+                setLectures(data.lectures.filter(lecture => {
                     const isHidden = decodedData.hiddenLectures.some(hiddenText =>
                         lecture.title.trim().includes(hiddenText.trim())
                     );
@@ -90,6 +93,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 }));
             } catch (err: unknown) {
                 setLectures([]);
+                setRaplaNotice(null);
                 setError(getErrorText(err));
             } finally {
                 setLoading(false);
@@ -259,6 +263,11 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                                     : error
                                         ? <WidgetStatus status="error" message={error} />
                                         : <>
+                                            {raplaNotice && (
+                                                <div className="lecture-plan-notice" role="status">
+                                                    {raplaNotice}
+                                                </div>
+                                            )}
                                             <h4 className="lecture-plan-heading">{decodedData.course}</h4>
                                             <LectureCalendar
                                                 key={`${weekOffset}`}
