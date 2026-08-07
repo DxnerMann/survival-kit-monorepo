@@ -49,7 +49,7 @@ public final class RaplaUrlSupport {
     public static Map<String, String> parseQueryParams(String raplaUrl) {
         try {
             var uri = new URI(raplaUrl);
-            var query = uri.getQuery();
+            var query = uri.getRawQuery();
             if (query == null) {
                 return Map.of();
             }
@@ -58,7 +58,10 @@ public final class RaplaUrlSupport {
             for (String param : query.split("&")) {
                 var keyValue = param.split("=", 2);
                 if (keyValue.length == 2) {
-                    params.put(keyValue[0], keyValue[1]);
+                    params.put(
+                            URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8),
+                            URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8)
+                    );
                 }
             }
             return params;
@@ -78,13 +81,11 @@ public final class RaplaUrlSupport {
     public static String rebuildUri(String raplaUrl, String query) {
         try {
             var uri = new URI(raplaUrl);
-            return new URI(
-                    uri.getScheme(),
-                    uri.getAuthority(),
-                    uri.getPath(),
-                    query,
-                    null
-            ).toString();
+            var base = uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath();
+            if (query == null || query.isBlank()) {
+                return base;
+            }
+            return base + "?" + query;
         } catch (URISyntaxException e) {
             return raplaUrl;
         }
