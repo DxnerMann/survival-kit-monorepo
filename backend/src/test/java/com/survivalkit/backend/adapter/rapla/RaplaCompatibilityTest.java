@@ -31,7 +31,7 @@ class RaplaAdapterRegistryTest {
     }
 
     @Test
-    void resolvesLegacyKarlsruheUrl() {
+    void resolvesV1KarlsruheUrl() {
         var adapter = registry.resolveForUrl(
                 "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
         );
@@ -39,7 +39,7 @@ class RaplaAdapterRegistryTest {
     }
 
     @Test
-    void resolvesCentralUrl() {
+    void resolvesV2Url() {
         var adapter = registry.resolveForUrl(
                 "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6"
         );
@@ -116,12 +116,12 @@ class RaplaUrlResolverTest {
 
 class RaplaAdapterFormattingTest {
 
-    private final RaplaAdapter legacyAdapter = new RaplaAdapterV1();
-    private final RaplaAdapter centralAdapter = new RaplaAdapterV2();
+    private final RaplaAdapter v1Adapter = new RaplaAdapterV1();
+    private final RaplaAdapter v2Adapter = new RaplaAdapterV2();
 
     @Test
-    void legacyFormatToBaseUrlStripsWeekParams() {
-        var formatted = legacyAdapter.formatToBaseUrl(
+    void v1FormatToBaseUrlStripsWeekParams() {
+        var formatted = v1Adapter.formatToBaseUrl(
                 "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6&day=3&month=8&year=2026"
         );
 
@@ -132,8 +132,8 @@ class RaplaAdapterFormattingTest {
     }
 
     @Test
-    void centralFormatToBaseUrlStripsWeekParams() {
-        var formatted = centralAdapter.formatToBaseUrl(
+    void v2FormatToBaseUrlStripsWeekParams() {
+        var formatted = v2Adapter.formatToBaseUrl(
                 "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6&day=3&month=8&year=2026"
         );
 
@@ -147,7 +147,7 @@ class RaplaAdapterFormattingTest {
 class WeekTableLectureParserTest {
 
     @Test
-    void parsesLegacyWeekHtml() throws IOException {
+    void parsesV1WeekHtml() throws IOException {
         var html = loadResource("rapla/legacy-week.html");
         var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
 
@@ -158,7 +158,7 @@ class WeekTableLectureParserTest {
     }
 
     @Test
-    void parsesNewWeekHtml() throws IOException {
+    void parsesV2WeekHtml() throws IOException {
         var html = loadResource("rapla/new-week.html");
         var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
 
@@ -169,7 +169,7 @@ class WeekTableLectureParserTest {
     }
 
     @Test
-    void centralAdapterExtractsCourseFromTitle() throws IOException {
+    void v2AdapterExtractsCourseFromTitle() throws IOException {
         var html = loadResource("rapla/new-week.html");
         var course = new RaplaAdapterV2().extractCourse(
                 Jsoup.parse(html),
@@ -180,7 +180,7 @@ class WeekTableLectureParserTest {
     }
 
     @Test
-    void legacyAdapterPrefersTitleOverFileParam() throws IOException {
+    void v1AdapterPrefersTitleOverFileParam() throws IOException {
         var html = loadResource("rapla/legacy-week.html");
         var course = new RaplaAdapterV1().extractCourse(
                 Jsoup.parse(html),
