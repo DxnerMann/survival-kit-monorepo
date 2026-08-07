@@ -5,13 +5,14 @@ import Info from "@/components/ui/Info.tsx";
 import Button from "@/components/ui/Button.tsx";
 import CaffeineChart from "@/components/caffeine/CaffeineChart.tsx";
 import {
-    addCaffeine,
+    addTodayCaffeineEntry,
     buildHalfLifeSeries,
     caffeineComment,
     CAFFEINE_PRESETS,
-    deleteCaffeine,
     getPeakMg,
-    getTodayCaffeine,
+    isGuestCaffeineMode,
+    loadTodayCaffeineEntries,
+    removeTodayCaffeineEntry,
     sourceLabel,
     toDateTimeLocalValue,
 } from "@/services/caffeineService.tsx";
@@ -29,18 +30,20 @@ const CaffeineCalculatorPage = () => {
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const loadToday = async () => {
-        const data = await getTodayCaffeine();
+        const data = await loadTodayCaffeineEntries();
         setEntries(data);
     };
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         loadToday().catch(() => {
-            snackbarService.showSnackbar({
-                type: "error",
-                text: "Koffein-Einträge konnten nicht geladen werden.",
-                showIcon: true,
-            });
+            if (!isGuestCaffeineMode()) {
+                snackbarService.showSnackbar({
+                    type: "error",
+                    text: "Koffein-Einträge konnten nicht geladen werden.",
+                    showIcon: true,
+                });
+            }
         });
     }, []);
 
@@ -75,9 +78,9 @@ const CaffeineCalculatorPage = () => {
                     });
                     return;
                 }
-                await addCaffeine(source, parsed, timestamp.toISOString());
+                await addTodayCaffeineEntry(source, parsed, timestamp.toISOString());
             } else {
-                await addCaffeine(source, undefined, timestamp.toISOString());
+                await addTodayCaffeineEntry(source, undefined, timestamp.toISOString());
             }
             setCustomMg("");
             setConsumedAt(toDateTimeLocalValue(new Date()));
@@ -95,7 +98,7 @@ const CaffeineCalculatorPage = () => {
     const handleDelete = async (id: string) => {
         try {
             setDeletingId(id);
-            await deleteCaffeine(id);
+            await removeTodayCaffeineEntry(id);
             await loadToday();
             snackbarService.showSnackbar({
                 type: "success",
@@ -115,6 +118,13 @@ const CaffeineCalculatorPage = () => {
                     subheading={"Halbwertszeit-Näherung für deine Dosis über den heutigen Tag."}
                     centered={false}
                 />
+
+                {isGuestCaffeineMode() && (
+                    <Info
+                        type="INFO"
+                        text="Als Gast werden deine Einträge nur für heute lokal im Browser gespeichert. Sie werden nicht synchronisiert und sind morgen wieder weg."
+                    />
+                )}
 
                 <div className="caffeine-calc-layout">
                     <div className="caffeine-calc-controls">

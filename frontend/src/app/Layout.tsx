@@ -46,7 +46,7 @@ const Layout = () => {
                     <Route path="/account" element={<ProtectedRoute> <ProfilePage /> </ProtectedRoute>} />
                     <Route path="/stats" element={<StatsPage />} />
                     <Route path="/exmatriculation" element={<Exmatriculation />} />
-                    <Route path="/caffeine-calculator" element={<ProtectedRoute> <CaffeineCalculatorPage /> </ProtectedRoute>} />
+                    <Route path="/caffeine-calculator" element={<CaffeineCalculatorPage />} />
                     <Route path="/presentation-game" element={<ProtectedRoute> <PresentationGameLobbyPage /> </ProtectedRoute>} />
                     <Route path="/presentation-game/:code" element={<ProtectedRoute> <PresentationGameRoomPage /> </ProtectedRoute>} />
                     <Route path="/imprint" element={<Imprint />} />
