@@ -77,7 +77,17 @@ public enum ErrorCode {
     PRESENTATION_SKIP_NOT_ALLOWED("09x00000009", "Skipping is not allowed in hard mode", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_NOT_JURY("09x0000000A", "Only jury members can approve", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_ALREADY_VOTED("09x0000000B", "You already voted on this word", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
-    PRESENTATION_NO_WORDS_LEFT("09x0000000C", "No words left in this game", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME);
+    PRESENTATION_NO_WORDS_LEFT("09x0000000C", "No words left in this game", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+
+    // MEME WALL (0Ax)
+    MEME_COURSE_REQUIRED("0Ax00000000", "Set your course before using the meme wall", HttpStatus.BAD_REQUEST, ErrorCategory.MEME),
+    MISSING_CONTENT_TYPE_MEME("0Ax00000001", "Failed to save meme, due to missing content type", HttpStatus.BAD_REQUEST, ErrorCategory.MEME),
+    UNSUPPORTED_CONTENT_TYPE_MEME("0Ax00000002", "Failed to save meme, due to unsupported content type", HttpStatus.UNSUPPORTED_MEDIA_TYPE, ErrorCategory.MEME),
+    FAILED_TO_READ_MEME_BYTES("0Ax00000003", "Failed to read bytes of the provided meme", HttpStatus.BAD_REQUEST, ErrorCategory.MEME),
+    MEME_NOT_FOUND("0Ax00000004", "Meme not found", HttpStatus.NOT_FOUND, ErrorCategory.MEME),
+    MEME_FILE_EMPTY("0Ax00000005", "Meme file cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.MEME),
+    MEME_UPLOAD_RATE_LIMIT_EXCEEDED("0Ax00000006", "You can only upload one meme every 5 minutes", HttpStatus.TOO_MANY_REQUESTS, ErrorCategory.MEME),
+    MEME_FILE_TOO_LARGE("0Ax00000007", "Meme file is too large", HttpStatus.PAYLOAD_TOO_LARGE, ErrorCategory.MEME);
 
     private final String code;
     private final String message;
@@ -119,7 +129,8 @@ public enum ErrorCode {
         COURSE,
         FEEDBACK,
         CAFFEINE,
-        PRESENTATION_GAME
+        PRESENTATION_GAME,
+        MEME
     }
 
     private static final Map<String, ErrorCode> BY_CODE = Arrays.stream(values())

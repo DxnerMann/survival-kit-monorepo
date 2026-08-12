@@ -11,7 +11,7 @@ import {
     ShieldCheck,
     ShieldMinus,
     SquareTerminal,
-    ThumbsDown,
+    ThumbsDown, Trash2,
     ThumbsUp
 } from "lucide-react";
 import {snackbarService} from "@/services/snackBarService.tsx";
@@ -20,8 +20,13 @@ import {fetchUsers, getLatestLogs, setUserRole} from "@/services/adminService.ts
 import {formatTimestamp} from "@/services/utils.tsx";
 import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
 import Separator from "@/components/ui/Separator.tsx";
+import type {Meme} from "@/models/Meme.tsx";
+import {deleteMeme, getMemesForAdmin} from "@/services/memeService.tsx";
+import FilterDropdown from "@/components/ui/FilterDropdown.tsx";
+import {lectureService} from "@/services/lectureService.tsx";
 
 const SWAGGER_PATH = (import.meta.env.VITE_API_BASE_URL || "") + "/swagger-ui/index.html";
+const ADMIN_MEME_PAGE_SIZE = 50;
 
 const AdminPage = () => {
 
@@ -36,6 +41,11 @@ const AdminPage = () => {
     const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
     const [users, setUsers] = useState<ProfileSettings[]>([]);
     const [userContinuation, setUserContinuation] = useState<string | null>(null);
+    const [adminMemes, setAdminMemes] = useState<Meme[]>([]);
+    const [memeContinuation, setMemeContinuation] = useState<string | null>(null);
+    const [loadingMemes, setLoadingMemes] = useState(false);
+    const [availableCourses, setAvailableCourses] = useState<string[]>([]);
+    const [selectedMemeCourses, setSelectedMemeCourses] = useState<string[]>([]);
     const suggestionsFetchId = useRef(0);
     const [pendingLinkIds, setPendingLinkIds] = useState<Set<string>>(() => new Set());
 
@@ -94,6 +104,7 @@ const AdminPage = () => {
     const tabs : string[] = [
         "GENERAL",
         "QUICKLINKS",
+        "MEMES",
         "SWAGGER"
     ];
 
@@ -140,6 +151,43 @@ const AdminPage = () => {
 
         setUserContinuation(res.continuation);
         setLoading(false);
+    };
+
+    const refreshAdminMemes = async (course?: string | null) => {
+        setLoadingMemes(true);
+        try {
+            const res = await getMemesForAdmin(course, ADMIN_MEME_PAGE_SIZE);
+            setAdminMemes(res.data);
+            setMemeContinuation(res.continuation);
+        } finally {
+            setLoadingMemes(false);
+        }
+    };
+
+    const loadMoreAdminMemes = async () => {
+        if (loadingMemes || memeContinuation === null) return;
+
+        setLoadingMemes(true);
+        try {
+            const course = selectedMemeCourses[0] ?? null;
+            const res = await getMemesForAdmin(course, ADMIN_MEME_PAGE_SIZE, memeContinuation);
+            setAdminMemes(prev => [...prev, ...res.data]);
+            setMemeContinuation(res.continuation);
+        } finally {
+            setLoadingMemes(false);
+        }
+    };
+
+    const handleMemeCourseFilterChange = (items: string[]) => {
+        const next = items.length > 0 ? [items[items.length - 1]] : [];
+        setSelectedMemeCourses(next);
+        void refreshAdminMemes(next[0] ?? null);
+    };
+
+    const handleDeleteMeme = async (id: string) => {
+        await deleteMeme(id);
+        setAdminMemes(prev => prev.filter(meme => meme.id !== id));
+        snackbarService.showSnackbar({ type: "success", text: "Meme wurde gelöscht", showIcon: true });
     };
 
     const refreshLogs = async () => {
@@ -232,6 +280,8 @@ const AdminPage = () => {
 
         void loadSuggestionsInit();
         void refreshLogs();
+        void refreshAdminMemes();
+        lectureService.getAvailableCourses().then(setAvailableCourses);
 
         const loadUsersInit = async () => {
             const res = await fetchUsers(50);
@@ -288,7 +338,7 @@ const AdminPage = () => {
                          key={tab}
                          className={`tab-bar-tab ${currentTab === tab ? "active" : ""}`}
                          onClick={() => setCurentTab(tab)}>
-                        <h3 className="tab-bar-tab-name">{tab === "GENERAL" ? "ALLGEMEIN" : tab === "QUICKLINKS" ? "QUICKLINKS" : "SWAGGER"}</h3>
+                        <h3 className="tab-bar-tab-name">{tab === "GENERAL" ? "ALLGEMEIN" : tab === "QUICKLINKS" ? "QUICKLINKS" : tab === "MEMES" ? "MEMES" : "SWAGGER"}</h3>
                     </div>
                 )
             }
@@ -301,6 +351,8 @@ const AdminPage = () => {
                 return General();
             case "QUICKLINKS":
                 return QuickLinks();
+            case "MEMES":
+                return Memes();
             case "SWAGGER":
                 return Swagger();
         }
@@ -377,6 +429,52 @@ const AdminPage = () => {
             ))}
             { continuation !== null && <Button text="Mehr Laden" onClick={() => loadMoreSuggestions()} variant="primary" disabled={continuation === null} /> }
             { suggestedGames.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine vorgeschlagenen Spiele</h4> }
+        </div>
+    }
+
+    const Memes = () => {
+        return <div className="tab-page">
+            <div className="admin-memes-header">
+                <SectionHeading heading={"Memes"} subheading={"Alle hochgeladenen Memes verwalten"} centered={false} />
+                <FilterDropdown
+                    values={availableCourses}
+                    selectedItems={selectedMemeCourses}
+                    returnSelected={false}
+                    onChange={handleMemeCourseFilterChange}
+                    placeholder="Kurs filtern"
+                />
+            </div>
+
+            {adminMemes.length !== 0 && (
+                <div className="admin-memes-table-header">
+                    <h3>Vorschau</h3>
+                    <h3>Titel</h3>
+                    <h3>Beschreibung</h3>
+                    <h3>Kurs</h3>
+                    <h3>Aktion</h3>
+                </div>
+            )}
+
+            {adminMemes.map(meme => (
+                <div className="admin-memes-table-item" key={meme.id}>
+                    <div className="admin-meme-preview">
+                        <img src={`data:${meme.contentType};base64,${meme.img}`} alt={meme.title || "Meme"} />
+                    </div>
+                    <div className="cell" title={meme.title ?? ""}>{meme.title || "-"}</div>
+                    <div className="cell" title={meme.description ?? ""}>{meme.description || "-"}</div>
+                    <div className="cell">{meme.course}</div>
+                    <div className="cell action-buttons">
+                        <Trash2
+                            size={23}
+                            className="icon-button reject"
+                            onClick={() => void handleDeleteMeme(meme.id)}
+                        />
+                    </div>
+                </div>
+            ))}
+
+            {memeContinuation !== null && <Button text="Mehr Laden" onClick={() => loadMoreAdminMemes()} variant="primary" disabled={loadingMemes} />}
+            {!loadingMemes && adminMemes.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Memes für diesen Filter</h4>}
         </div>
     }
 

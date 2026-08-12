@@ -1,0 +1,31 @@
+{
+  "version": "3.2.0",
+  "date": "2026-08-12",
+  "sections": [
+    {
+      "title": "Memewand",
+      "items": [
+        "Neue kursbasierte Memewand unter /memewall mit Upload für PNG, JPG/JPEG und GIF",
+        "Memes werden als scrollbare Wand im Masonry-Stil angezeigt; Hover blendet Titel und Beschreibung ein",
+        "Explore-Karte „<Kurs> Memewand“ erscheint nur für angemeldete Nutzer mit gesetztem Kurs",
+        "Upload-Dialog mit Drag & Drop, optionalem Titel und optionaler Beschreibung"
+      ]
+    },
+    {
+      "title": "Administration",
+      "items": [
+        "Admin-Bereich mit neuem MEMES-Tab zur Übersicht aller hochgeladenen Memes",
+        "Kursfilter für Admins auf Basis der bekannten Kurse",
+        "Admins können Memes direkt aus der Memewand oder aus dem Admin-Bereich löschen"
+      ]
+    },
+    {
+      "title": "API & Schutzmaßnahmen",
+      "items": [
+        "Neue Meme-Wall-API mit paginierten Kurs- und Admin-Endpunkten",
+        "Upload-Rate-Limit: maximal ein Meme pro Nutzer alle 5 Minuten",
+        "Dedizierte Fehlermeldungen für zu große Meme-Dateien, Rate Limits und ungültige Dateitypen"
+      ]
+    }
+  ]
+}

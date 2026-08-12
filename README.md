@@ -189,6 +189,18 @@ Roles: `GUEST` (public), `USER`, `ADMIN`. Interactive OpenAPI UI: `/swagger-ui/i
 | `DELETE` | `/?id=` | ADMIN | Delete feedback |
 | `PATCH` | `/answer` | ADMIN | Answer feedback. Body: `{ id, answer }` |
 
+### Meme Wall — `/v1/memes`
+
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| `POST` | `/` | USER | Upload one PNG/JPG/JPEG/GIF meme (`multipart/form-data`: `file`, optional `title`, optional `description`) |
+| `GET` | `/?pageSize=&continuation=` | USER | Paged memes for the current user's course |
+| `GET` | `/admin?course=&pageSize=&continuation=` | ADMIN | Paged admin meme list, optionally filtered by course |
+| `GET` | `/{id}` | USER | Get a meme from the current user's course |
+| `DELETE` | `/{id}` | ADMIN | Delete a meme by ID |
+
+Meme uploads are limited to the global multipart size limit (`2MB`) and to one upload attempt per user every 5 minutes.
+
 ### Statistics & Tracking
 
 | Method | Path | Role | Description |
@@ -237,7 +249,7 @@ Paginated endpoints return `{ data: [...], continuation: string | null }`.
 
 ## Rate Limiting
 
-Limits are enforced per client IP (honors `X-Forwarded-For`) via Redis fixed windows. Exceeding a limit returns **HTTP 429** with error code `01x0000000C`.
+Limits are enforced via Redis fixed windows. IP-based limits honor `X-Forwarded-For` and return **HTTP 429** with error code `01x0000000C`; meme upload limits are per user and return `0Ax00000006`.
 
 | Scope | Limit | Window |
 |-------|------:|--------|
@@ -247,8 +259,9 @@ Limits are enforced per client IP (honors `X-Forwarded-For`) via Redis fixed win
 | `GET /v1/auth/verify` | 30 | 1 minute |
 | `PUT /v1/auth/password` | 5 | 1 minute |
 | `/v1/lecture/**` | 60 | 1 minute |
+| `POST /v1/memes` | 1 | 5 minutes |
 
-Redis keys use the prefix `rate:<bucket>:<ip>`.
+Redis keys use the prefix `rate:<bucket>:<ip>` for anonymous/IP based limits and `rate:meme-upload:<userId>` for meme uploads.
 
 ---
 

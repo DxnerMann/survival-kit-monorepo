@@ -19,6 +19,7 @@ import PrivacyPolicy from "@/pages/legal/PrivacyPolicy.tsx";
 import Imprint from "@/pages/legal/Imprint.tsx";
 import ReleaseNotesPage from "@/pages/release-notes/ReleaseNotesPage.tsx";
 import MaintananceInfoPage from "@/pages/maintenance/MaintananceInfoPage.tsx";
+import MemeWallPage from "@/pages/memewall/MemeWallPage.tsx";
 
 const HIDDEN_HEADER_ROUTES = ['/login']
 const HIDDEN_FOOTER_ROUTES = ['/login', '/chat', '/presentation-game']
@@ -49,6 +50,7 @@ const Layout = () => {
                     <Route path="/caffeine-calculator" element={<CaffeineCalculatorPage />} />
                     <Route path="/presentation-game" element={<ProtectedRoute> <PresentationGameLobbyPage /> </ProtectedRoute>} />
                     <Route path="/presentation-game/:code" element={<ProtectedRoute> <PresentationGameRoomPage /> </ProtectedRoute>} />
+                    <Route path="/memewall" element={<ProtectedRoute> <MemeWallPage /> </ProtectedRoute>} />
                     <Route path="/imprint" element={<Imprint />} />
                     <Route path="/privacypolicy" element={<PrivacyPolicy />} />
                     <Route path="/release-notes" element={<ReleaseNotesPage />} />
