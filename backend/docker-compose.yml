@@ -3,7 +3,11 @@ services:
     image: postgres:16
     container_name: survival-kit-local-database
     env_file:
-      ../.env
+      - ../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME:-survival-kit}
+      POSTGRES_USER: ${POSTGRES_USER:-survival-kit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-survival-kit}
     ports:
       - "5432:5432"
     volumes:
@@ -24,7 +28,7 @@ services:
     volumes:
       - redis_data:/data
     env_file:
-      ../.env
+      - ../.env
     command: sh -c "redis-server --appendonly yes --requirepass $$REDIS_PASSWORD"
     restart: unless-stopped
 
