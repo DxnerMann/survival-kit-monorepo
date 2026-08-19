@@ -2,6 +2,9 @@ package com.survivalkit.backend.adapter.web.admin;
 
 import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
+import com.survivalkit.backend.core.admin.AdminHealth;
+import com.survivalkit.backend.core.admin.AdminMonitoringPort;
+import com.survivalkit.backend.core.admin.StorageUsage;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.core.user.UserPort;
 import com.survivalkit.backend.shared.Page;
@@ -22,10 +25,12 @@ public class AdminController {
 
     private final SecurityLog securityLog;
     private final UserPort userPort;
+    private final AdminMonitoringPort adminMonitoringPort;
 
-    public AdminController(SecurityLog securityLog, UserPort userPort) {
+    public AdminController(SecurityLog securityLog, UserPort userPort, AdminMonitoringPort adminMonitoringPort) {
         this.securityLog = securityLog;
         this.userPort = userPort;
+        this.adminMonitoringPort = adminMonitoringPort;
     }
 
     @Role(RoleLevel.ADMIN)
@@ -54,5 +59,17 @@ public class AdminController {
     ) {
         userPort.promote(userId, role);
         return ResponseEntity.ok().build();
+    }
+
+    @Role(RoleLevel.ADMIN)
+    @GetMapping("health")
+    public ResponseEntity<AdminHealth> health() {
+        return ResponseEntity.ok(adminMonitoringPort.health());
+    }
+
+    @Role(RoleLevel.ADMIN)
+    @GetMapping("monitoring/storage")
+    public ResponseEntity<StorageUsage> storage() {
+        return ResponseEntity.ok(adminMonitoringPort.storage());
     }
 }

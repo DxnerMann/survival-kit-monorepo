@@ -88,4 +88,8 @@ public class WebSocketSessionRegistry {
                 .filter(session -> session != null && session.isOpen())
                 .toList();
     }
+
+    public Set<String> getActiveChannels() {
+        return Set.copyOf(sessionIdsByChannel.keySet());
+    }
 }

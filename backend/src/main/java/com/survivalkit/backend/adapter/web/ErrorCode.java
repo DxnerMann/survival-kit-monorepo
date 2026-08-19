@@ -87,7 +87,18 @@ public enum ErrorCode {
     MEME_NOT_FOUND("0Ax00000004", "Meme not found", HttpStatus.NOT_FOUND, ErrorCategory.MEME),
     MEME_FILE_EMPTY("0Ax00000005", "Meme file cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.MEME),
     MEME_UPLOAD_RATE_LIMIT_EXCEEDED("0Ax00000006", "You can only upload one meme every 5 minutes", HttpStatus.TOO_MANY_REQUESTS, ErrorCategory.MEME),
-    MEME_FILE_TOO_LARGE("0Ax00000007", "Meme file is too large", HttpStatus.PAYLOAD_TOO_LARGE, ErrorCategory.MEME);
+    MEME_FILE_TOO_LARGE("0Ax00000007", "Meme file is too large", HttpStatus.PAYLOAD_TOO_LARGE, ErrorCategory.MEME),
+
+    // DAILY CHAT (0Bx)
+    CHAT_COURSE_REQUIRED("0Bx00000000", "Set your course before using the daily chat", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
+    CHAT_MESSAGE_EMPTY("0Bx00000001", "Message cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
+    CHAT_MESSAGE_TOO_LONG("0Bx00000002", "Message is too long", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
+    CHAT_ATTACHMENT_NOT_FOUND("0Bx00000003", "Chat attachment not found", HttpStatus.NOT_FOUND, ErrorCategory.CHAT),
+    CHAT_ATTACHMENT_EMPTY("0Bx00000004", "Chat file cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
+    CHAT_UNSUPPORTED_CONTENT_TYPE("0Bx00000005", "This file type is not allowed in chat", HttpStatus.UNSUPPORTED_MEDIA_TYPE, ErrorCategory.CHAT),
+    CHAT_FILE_TOO_LARGE("0Bx00000006", "Chat file is too large", HttpStatus.PAYLOAD_TOO_LARGE, ErrorCategory.CHAT),
+    CHAT_VIDEO_TOO_LONG("0Bx00000007", "Chat videos cannot be longer than 2 minutes", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
+    CHAT_TOO_MANY_ATTACHMENTS("0Bx00000008", "Too many attachments on a single message", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT);
 
     private final String code;
     private final String message;
@@ -130,7 +141,8 @@ public enum ErrorCode {
         FEEDBACK,
         CAFFEINE,
         PRESENTATION_GAME,
-        MEME
+        MEME,
+        CHAT
     }
 
     private static final Map<String, ErrorCode> BY_CODE = Arrays.stream(values())

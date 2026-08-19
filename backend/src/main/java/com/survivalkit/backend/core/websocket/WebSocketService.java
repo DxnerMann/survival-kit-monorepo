@@ -3,8 +3,10 @@ package com.survivalkit.backend.core.websocket;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.survivalkit.backend.adapter.web.chat.ChatSendRequest;
 import com.survivalkit.backend.adapter.websocket.WebSocketSessionRegistry;
 import com.survivalkit.backend.adapter.websocket.WebSocketUserContext;
+import com.survivalkit.backend.core.chat.ChatPort;
 import com.survivalkit.backend.shared.WebSocketChannels;
 import com.survivalkit.backend.shared.WebSocketEnvelope;
 import com.survivalkit.backend.shared.WebSocketMessageType;
@@ -14,21 +16,25 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 public class WebSocketService implements WebSocketPort {
 
     private final WebSocketSessionRegistry sessionRegistry;
     private final CourseChannelAccessValidator channelAccessValidator;
+    private final ChatPort chatPort;
     private final ObjectMapper objectMapper;
 
     public WebSocketService(
             WebSocketSessionRegistry sessionRegistry,
             CourseChannelAccessValidator channelAccessValidator,
+            ChatPort chatPort,
             ObjectMapper objectMapper
     ) {
         this.sessionRegistry = sessionRegistry;
         this.channelAccessValidator = channelAccessValidator;
+        this.chatPort = chatPort;
         this.objectMapper = objectMapper;
     }
 
@@ -79,6 +85,19 @@ public class WebSocketService implements WebSocketPort {
     @Override
     public void broadcastToChannel(String channel, WebSocketEnvelope envelope) {
         sendToChannel(channel, envelope, null);
+    }
+
+    @Override
+    public void broadcastChatCleared() {
+        for (var channel : sessionRegistry.getActiveChannels()) {
+            var parsed = WebSocketChannels.parse(channel);
+            if (parsed.isPresent() && parsed.get().kind() == WebSocketChannels.ChannelKind.CHAT) {
+                broadcastToChannel(
+                        channel,
+                        WebSocketEnvelope.of(WebSocketMessageType.CHAT_CLEARED, channel, objectMapper.createObjectNode())
+                );
+            }
+        }
     }
 
     public void sendConnectedAck(WebSocketSession session, WebSocketUserContext user) {
@@ -160,14 +179,47 @@ public class WebSocketService implements WebSocketPort {
             return;
         }
 
-        if (WebSocketChannels.parse(channel).isEmpty()) {
+        var parsed = WebSocketChannels.parse(channel);
+        if (parsed.isEmpty()) {
             sendError(session, "INVALID_CHANNEL", "Channel format is invalid.");
+            return;
+        }
+
+        if (parsed.get().kind() == WebSocketChannels.ChannelKind.CHAT) {
+            handleChatMessage(session, user, channel, envelope.payload());
             return;
         }
 
         var relayPayload = wrapOutgoingPayload(user, envelope.payload());
         var relay = WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, relayPayload);
         sendToChannel(channel, relay, session.getId());
+    }
+
+    private void handleChatMessage(WebSocketSession session, WebSocketUserContext user, String channel, JsonNode payload) {
+        if (user.course() == null || user.course().isBlank()) {
+            sendError(session, "NO_COURSE_SET", "Set your course in profile settings before joining.");
+            return;
+        }
+
+        try {
+            var request = payload == null || payload.isNull()
+                    ? new ChatSendRequest(null, List.of(), null)
+                    : objectMapper.convertValue(payload, ChatSendRequest.class);
+            var message = chatPort.postMessage(
+                    user.userId(),
+                    user.username(),
+                    user.course(),
+                    request.text(),
+                    request.attachmentIds(),
+                    request.clientId()
+            );
+            broadcastToChannel(
+                    channel,
+                    WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, objectMapper.valueToTree(message))
+            );
+        } catch (RuntimeException ex) {
+            sendError(session, ex.getMessage() != null ? ex.getMessage() : "CHAT_ERROR", "Nachricht konnte nicht gesendet werden.");
+        }
     }
 
     private ObjectNode wrapOutgoingPayload(WebSocketUserContext user, JsonNode payload) {
