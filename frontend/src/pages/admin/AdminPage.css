@@ -40,6 +40,49 @@
     align-items: center;
 }
 
+.admin-memes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-memes-table-header,
+.admin-memes-table-item {
+    display: grid;
+    grid-template-columns: 90px 1fr 2fr 1fr 100px;
+    gap: 12px;
+    padding: 10px;
+    align-items: center;
+}
+
+.admin-memes-table-header {
+    font-weight: bold;
+    border-bottom: 1px solid #333;
+    margin-top: 1rem;
+    color: var(--color-primary-accent);
+}
+
+.admin-memes-table-item {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.admin-meme-preview {
+    width: 72px;
+    height: 72px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--color-background-primary);
+}
+
+.admin-meme-preview img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
 .suggested-games-table-header {
     font-weight: bold;
     border-bottom: 1px solid #333;

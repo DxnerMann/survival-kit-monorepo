@@ -64,6 +64,15 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "09x0000000A": { text: "Nur die Jury kann bestätigen.", type: "error" },
     "09x0000000B": { text: "Du hast für dieses Wort bereits abgestimmt.", type: "warning" },
     "09x0000000C": { text: "Keine Wörter mehr in diesem Spiel.", type: "info" },
+
+    "0Ax00000000": { text: "Lege zuerst deinen Kurs im Profil fest, um die Memewand zu nutzen.", type: "warning" },
+    "0Ax00000001": { text: "Der Datei-Typ konnte nicht erkannt werden.", type: "warning" },
+    "0Ax00000002": { text: "Bitte lade ein PNG-, JPG/JPEG- oder GIF-Bild hoch.", type: "warning" },
+    "0Ax00000003": { text: "Das Meme konnte nicht gelesen werden.", type: "error" },
+    "0Ax00000004": { text: "Dieses Meme wurde nicht gefunden.", type: "error" },
+    "0Ax00000005": { text: "Bitte wähle eine Meme-Datei aus.", type: "warning" },
+    "0Ax00000006": { text: "Du kannst nur ein Meme alle 5 Minuten hochladen.", type: "warning" },
+    "0Ax00000007": { text: "Das Meme ist zu groß. Maximal erlaubt sind 2 MB.", type: "warning" },
 };
 
 export function getErrorText(error: ApiError | unknown): string {

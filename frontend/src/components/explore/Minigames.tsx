@@ -1,7 +1,28 @@
 import LinkCard from "@/components/explore/LinkCard/LinkCard.tsx";
 import {getUserRole} from "@/services/tokenService.tsx";
+import {useEffect, useState} from "react";
+import {fetchProfileSettings} from "@/services/userService.tsx";
 
 const Minigames = () => {
+    const userRole = getUserRole();
+    const showUserCards = userRole === "USER" || userRole === "ADMIN";
+    const [course, setCourse] = useState("");
+    const courseName = course.trim();
+    const hasCourse = courseName.length > 0;
+
+    useEffect(() => {
+        if (!showUserCards) {
+            return;
+        }
+
+        const fetchCourse = async () => {
+            const profileSettings = await fetchProfileSettings();
+            setCourse(profileSettings.course);
+        };
+
+        fetchCourse();
+    }, [showUserCards]);
+
     return <div className="minigames-container">
         <LinkCard
             href={"/exmatriculation"}
@@ -35,18 +56,32 @@ const Minigames = () => {
             alingRight={true}
             previewImagePath={"/images/white-monster.png"}
         />
-        {getUserRole() !== "GUEST" && (
-            <LinkCard
-                href={"/presentation-game"}
-                heading={"Das Präsi-Spiel"}
-                description={
-                    "Während du im Kurs Presentierst, erscheinen Zufallswörter auf dem Bildschirm. – Baue sie unauffällig in deine Präsentation ein, ohne dass der/die Dozent*in es merkt um Punkte zu gewinnen.\n" + "\n" +
-                    "Der Lobby-Host ist Presenter und kann Wörter nur überspringen. Mitspieler genehmigen eingebaute Wörter und sammeln Punkte." + "\n" +
-                    "Es gibt mehrere Schwierigkeitsstufen"
-                    }
-                alingRight={false}
-                previewImagePath={"/images/dice.png"}
-            />
+        {showUserCards && (
+            <>
+                <LinkCard
+                    href={"/presentation-game"}
+                    heading={"Das Präsi-Spiel"}
+                    description={
+                        "Während du im Kurs Presentierst, erscheinen Zufallswörter auf dem Bildschirm. – Baue sie unauffällig in deine Präsentation ein, ohne dass der/die Dozent*in es merkt um Punkte zu gewinnen.\n" + "\n" +
+                        "Der Lobby-Host ist Presenter und kann Wörter nur überspringen. Mitspieler genehmigen eingebaute Wörter und sammeln Punkte." + "\n" +
+                        "Es gibt mehrere Schwierigkeitsstufen"
+                        }
+                    alingRight={false}
+                    previewImagePath={"/images/dice.png"}
+                />
+                {hasCourse && (
+                    <LinkCard
+                        href={"/memewall"}
+                        heading={`${courseName} Memewand`}
+                        description={
+                            "Der Platz für die besten Memes aus deinem Kurs.\n" +
+                            "Lade Bilder hoch, stöbere durch die Memewand und sammle die Highlights des Studienalltags."
+                        }
+                        alingRight={true}
+                        previewImagePath={"/images/memewall.png"}
+                    />
+                )}
+            </>
         )}
     </div>
 }

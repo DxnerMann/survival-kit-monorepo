@@ -33,6 +33,16 @@ public class GlobalExceptionHandler {
     private ApiError resolveError(Exception exception) {
         var errorCode = ErrorCode.UNKNOWN;
         try {
+            if (isUploadSizeLimitExceeded(exception)) {
+                errorCode = ErrorCode.MEME_FILE_TOO_LARGE;
+                return new ApiError(
+                        errorCode.getHttpStatus().value(),
+                        errorCode.getCode(),
+                        errorCode.getHttpStatus(),
+                        errorCode.getMessage(),
+                        Instant.now()
+                );
+            }
             errorCode = ErrorCode.fromCode(exception.getMessage());
         } catch (IllegalArgumentException | NoSuchElementException ex) {
             exception.printStackTrace();
@@ -49,6 +59,19 @@ public class GlobalExceptionHandler {
                 errorCode.getMessage(),
                 Instant.now()
         );
+    }
+
+    private boolean isUploadSizeLimitExceeded(Throwable exception) {
+        var current = exception;
+        while (current != null) {
+            if (current.getClass().getName().equals("org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException")
+                    || current.getClass().getName().equals("org.springframework.web.multipart.MaxUploadSizeExceededException")
+                    || (current.getMessage() != null && current.getMessage().contains("SizeLimitExceededException"))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
 }

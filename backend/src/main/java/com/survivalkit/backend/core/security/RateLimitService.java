@@ -16,11 +16,15 @@ public class RateLimitService {
     }
 
     public void check(String bucket, String clientKey, int maxRequests, Duration window) {
+        check(bucket, clientKey, maxRequests, window, ErrorCode.RATE_LIMIT_EXCEEDED);
+    }
+
+    public void check(String bucket, String clientKey, int maxRequests, Duration window, ErrorCode errorCode) {
         var redisKey = "rate:" + bucket + ":" + clientKey;
         var count = redisTemplate.opsForValue().increment(redisKey);
 
         if (count == null) {
-            throw new RateLimitExceededException(ErrorCode.RATE_LIMIT_EXCEEDED.getCode());
+            throw new RateLimitExceededException(errorCode.getCode());
         }
 
         if (count == 1L) {
@@ -28,7 +32,7 @@ public class RateLimitService {
         }
 
         if (count > maxRequests) {
-            throw new RateLimitExceededException(ErrorCode.RATE_LIMIT_EXCEEDED.getCode());
+            throw new RateLimitExceededException(errorCode.getCode());
         }
     }
 }
