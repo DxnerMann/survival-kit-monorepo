@@ -73,12 +73,23 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "0Ax00000005": { text: "Bitte wähle eine Meme-Datei aus.", type: "warning" },
     "0Ax00000006": { text: "Du kannst nur ein Meme alle 5 Minuten hochladen.", type: "warning" },
     "0Ax00000007": { text: "Das Meme ist zu groß. Maximal erlaubt sind 2 MB.", type: "warning" },
+
+    "0Bx00000000": { text: "Lege zuerst deinen Kurs im Profil fest, um den Chat zu nutzen.", type: "warning" },
+    "0Bx00000001": { text: "Nachricht darf nicht leer sein.", type: "warning" },
+    "0Bx00000002": { text: "Die Nachricht ist zu lang.", type: "warning" },
+    "0Bx00000003": { text: "Der Chat-Anhang wurde nicht gefunden.", type: "error" },
+    "0Bx00000004": { text: "Bitte wähle eine Datei aus.", type: "warning" },
+    "0Bx00000005": { text: "Dieser Dateityp ist im Chat nicht erlaubt.", type: "warning" },
+    "0Bx00000006": { text: "Die Datei ist zu groß.", type: "warning" },
+    "0Bx00000007": { text: "Videos dürfen höchstens 2 Minuten lang sein.", type: "warning" },
+    "0Bx00000008": { text: "Zu viele Anhänge an einer Nachricht.", type: "warning" },
 };
 
 export function getErrorText(error: ApiError | unknown): string {
     if (error && typeof error === "object" && "errorCode" in error) {
         const apiError = error as ApiError;
-        return ERROR_CODE_MAP[apiError.errorCode]?.text ?? GENERIC_ERROR_TEXT;
+        const text = ERROR_CODE_MAP[apiError.errorCode]?.text ?? GENERIC_ERROR_TEXT;
+        return `${text} (${apiError.errorCode})`;
     }
     if (error instanceof Error && error.message) {
         return error.message;

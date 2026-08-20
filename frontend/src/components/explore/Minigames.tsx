@@ -7,7 +7,7 @@ const Minigames = () => {
     const userRole = getUserRole();
     const showUserCards = userRole === "USER" || userRole === "ADMIN";
     const [course, setCourse] = useState("");
-    const courseName = course.trim();
+    const courseName = (course ?? "").trim();
     const hasCourse = courseName.length > 0;
 
     useEffect(() => {
@@ -16,8 +16,12 @@ const Minigames = () => {
         }
 
         const fetchCourse = async () => {
-            const profileSettings = await fetchProfileSettings();
-            setCourse(profileSettings.course);
+            try {
+                const profileSettings = await fetchProfileSettings();
+                setCourse(profileSettings.course ?? "");
+            } catch {
+                setCourse("");
+            }
         };
 
         fetchCourse();
