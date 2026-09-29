@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: ['**']
   workflow_dispatch:
+    inputs:
+      task:
+        description: What to run
+        type: choice
+        required: true
+        default: deploy
+        options:
+          - deploy
+          - renew-certificate
 
 env:
   REGISTRY: ghcr.io
@@ -17,6 +26,7 @@ jobs:
   build-backend:
     name: Build Backend
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || inputs.task == 'deploy'
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +50,7 @@ jobs:
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || inputs.task == 'deploy'
     steps:
       - uses: actions/checkout@v4
 
@@ -63,6 +74,7 @@ jobs:
     name: Test Backend
     runs-on: ubuntu-latest
     needs: build-backend
+    if: github.event_name != 'workflow_dispatch' || inputs.task == 'deploy'
     steps:
       - uses: actions/checkout@v4
 
@@ -88,7 +100,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs: [build-backend, build-frontend, test-backend]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.task == 'deploy'
     steps:
       - uses: actions/checkout@v4
 
@@ -158,3 +170,30 @@ jobs:
             cd /home/deploy/apps/survival-kit
             docker compose pull
             docker compose up -d --remove-orphans
+
+  # ─── TLS ─────────────────────────────────────────────
+  renew-certificate:
+    name: Renew TLS certificate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.task == 'renew-certificate'
+    steps:
+      - name: Renew Let's Encrypt certificate and reload Nginx
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: deploy
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          script_stop: true
+          script: |
+            set -eu
+            show_cert() {
+              echo | openssl s_client -connect 127.0.0.1:443 -servername lecture-survival-kit.jannis-saur.de 2>/dev/null | openssl x509 -noout -dates -subject -ext subjectAltName || true
+            }
+            echo "Certificate before renewal:"
+            show_cert
+            sudo -n certbot renew --cert-name lecture-survival-kit.jannis-saur.de --force-renewal --non-interactive
+            sudo -n nginx -t
+            sudo -n systemctl reload nginx
+            echo "Certificate after renewal:"
+            show_cert
