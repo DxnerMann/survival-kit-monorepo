@@ -184,16 +184,45 @@ jobs:
           username: deploy
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 15m
-          script_stop: true
           script: |
             set -eu
             show_cert() {
-              echo | openssl s_client -connect 127.0.0.1:443 -servername lecture-survival-kit.jannis-saur.de 2>/dev/null | openssl x509 -noout -dates -subject -ext subjectAltName || true
+              echo | openssl s_client -connect 127.0.0.1:443 -servername lecture-survival-kit.jannis-saur.de 2>/dev/null | openssl x509 -noout -dates -subject -ext subjectAltName
             }
             echo "Certificate before renewal:"
-            show_cert
-            sudo -n certbot renew --cert-name lecture-survival-kit.jannis-saur.de --force-renewal --non-interactive
-            sudo -n nginx -t
-            sudo -n systemctl reload nginx
+            show_cert || true
+
+            nginx_restarted=0
+            restore_nginx() {
+              if [ "$nginx_restarted" -eq 0 ]; then
+                docker start nginx
+              fi
+            }
+            trap restore_nginx EXIT
+
+            docker stop nginx
+            docker run --rm --name certbot-renew \
+              -p 80:80 \
+              -v /etc/letsencrypt:/etc/letsencrypt \
+              -v /var/lib/letsencrypt:/var/lib/letsencrypt \
+              certbot/certbot certonly --standalone \
+              --cert-name lecture-survival-kit.jannis-saur.de \
+              -d lecture-survival-kit.jannis-saur.de \
+              -d api.lecture-survival-kit.jannis-saur.de \
+              --force-renewal \
+              --non-interactive \
+              --agree-tos \
+              --email saur-jannis@gmx.de
+            docker start nginx
+            nginx_restarted=1
+
             echo "Certificate after renewal:"
-            show_cert
+            ok=0
+            for _ in 1 2 3 4 5 6 7 8 9 10; do
+              if show_cert; then
+                ok=1
+                break
+              fi
+              sleep 2
+            done
+            test "$ok" -eq 1

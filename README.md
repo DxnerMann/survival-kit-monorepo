@@ -94,7 +94,7 @@ The app is deployed on a Linux VPS via Docker. A shared `web` Docker network con
 
 - **Build & Test** — runs on every push and pull request on all branches
 - **Deploy** — triggered manually via `workflow_dispatch` with task `deploy`, only on `main`
-- **Renew TLS certificate** — same workflow, task `renew-certificate`, only on `main`. SSHs in as `deploy` and runs `certbot renew` for `lecture-survival-kit.jannis-saur.de`, then reloads Nginx. The `deploy` user needs passwordless sudo for `certbot`, `nginx`, and `systemctl reload nginx`.
+- **Renew TLS certificate** — same workflow, task `renew-certificate`, only on `main`. SSHs in as `deploy`, stops the `nginx` container, renews `lecture-survival-kit.jannis-saur.de` with a Certbot container (`--standalone` on port 80), then starts Nginx again. HTTPS is briefly down while Certbot runs.
 
 The deploy job:
 1. Builds Docker images for backend and frontend
