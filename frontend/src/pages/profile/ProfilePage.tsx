@@ -50,7 +50,7 @@ const ProfilePage = () => {
 
             const profileSettings = await fetchProfileSettings();
             setprofileSettings(profileSettings);
-            setSelectedCourse(profileSettings.course);
+            setSelectedCourse(profileSettings.course ?? "");
             setProfileColor(profileSettings.color);
             setUsername(profileSettings.username);
             setIsVerified(profileSettings.isVerified);

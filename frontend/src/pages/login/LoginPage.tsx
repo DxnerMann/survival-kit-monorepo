@@ -40,6 +40,11 @@ const LoginPage = () => {
     const handleRegister = async () => {
         try {
             setLoading(true)
+            if (username.trim().length === 0) {
+                snackbarService.showSnackbar({ type: "error", text: "Bitte gib einen Benutzernamen ein", showIcon: true });
+                return
+            }
+
             if (firstName.length > 30 || lastName.length > 30 || username.length > 30) {
                 snackbarService.showSnackbar({ type: "error",   text: "Es sind Max 30 Zeichen lange Namen erlaubt", showIcon: true });
                 return

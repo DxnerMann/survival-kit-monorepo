@@ -62,10 +62,20 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
-    public Optional<UserModel> findByEmailOrUsername(String email, String username) {
-        return jdbcClient.sql(Statements.GET_BY_MAIL_OR_USERNAME.sql)
-                .paramSource(new MapSqlParameterSource("email", email)
-                        .addValue("username", username))
+    public List<UserModel> findByEmail(String email) {
+        return jdbcClient.sql(Statements.GET_BY_EMAIL.sql)
+                .paramSource(new MapSqlParameterSource("email", email))
+                .query(USER_ROW_MAPPER)
+                .list();
+    }
+
+    @Override
+    public Optional<UserModel> findByUsername(String username) {
+        if (username == null || username.isBlank()) {
+            return Optional.empty();
+        }
+        return jdbcClient.sql(Statements.GET_BY_USERNAME.sql)
+                .paramSource(new MapSqlParameterSource("username", username))
                 .query(USER_ROW_MAPPER)
                 .optional();
     }
@@ -205,9 +215,14 @@ public class UserRepository implements UserPersistancePort {
         byte[] imgBytes = rs.getBytes("img");
         String imgTypeRaw = rs.getString("imgType");
 
-        ImgWrapper img = imgBytes != null && imgTypeRaw != null
-                ? new ImgWrapper(imgBytes, ImgWrapper.ProfileImgType.valueOf(imgTypeRaw))
-                : null;
+        ImgWrapper img = null;
+        if (imgBytes != null && imgTypeRaw != null) {
+            try {
+                img = new ImgWrapper(imgBytes, ImgWrapper.ProfileImgType.valueOf(imgTypeRaw));
+            } catch (IllegalArgumentException ex) {
+                img = null;
+            }
+        }
 
         return new UserModel(
                 rs.getString("id"),
@@ -252,9 +267,16 @@ public class UserRepository implements UserPersistancePort {
             """
         ),
         // language=sql
-        GET_BY_MAIL_OR_USERNAME(
+        GET_BY_EMAIL(
         """
-                SELECT * FROM users WHERE username = :username OR LOWER(email) = LOWER(:email) LIMIT 1;            """
+                SELECT * FROM users WHERE LOWER(email) = LOWER(:email)
+            """
+        ),
+        // language=sql
+        GET_BY_USERNAME(
+        """
+                SELECT * FROM users WHERE username = :username
+            """
         ),
         // language=sql
         GET_BY_VERIFICATION_TOKEN(

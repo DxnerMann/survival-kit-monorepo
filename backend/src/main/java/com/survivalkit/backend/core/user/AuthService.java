@@ -28,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AuthService implements AuthPort {
@@ -61,23 +62,40 @@ public class AuthService implements AuthPort {
     @Override
     public void register(RegisterRequest request) {
 
-        if (!isEmailValid(request.email()) || isPasswordInvalid(request.password())) {
+        if (request.username() == null || request.username().isBlank()
+                || !isEmailValid(request.email())
+                || isPasswordInvalid(request.password())) {
             throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode());
         }
 
-        var existingUser = userPersistancePort.findByEmailOrUsername(request.email(), request.username());
+        var emailMatches = userPersistancePort.findByEmail(request.email());
+        var usernameMatch = userPersistancePort.findByUsername(request.username());
 
-        if (existingUser.isPresent()) {
-            if (existingUser.get().isVerified()) {
-                throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
-            }
+        if (emailMatches.stream().anyMatch(user -> Boolean.TRUE.equals(user.isVerified()))
+                || (usernameMatch.isPresent() && Boolean.TRUE.equals(usernameMatch.get().isVerified()))) {
+            throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
+        }
 
-            var existing = existingUser.get();
+        var existing = emailMatches.stream()
+                .filter(user -> request.email().equals(user.email()))
+                .findFirst()
+                .or(() -> emailMatches.size() == 1 ? Optional.of(emailMatches.getFirst()) : Optional.empty());
+
+        if (emailMatches.size() > 1 && existing.isEmpty()) {
+            throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
+        }
+
+        if (usernameMatch.isPresent() && (existing.isEmpty() || !usernameMatch.get().id().equals(existing.get().id()))) {
+            throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
+        }
+
+        if (existing.isPresent()) {
             var verificationToken = NanoId.generate(32);
             emailPort.sendVerificationEmail(request.email(), request.firstName(), verificationToken);
+            var account = existing.get();
             userPersistancePort.save(
                     new UserModel(
-                            existing.id(),
+                            account.id(),
                             request.firstName(),
                             request.lastName(),
                             request.username(),
@@ -86,10 +104,10 @@ public class AuthService implements AuthPort {
                             RoleLevel.USER,
                             verificationToken,
                             false,
-                            existing.course(),
-                            existing.color() != null ? existing.color() : String.format("#%06X", new SecureRandom().nextInt(0xFFFFFF + 1)),
-                            existing.img() != null ? existing.img() : userPort.getDefaultProfilePicture(),
-                            existing.lastUpdated() != null ? existing.lastUpdated() : Instant.now()
+                            account.course(),
+                            account.color() != null ? account.color() : String.format("#%06X", new SecureRandom().nextInt(0xFFFFFF + 1)),
+                            account.img() != null ? account.img() : userPort.getDefaultProfilePicture(),
+                            account.lastUpdated() != null ? account.lastUpdated() : Instant.now()
                     )
             );
             return;
@@ -147,11 +165,8 @@ public class AuthService implements AuthPort {
 
     @Override
     public LoginResponse login(String email, String password) {
-        var user = userPersistancePort.findByEmailOrUsername(email, "");
-        if (user.isEmpty() || isPasswordIncorrect(password, user.get().password())) {
-            throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode());
-        }
-        var existingUser = user.get();
+        var existingUser = findLoginUser(email, password)
+                .orElseThrow(() -> new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode()));
 
         return new LoginResponse(
                 tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
@@ -245,12 +260,11 @@ public class AuthService implements AuthPort {
             throw new InvalidCredentialsException(ErrorCode.EMAIL_NOT_VALID.getCode());
         }
 
-        var existingUser = userPersistancePort.findByEmailOrUsername(email, "");
+        var emailTaken = userPersistancePort.findByEmail(email).stream()
+                .anyMatch(user -> !user.id().equals(userId) && Boolean.TRUE.equals(user.isVerified()));
 
-        if (existingUser.isPresent()) {
-            if (existingUser.get().isVerified()) {
-                throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
-            }
+        if (emailTaken) {
+            throw new UserAlreadyExistsException(ErrorCode.USER_ALREADY_EXISTS.getCode());
         }
 
         var user = userPersistancePort.getById(authUser.userId());
@@ -276,12 +290,41 @@ public class AuthService implements AuthPort {
         });
     }
 
+    private Optional<UserModel> findLoginUser(String email, String password) {
+        var matches = userPersistancePort.findByEmail(email);
+        var exact = matches.stream()
+                .filter(user -> email != null && email.equals(user.email()))
+                .findFirst();
+        if (exact.isPresent()) {
+            return passwordMatches(password, exact.get().password()) ? exact : Optional.empty();
+        }
+
+        var matchedByPassword = matches.stream()
+                .filter(user -> passwordMatches(password, user.password()))
+                .toList();
+        if (matchedByPassword.size() == 1) {
+            return Optional.of(matchedByPassword.getFirst());
+        }
+        return Optional.empty();
+    }
+
     private String hashPassword(String password) {
         return passwordEncoder.encode(password);
     }
 
+    private boolean passwordMatches(String plainPassword, String hashedPassword) {
+        return !isPasswordIncorrect(plainPassword, hashedPassword);
+    }
+
     private boolean isPasswordIncorrect(String plainPassword, String hashedPassword) {
-        return !passwordEncoder.matches(plainPassword, hashedPassword);
+        if (plainPassword == null || hashedPassword == null || hashedPassword.isBlank()) {
+            return true;
+        }
+        try {
+            return !passwordEncoder.matches(plainPassword, hashedPassword);
+        } catch (IllegalArgumentException ex) {
+            return true;
+        }
     }
 
     private static boolean isPasswordInvalid(String password) {

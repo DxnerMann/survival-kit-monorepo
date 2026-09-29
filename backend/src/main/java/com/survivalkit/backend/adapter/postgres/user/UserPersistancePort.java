@@ -4,13 +4,15 @@ import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.shared.Page;
 import com.survivalkit.backend.shared.RoleLevel;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserPersistancePort {
 
     void save(UserModel user);
     Optional<UserModel> getById(String id);
-    Optional<UserModel> findByEmailOrUsername(String email, String username);
+    List<UserModel> findByEmail(String email);
+    Optional<UserModel> findByUsername(String username);
     Optional<UserModel> findByVerificationToken(String verificationToken);
     void setVerified(String userId, boolean verified);
     void setUserCourse(String userId, String course);
