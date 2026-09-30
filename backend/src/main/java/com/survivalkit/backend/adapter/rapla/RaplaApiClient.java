@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.rapla;
 
 import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapter;
+import com.survivalkit.backend.adapter.rapla.support.RaplaIcalLecturers;
 import com.survivalkit.backend.adapter.rapla.support.RaplaUrlSupport;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.shared.Lecture;
@@ -9,12 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.net.URI;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class RaplaApiClient implements RaplaApiPort {
@@ -24,6 +28,7 @@ public class RaplaApiClient implements RaplaApiPort {
 
     private final RestClient restClient;
     private final RaplaAdapterRegistry adapterRegistry;
+    private final ConcurrentHashMap<String, CachedIcal> icalCache = new ConcurrentHashMap<>();
 
     public RaplaApiClient(RestClient restClient, RaplaAdapterRegistry adapterRegistry) {
         this.restClient = restClient;
@@ -34,15 +39,17 @@ public class RaplaApiClient implements RaplaApiPort {
     public List<Lecture> getLectures(int weekOffset, String raplaCourseBaseUrl) {
         var adapter = resolveAdapter(raplaCourseBaseUrl);
         var baseUrl = adapter.formatToBaseUrl(raplaCourseBaseUrl);
-        var html = fetchWeekHtml(adapter, baseUrl, weekOffset);
-        return adapter.parseLectures(Jsoup.parse(html));
+        var monday = LocalDate.now(ZONE).with(DayOfWeek.MONDAY).plusWeeks(weekOffset);
+        var html = fetchWeekHtml(adapter, baseUrl, monday);
+        var lectures = adapter.parseLectures(Jsoup.parse(html));
+        return enrichLecturers(baseUrl, monday, lectures);
     }
 
     @Override
     public String extractCourse(String raplaCourseBaseUrl) {
         var adapter = resolveAdapter(raplaCourseBaseUrl);
         var baseUrl = adapter.formatToBaseUrl(raplaCourseBaseUrl);
-        var html = fetchWeekHtml(adapter, baseUrl, 0);
+        var html = fetchWeekHtml(adapter, baseUrl, LocalDate.now(ZONE).with(DayOfWeek.MONDAY));
         var course = adapter.extractCourse(Jsoup.parse(html), baseUrl);
 
         if (course == null || course.isBlank()) {
@@ -100,11 +107,50 @@ public class RaplaApiClient implements RaplaApiPort {
         }
     }
 
-    private String fetchWeekHtml(RaplaAdapter adapter, String baseUrl, int weekOffset) {
-        var monday = LocalDate.now(ZONE)
-                .with(DayOfWeek.MONDAY)
-                .plusWeeks(weekOffset);
+    private List<Lecture> enrichLecturers(String baseUrl, LocalDate monday, List<Lecture> lectures) {
+        if (lectures.isEmpty()) {
+            return lectures;
+        }
+        var ical = fetchIcal(baseUrl);
+        if (ical == null || ical.isBlank()) {
+            return lectures;
+        }
+        return RaplaIcalLecturers.apply(lectures, ical, monday);
+    }
 
+    private String fetchIcal(String baseUrl) {
+        var cached = icalCache.get(baseUrl);
+        if (cached != null && cached.fetchedAt().plusSeconds(600).isAfter(Instant.now())) {
+            return cached.body();
+        }
+
+        var icalUri = icalUri(baseUrl);
+        if (icalUri == null) {
+            return null;
+        }
+
+        try {
+            var body = restClient.get().uri(icalUri).retrieve().body(String.class);
+            if (body != null && !body.isBlank()) {
+                icalCache.put(baseUrl, new CachedIcal(body, Instant.now()));
+            }
+            return body;
+        } catch (RestClientException ex) {
+            return cached == null ? null : cached.body();
+        }
+    }
+
+    private static URI icalUri(String baseUrl) {
+        var queryStart = baseUrl.indexOf('?');
+        var path = queryStart < 0 ? baseUrl : baseUrl.substring(0, queryStart);
+        if (!path.endsWith("/calendar")) {
+            return null;
+        }
+        var query = queryStart < 0 ? "" : baseUrl.substring(queryStart);
+        return URI.create(path.substring(0, path.length() - "/calendar".length()) + "/ical" + query);
+    }
+
+    private String fetchWeekHtml(RaplaAdapter adapter, String baseUrl, LocalDate monday) {
         try {
             return restClient.get()
                     .uri(adapter.buildWeekRequestUri(baseUrl, monday))
@@ -114,4 +160,6 @@ public class RaplaApiClient implements RaplaApiPort {
             throw new RuntimeException(ErrorCode.RAPLA_REQUEST_FAILED.getCode(), e);
         }
     }
+
+    private record CachedIcal(String body, Instant fetchedAt) {}
 }

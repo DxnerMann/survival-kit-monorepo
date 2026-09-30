@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type TouchEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -137,6 +137,16 @@ const mondayOfWeek = (weekOffset: number) => {
     return monday;
 };
 
+const weekOffsetOf = (date: Date) => {
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    const day = target.getDay();
+    const distanceToMonday = day === 0 ? -6 : 1 - day;
+    target.setDate(target.getDate() + distanceToMonday);
+    const currentMonday = mondayOfWeek(0);
+    return Math.round((target.getTime() - currentMonday.getTime()) / (7 * 24 * 60 * 60 * 1000));
+};
+
 const addDays = (date: Date, days: number) => {
     const next = new Date(date);
     next.setDate(date.getDate() + days);
@@ -205,6 +215,90 @@ const EventCard = ({ arg, compact }: { arg: EventContentArg; compact: boolean })
     );
 };
 
+const hiddenDaysFor = (items: Lecture[], view: ViewMode) => {
+    if (view === "day") {
+        return [];
+    }
+    const days: number[] = [];
+    if (!items.some((lecture) => lecture.day === "SUNDAY")) {
+        days.push(0);
+    }
+    if (!items.some((lecture) => lecture.day === "SATURDAY")) {
+        days.push(6);
+    }
+    return days;
+};
+
+const slotLayoutFor = (items: Lecture[], slotArea: number) => {
+    const range = planTimeRange(items);
+    const slots = Math.max(1, (minutesOf(range.max) - minutesOf(range.min)) / 30);
+    const fitted = Math.floor(slotArea / slots);
+    const minSlot = 22;
+    const fits = fitted >= minSlot;
+    return { range, height: fits ? fitted : minSlot, fits };
+};
+
+const PlanPane = ({
+    lectures,
+    date,
+    view,
+    weekOffset,
+    slotArea,
+    onEventClick,
+}: {
+    lectures: Lecture[];
+    date: Date;
+    view: ViewMode;
+    weekOffset: number;
+    slotArea: number;
+    onEventClick: (info: EventClickArg) => void;
+}) => {
+    const dayName = WEEK_DAYS[(date.getDay() + 6) % 7];
+    const dayLectures = lectures.filter((lecture) => lecture.day === dayName);
+    const layoutSource = view === "day"
+        ? (dayLectures.length > 0 ? dayLectures : lectures)
+        : lectures;
+    const layout = slotLayoutFor(layoutSource, slotArea);
+    const hiddenDays = hiddenDaysFor(lectures, view);
+    const events = useMemo(
+        () => lectureConversionUtil.toCalendarEvents(lectures, COLORS, weekOffset),
+        [lectures, weekOffset]
+    );
+
+    return (
+        <div
+            className={`cal-plan ${layout.fits ? "cal-plan--fit" : ""}`}
+            style={{ "--cal-slot": `${layout.height}px` } as CSSProperties}
+        >
+            <FullCalendar
+                key={`${view}-${toDateKey(date)}-${hiddenDays.join("")}-${layout.range.min}-${layout.range.max}`}
+                plugins={[timeGridPlugin]}
+                initialView={view === "day" ? "timeGridDay" : "timeGridWeek"}
+                initialDate={toDateKey(date)}
+                locale={deLocale}
+                firstDay={1}
+                headerToolbar={false}
+                allDaySlot={false}
+                nowIndicator
+                height="100%"
+                slotMinTime={layout.range.min}
+                slotMaxTime={layout.range.max}
+                scrollTime={layout.range.min}
+                slotDuration="00:30:00"
+                slotLabelInterval="01:00:00"
+                hiddenDays={hiddenDays}
+                eventMinHeight={0}
+                slotEventOverlap={false}
+                events={events}
+                eventClick={onEventClick}
+                eventContent={(arg) => <EventCard arg={arg} compact={view === "week"} />}
+                dayHeaderFormat={{ weekday: "short" }}
+                slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+            />
+        </div>
+    );
+};
+
 const CalendarPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -220,7 +314,7 @@ const CalendarPage = () => {
     const [semesterNames, setSemesterNames] = useState<string[]>([]);
     const [hiddenTitles, setHiddenTitles] = useState<string[]>([]);
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [lectures, setLectures] = useState<Lecture[]>([]);
+    const [weeks, setWeeks] = useState<Record<string, Lecture[]>>({});
     const [loading, setLoading] = useState(Boolean(source));
     const [failed, setFailed] = useState(false);
     const [selected, setSelected] = useState<Lecture | null>(null);
@@ -229,9 +323,23 @@ const CalendarPage = () => {
     const [iosHint, setIosHint] = useState(false);
 
     const cacheRef = useRef(new Map<string, Lecture[]>());
-    const touchRef = useRef<{ x: number; y: number } | null>(null);
     const bodyRef = useRef<HTMLDivElement>(null);
+    const swipeRef = useRef<HTMLDivElement>(null);
+    const trackRef = useRef<HTMLDivElement>(null);
+    const applyTransformRef = useRef<(x: number, animate: boolean) => void>(() => undefined);
+    const shiftRef = useRef<(direction: 1 | -1) => void>(() => undefined);
+    const settingsOpenRef = useRef(false);
+    const selectedRef = useRef<Lecture | null>(null);
+    const suppressClickRef = useRef(false);
     const [slotArea, setSlotArea] = useState(0);
+    const loadedSource = useRef(source);
+    if (loadedSource.current !== source) {
+        loadedSource.current = source;
+        cacheRef.current.clear();
+        setWeeks({});
+        setLoading(Boolean(source));
+        setFailed(false);
+    }
 
     const monday = useMemo(() => mondayOfWeek(weekOffset), [weekOffset]);
     const visibleDate = view === "day" ? addDays(monday, dayIndex) : monday;
@@ -239,47 +347,16 @@ const CalendarPage = () => {
         ? formatDayTitle(visibleDate)
         : `${formatShort(monday)} – ${formatShort(addDays(monday, 6))}`;
 
-    const shownLectures = useMemo(
-        () => lectures.filter((lecture) => !isTitleHidden(lecture.title, hiddenTitles)),
-        [lectures, hiddenTitles]
-    );
+    const lectures = weeks[String(weekOffset)] ?? [];
+    const centerReady = weeks[String(weekOffset)] !== undefined;
 
-    const hiddenDays = useMemo(() => {
-        if (view === "day") {
-            return [];
-        }
-        const days: number[] = [];
-        if (!shownLectures.some((lecture) => lecture.day === "SUNDAY")) {
-            days.push(0);
-        }
-        if (!shownLectures.some((lecture) => lecture.day === "SATURDAY")) {
-            days.push(6);
-        }
-        return days;
-    }, [shownLectures, view]);
-
-    const rangeLectures = useMemo(() => {
-        if (view !== "day") {
-            return shownLectures;
-        }
-        const forDay = shownLectures.filter((lecture) => lecture.day === WEEK_DAYS[dayIndex]);
-        return forDay.length > 0 ? forDay : shownLectures;
-    }, [shownLectures, view, dayIndex]);
-
-    const timeRange = useMemo(() => planTimeRange(rangeLectures), [rangeLectures]);
-
-    const slotLayout = useMemo(() => {
-        const slots = Math.max(1, (minutesOf(timeRange.max) - minutesOf(timeRange.min)) / 30);
-        const fitted = Math.floor(slotArea / slots);
-        const minSlot = 22;
-        const fits = fitted >= minSlot;
-        return { height: fits ? fitted : minSlot, fits };
-    }, [timeRange, slotArea]);
-
-    const events = useMemo(
-        () => lectureConversionUtil.toCalendarEvents(shownLectures, COLORS, weekOffset),
-        [shownLectures, weekOffset]
-    );
+    const panes = useMemo(() => [-1, 0, 1].map((delta) => {
+        const date = view === "day" ? addDays(visibleDate, delta) : mondayOfWeek(weekOffset + delta);
+        const offset = view === "day" ? weekOffsetOf(date) : weekOffset + delta;
+        const paneLectures = (weeks[String(offset)] ?? [])
+            .filter((lecture) => !isTitleHidden(lecture.title, hiddenTitles));
+        return { date, offset, lectures: paneLectures };
+    }), [view, visibleDate, weekOffset, weeks, hiddenTitles]);
 
     useEffect(() => {
         document.documentElement.classList.add("calendar-app-active");
@@ -360,7 +437,8 @@ const CalendarPage = () => {
             return;
         }
         const measure = () => {
-            const header = node.querySelector(".fc-scrollgrid-section-header");
+            const center = node.querySelector(".cal-swipe__page:nth-child(2)") ?? node;
+            const header = center.querySelector(".fc-scrollgrid-section-header");
             const headerHeight = header?.getBoundingClientRect().height ?? 36;
             setSlotArea(Math.max(0, node.clientHeight - headerHeight));
         };
@@ -368,44 +446,53 @@ const CalendarPage = () => {
         const observer = new ResizeObserver(measure);
         observer.observe(node);
         return () => observer.disconnect();
-    }, [source, failed, loading, view, timeRange.min, timeRange.max]);
+    }, [source, failed, loading, view, centerReady]);
 
     useEffect(() => {
         if (!source) {
             return;
         }
 
-        const cacheKey = `${source}:${weekOffset}`;
-        const cached = cacheRef.current.get(cacheKey);
-        if (cached) {
-            setLectures(cached);
-            setFailed(false);
-            setLoading(false);
-            return;
-        }
-
+        const requested = weekOffset;
         let cancelled = false;
-        setLoading(true);
-        setFailed(false);
-        readWeek(source, weekOffset)
-            .then((nextLectures) => {
-                if (cancelled) {
-                    return;
-                }
-                cacheRef.current.set(cacheKey, nextLectures);
-                setLectures(nextLectures);
-            })
-            .catch(() => {
-                if (!cancelled) {
-                    setLectures([]);
-                    setFailed(true);
-                }
-            })
-            .finally(() => {
-                if (!cancelled) {
+        const offsets = [requested - 1, requested, requested + 1];
+
+        offsets.forEach((offset) => {
+            const cacheKey = `${source}:${offset}`;
+            const cached = cacheRef.current.get(cacheKey);
+            if (cached) {
+                setWeeks((current) => current[String(offset)] === cached ? current : { ...current, [String(offset)]: cached });
+                if (offset === requested) {
+                    setFailed(false);
                     setLoading(false);
                 }
-            });
+                return;
+            }
+
+            if (offset === requested) {
+                setLoading(true);
+                setFailed(false);
+            }
+
+            readWeek(source, offset)
+                .then((nextLectures) => {
+                    if (cancelled) {
+                        return;
+                    }
+                    cacheRef.current.set(cacheKey, nextLectures);
+                    setWeeks((current) => ({ ...current, [String(offset)]: nextLectures }));
+                    if (offset === requested) {
+                        setFailed(false);
+                        setLoading(false);
+                    }
+                })
+                .catch(() => {
+                    if (!cancelled && offset === requested) {
+                        setFailed(true);
+                        setLoading(false);
+                    }
+                });
+        });
 
         return () => {
             cancelled = true;
@@ -517,28 +604,132 @@ const CalendarPage = () => {
         });
     };
 
-    const onTouchStart = (event: TouchEvent) => {
-        if (selected || settingsOpen) {
-            return;
-        }
-        const touch = event.changedTouches[0];
-        touchRef.current = { x: touch.clientX, y: touch.clientY };
-    };
+    shiftRef.current = shift;
+    settingsOpenRef.current = settingsOpen;
+    selectedRef.current = selected;
 
-    const onTouchEnd = (event: TouchEvent) => {
-        const start = touchRef.current;
-        touchRef.current = null;
-        if (!start || selected || settingsOpen || !source) {
+    const applyTransform = (x: number, animate: boolean) => {
+        const track = trackRef.current;
+        if (!track) {
             return;
         }
-        const touch = event.changedTouches[0];
-        const deltaX = touch.clientX - start.x;
-        const deltaY = touch.clientY - start.y;
-        if (Math.abs(deltaX) < 56 || Math.abs(deltaX) < Math.abs(deltaY)) {
-            return;
-        }
-        shift(deltaX < 0 ? 1 : -1);
+        track.style.transition = animate ? "transform 260ms ease-out" : "none";
+        track.style.transform = `translate3d(calc(-33.333333% + ${x}px), 0, 0)`;
     };
+    applyTransformRef.current = applyTransform;
+
+    useLayoutEffect(() => {
+        applyTransformRef.current(0, false);
+    }, [weekOffset, dayIndex, view, centerReady]);
+
+    useEffect(() => {
+        const node = swipeRef.current;
+        if (!node || !centerReady) {
+            return;
+        }
+
+        let startX = 0;
+        let startY = 0;
+        let lastX = 0;
+        let mode: "undecided" | "x" | "y" = "undecided";
+        let pointerId = -1;
+        let animating = false;
+
+        const onDown = (event: PointerEvent) => {
+            if (animating || event.button !== 0 || settingsOpenRef.current || selectedRef.current) {
+                return;
+            }
+            startX = event.clientX;
+            startY = event.clientY;
+            lastX = 0;
+            mode = "undecided";
+            pointerId = event.pointerId;
+            suppressClickRef.current = false;
+        };
+
+        const onMove = (event: PointerEvent) => {
+            if (event.pointerId !== pointerId || mode === "y" || animating) {
+                return;
+            }
+            const deltaX = event.clientX - startX;
+            const deltaY = event.clientY - startY;
+            if (mode === "undecided") {
+                if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) {
+                    return;
+                }
+                if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                    mode = "y";
+                    return;
+                }
+                mode = "x";
+                try {
+                    node.setPointerCapture(event.pointerId);
+                } catch {
+                    // The pointer can already be gone. The swipe still follows the finger.
+                }
+            }
+            lastX = deltaX;
+            event.preventDefault();
+            applyTransformRef.current(deltaX, false);
+        };
+
+        const onUp = (event: PointerEvent) => {
+            if (event.pointerId !== pointerId) {
+                return;
+            }
+            pointerId = -1;
+            if (mode !== "x") {
+                return;
+            }
+            const width = node.clientWidth;
+            const direction: 1 | -1 = lastX < 0 ? 1 : -1;
+            const commit = Math.abs(lastX) > Math.min(72, width * 0.18);
+            suppressClickRef.current = Math.abs(lastX) > 8;
+            if (!commit) {
+                applyTransformRef.current(0, true);
+                return;
+            }
+            animating = true;
+            const track = trackRef.current;
+            if (!track) {
+                animating = false;
+                shiftRef.current(direction);
+                return;
+            }
+            let settled = false;
+            const settle = () => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                window.clearTimeout(fallback);
+                track.removeEventListener("transitionend", finish);
+                animating = false;
+                shiftRef.current(direction);
+            };
+            const finish = (transitionEvent: TransitionEvent) => {
+                if (transitionEvent.propertyName !== "transform") {
+                    return;
+                }
+                settle();
+            };
+            const fallback = window.setTimeout(settle, 320);
+            track.addEventListener("transitionend", finish);
+            void track.offsetWidth;
+            applyTransformRef.current(direction < 0 ? width : -width, true);
+        };
+
+        node.addEventListener("pointerdown", onDown);
+        node.addEventListener("pointermove", onMove);
+        node.addEventListener("pointerup", onUp);
+        node.addEventListener("pointercancel", onUp);
+        return () => {
+            node.removeEventListener("pointerdown", onDown);
+            node.removeEventListener("pointermove", onMove);
+            node.removeEventListener("pointerup", onUp);
+            node.removeEventListener("pointercancel", onUp);
+        };
+    }, [centerReady]);
 
     const openLink = (event: FormEvent) => {
         event.preventDefault();
@@ -560,6 +751,10 @@ const CalendarPage = () => {
 
     const onEventClick = (info: EventClickArg) => {
         info.jsEvent.preventDefault();
+        if (suppressClickRef.current) {
+            suppressClickRef.current = false;
+            return;
+        }
         setSelected(info.event.extendedProps["lecture"] as Lecture);
     };
 
@@ -611,12 +806,7 @@ const CalendarPage = () => {
                 <p className="cal-app__ios-hint">Teilen, dann „Zum Home-Bildschirm“.</p>
             )}
 
-            <div
-                ref={bodyRef}
-                className="cal-app__body"
-                onTouchStart={onTouchStart}
-                onTouchEnd={onTouchEnd}
-            >
+            <div ref={bodyRef} className="cal-app__body">
                 {!source && (
                     <form className="cal-app__link-form" onSubmit={openLink}>
                         <label htmlFor="calendar-source">Rapla-Link</label>
@@ -639,33 +829,21 @@ const CalendarPage = () => {
                     <p className="cal-app__message">Wird geladen…</p>
                 )}
                 {source && !failed && !(loading && lectures.length === 0) && (
-                    <div
-                        className={`cal-plan ${slotLayout.fits ? "cal-plan--fit" : ""}`}
-                        style={{ "--cal-slot": `${slotLayout.height}px` } as CSSProperties}
-                    >
-                        <FullCalendar
-                            key={`${view}-${toDateKey(visibleDate)}-${hiddenDays.join("")}-${timeRange.min}-${timeRange.max}`}
-                            plugins={[timeGridPlugin]}
-                            initialView={view === "day" ? "timeGridDay" : "timeGridWeek"}
-                            initialDate={toDateKey(visibleDate)}
-                            locale={deLocale}
-                            firstDay={1}
-                            headerToolbar={false}
-                            allDaySlot={false}
-                            nowIndicator
-                            height="100%"
-                            slotMinTime={timeRange.min}
-                            slotMaxTime={timeRange.max}
-                            scrollTime={timeRange.min}
-                            slotDuration="00:30:00"
-                            slotLabelInterval="01:00:00"
-                            hiddenDays={hiddenDays}
-                            events={events}
-                            eventClick={onEventClick}
-                            eventContent={(arg) => <EventCard arg={arg} compact={view === "week"} />}
-                            dayHeaderFormat={{ weekday: "short" }}
-                            slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
-                        />
+                    <div className="cal-swipe" ref={swipeRef}>
+                        <div className="cal-swipe__track" ref={trackRef}>
+                            {panes.map((pane) => (
+                                <div className="cal-swipe__page" key={`${view}-${pane.offset}-${toDateKey(pane.date)}`}>
+                                    <PlanPane
+                                        lectures={pane.lectures}
+                                        date={pane.date}
+                                        view={view}
+                                        weekOffset={pane.offset}
+                                        slotArea={slotArea}
+                                        onEventClick={onEventClick}
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>

@@ -230,17 +230,49 @@ html.calendar-app-active #root {
     overflow: hidden !important;
 }
 
+.cal-app .fc-scroller {
+    touch-action: pan-y;
+}
+
 .cal-app .fc-timegrid-slot-label {
     font-size: 10px;
     color: var(--color-text-secondary);
     vertical-align: top;
 }
 
-.cal-app .fc-timegrid-event {
-    border: none !important;
+.cal-app .fc-timegrid-col-events {
+    margin: 0 !important;
+}
+
+.cal-app .fc-timegrid-event,
+.cal-app .fc-v-event {
+    border: 0 !important;
+    border-width: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
     border-radius: 4px !important;
     padding: 0 !important;
     overflow: hidden;
+}
+
+.cal-swipe {
+    height: 100%;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+.cal-swipe__track {
+    display: flex;
+    height: 100%;
+    width: 300%;
+    will-change: transform;
+}
+
+.cal-swipe__page {
+    width: calc(100% / 3);
+    height: 100%;
+    min-width: 0;
+    flex: none;
 }
 
 .cal-app .fc-event-main {

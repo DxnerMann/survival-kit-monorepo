@@ -109,6 +109,7 @@ const LectureCalendar = ({
                 height="auto"
                 eventOverlap={false}
                 slotEventOverlap={false}
+                eventMinHeight={0}
                 initialEvents={events}
                 eventContent={(arg: EventContentArg) => <EventCard arg={arg} />}
                 eventMouseEnter={handleMouseEnter}

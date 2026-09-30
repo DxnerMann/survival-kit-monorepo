@@ -3,6 +3,7 @@ package com.survivalkit.backend.adapter.rapla;
 import com.survivalkit.backend.adapter.postgres.course.CourseRaplaConfig;
 import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapter;
 import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapterV2;
+import com.survivalkit.backend.adapter.rapla.support.RaplaIcalLecturers;
 import com.survivalkit.backend.adapter.rapla.support.WeekTableLectureParser;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.shared.Lecture;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -200,6 +202,42 @@ class WeekTableLectureParserTest {
         assertEquals("Klausur Data Science", lectures.get(0).title());
         assertEquals(Lecture.LectureType.OTHER, lectures.get(1).type());
         assertEquals(Lecture.LectureType.LECTURE, lectures.get(2).type());
+    }
+
+    @Test
+    void fillsLecturerFromIcalWhenTheWeekPageHasNone() {
+        var ical = """
+                BEGIN:VCALENDAR
+                BEGIN:VEVENT
+                DTSTART;TZID=Europe/Berlin:20260929T084500
+                SUMMARY:Theories and Methods in AI
+                DESCRIPTION:Theories and Methods in AI   Personen: Li\\, Nuo Ressourcen: E209
+                END:VEVENT
+                BEGIN:VEVENT
+                DTSTART;TZID=Europe/Berlin:20260916T083000
+                SUMMARY:Data Science <Grundlagen>
+                DESCRIPTION:Data Science   Personen: Mecke\\, Christoph\\, Sauder\\, Philipp Ressourcen: E209
+                RRULE:FREQ=WEEKLY;COUNT=3;INTERVAL=1;BYDAY=WE
+                END:VEVENT
+                BEGIN:VEVENT
+                DTSTART;TZID=Europe/Berlin:20260929T083000
+                SUMMARY:Semesterstart-Besprechung
+                DESCRIPTION:Semesterstart   Personen: Li\\, Nuo Ressourcen: E209
+                END:VEVENT
+                END:VCALENDAR
+                """;
+
+        var filled = RaplaIcalLecturers.apply(List.of(
+                new Lecture("Theories and Methods in AI", Lecture.LectureType.LECTURE, "8:45", "12:00", List.of(), "", List.of(), DayOfWeek.TUESDAY),
+                new Lecture("Data Science  <Grundlagen>", Lecture.LectureType.LECTURE, "08:30", "12:45", List.of(), "", List.of(), DayOfWeek.WEDNESDAY),
+                new Lecture("Semesterstart-Besprechung", Lecture.LectureType.LECTURE, "08:30", "08:45", List.of(), "", List.of(), DayOfWeek.TUESDAY),
+                new Lecture("Other", Lecture.LectureType.LECTURE, "08:30", "10:00", List.of(), "", List.of(), DayOfWeek.MONDAY)
+        ), ical, LocalDate.of(2026, 9, 28));
+
+        assertEquals("Nuo Li", filled.get(0).lecturer());
+        assertEquals("Christoph Mecke, Philipp Sauder", filled.get(1).lecturer());
+        assertEquals("Nuo Li", filled.get(2).lecturer());
+        assertEquals("", filled.get(3).lecturer());
     }
 
     private String loadResource(String path) throws IOException {
