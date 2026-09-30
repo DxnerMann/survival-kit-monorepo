@@ -1,3 +1,5 @@
+name: survival-kit-local
+
 services:
   postgres:
     image: postgres:16
@@ -34,4 +36,5 @@ services:
 
 volumes:
   postgres_data:
+    name: survival-kit_local_postgres
   redis_data:

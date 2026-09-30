@@ -47,6 +47,9 @@ const Clock = ({title, data, id, isPreview} : WidgetProps) => {
     };
 
     function saveSettings() {
+        if (isPreview) {
+            return;
+        }
         try {
             if (getUserRole() !== "GUEST") {
                 dashboardService.saveWidgetData(id, JSON.stringify(decodedData));
@@ -61,7 +64,7 @@ const Clock = ({title, data, id, isPreview} : WidgetProps) => {
 
     useEffect(() => {
         saveSettings();
-    }, [decodedData]);
+    }, [decodedData, isPreview]);
 
     function toggleClockMode() {
         updateData({

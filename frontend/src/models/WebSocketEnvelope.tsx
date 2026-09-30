@@ -35,6 +35,7 @@ export const WebSocketMessageType = {
     LEAVE: "LEAVE",
     LEFT: "LEFT",
     MESSAGE: "MESSAGE",
+    CHAT_CLEARED: "CHAT_CLEARED",
     ERROR: "ERROR",
 } as const;
 

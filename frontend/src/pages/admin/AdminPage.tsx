@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import {snackbarService} from "@/services/snackBarService.tsx";
 import type {SecurityLog} from "@/models/SecurityLog.tsx";
-import {fetchUsers, getLatestLogs, setUserRole} from "@/services/adminService.tsx";
+import {fetchUsers, fetchAdminHealth, fetchStorageUsage, getLatestLogs, setUserRole} from "@/services/adminService.tsx";
+import type {AdminHealth, StorageUsage} from "@/models/AdminMonitoring.tsx";
 import {formatTimestamp} from "@/services/utils.tsx";
 import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
 import Separator from "@/components/ui/Separator.tsx";
@@ -46,6 +47,10 @@ const AdminPage = () => {
     const [loadingMemes, setLoadingMemes] = useState(false);
     const [availableCourses, setAvailableCourses] = useState<string[]>([]);
     const [selectedMemeCourses, setSelectedMemeCourses] = useState<string[]>([]);
+    const [health, setHealth] = useState<AdminHealth | null>(null);
+    const [storage, setStorage] = useState<StorageUsage | null>(null);
+    const [healthLoading, setHealthLoading] = useState(true);
+    const [storageLoading, setStorageLoading] = useState(true);
     const suggestionsFetchId = useRef(0);
     const [pendingLinkIds, setPendingLinkIds] = useState<Set<string>>(() => new Set());
 
@@ -207,6 +212,69 @@ const AdminPage = () => {
         setLoadingLogs(false);
     };
 
+    const loadMonitoring = async () => {
+        setHealthLoading(true);
+        setStorageLoading(true);
+        try {
+            setHealth(await fetchAdminHealth());
+        } catch {
+            setHealth(null);
+        } finally {
+            setHealthLoading(false);
+        }
+        try {
+            setStorage(await fetchStorageUsage());
+        } catch {
+            setStorage(null);
+        } finally {
+            setStorageLoading(false);
+        }
+    };
+
+    const share = (part: number, total: number) => {
+        if (part <= 0 || total <= 0) {
+            return 0;
+        }
+        return (part / total) * 100;
+    };
+
+    const lampState = (value: string | undefined, loaded: boolean): "up" | "down" | "other" => {
+        if (!loaded) {
+            return "down";
+        }
+        const flag = (value ?? "").toUpperCase();
+        if (flag === "UP") {
+            return "up";
+        }
+        if (flag === "DOWN") {
+            return "down";
+        }
+        return "other";
+    };
+
+    const lampLabel = (state: "up" | "down" | "other") => {
+        if (state === "up") {
+            return "Up";
+        }
+        if (state === "down") {
+            return "Down";
+        }
+        return "Other";
+    };
+
+    const formatBytes = (value: number) => {
+        if (value < 1024) {
+            return `${value} B`;
+        }
+        if (value < 1024 * 1024) {
+            return `${(value / 1024).toFixed(1)} KB`;
+        }
+        if (value < 1024 * 1024 * 1024) {
+            return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+        }
+        return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    };
+
     const updateField = (id: string, field: "title" | "description", value: string) => {
         setEditedGames(prev => ({
             ...prev,
@@ -279,6 +347,7 @@ const AdminPage = () => {
         };
 
         void loadSuggestionsInit();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void refreshLogs();
         void refreshAdminMemes();
         lectureService.getAvailableCourses().then(setAvailableCourses);
@@ -297,6 +366,7 @@ const AdminPage = () => {
         };
 
         void loadUsersInit();
+        void loadMonitoring();
 
         return () => {
             cancelled = true;
@@ -305,6 +375,7 @@ const AdminPage = () => {
     }, []);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setEditedGames((prev) => {
             const next = { ...prev };
             const activeIds = new Set(suggestedGames.map((game) => game.id));
@@ -338,7 +409,7 @@ const AdminPage = () => {
                          key={tab}
                          className={`tab-bar-tab ${currentTab === tab ? "active" : ""}`}
                          onClick={() => setCurentTab(tab)}>
-                        <h3 className="tab-bar-tab-name">{tab === "GENERAL" ? "ALLGEMEIN" : tab === "QUICKLINKS" ? "QUICKLINKS" : tab === "MEMES" ? "MEMES" : "SWAGGER"}</h3>
+                         <h3 className="tab-bar-tab-name">{tab === "GENERAL" ? "ÜBERWACHUNG" : tab === "QUICKLINKS" ? "QUICKLINKS" : tab === "MEMES" ? "MEMES" : "SWAGGER"}</h3>
                     </div>
                 )
             }
@@ -361,6 +432,7 @@ const AdminPage = () => {
     const QuickLinks = () => {
         return <div className="tab-page">
             <SectionHeading heading={"Vorgeschlagene Spiele"} subheading={"Spiele die von anderen Benutzern Vorgeschlagen wurden"} centered={false} />
+            <br />
             {suggestedGames.length !== 0 && (
                 <div className="suggested-games-table-header">
                     <h3 className="suggested-games-table-header-text">ID</h3>
@@ -436,6 +508,7 @@ const AdminPage = () => {
         return <div className="tab-page">
             <div className="admin-memes-header">
                 <SectionHeading heading={"Memes"} subheading={"Alle hochgeladenen Memes verwalten"} centered={false} />
+                <br />
                 <FilterDropdown
                     values={availableCourses}
                     selectedItems={selectedMemeCourses}
@@ -480,7 +553,8 @@ const AdminPage = () => {
 
     const General = () => {
         return <div className="tab-page">
-            <SectionHeading heading={"Benutzer"} centered={false} />
+            <SectionHeading heading={"Benutzer"} subheading={"Alle Benutzer der Anwendung"} centered={false} />
+            <br />
             <div className="users-table-wrapper">
                 <table className="users-table">
                     <thead>
@@ -520,7 +594,76 @@ const AdminPage = () => {
             < Separator width={"0%"} height={"10px"} variant={"primary"} />
             < Separator width={"100%"} height={"2px"} variant={"primary"} />
             <br />
-            <SectionHeading heading={"Logs"} centered={false} />
+            <SectionHeading heading={"Health"} subheading={"Status von Backend, Datenbank und Redis"} centered={false} />
+            <br />
+            {healthLoading ? (
+                <p className="monitoring-muted">Laden…</p>
+            ) : (
+                <ul className="lamps">
+                    <li>
+                        <span className="lamp" data-state={lampState(health?.status, Boolean(health))} />
+                        Backend {lampLabel(lampState(health?.status, Boolean(health)))}
+                    </li>
+                    <li>
+                        <span className="lamp" data-state={lampState(health?.database, Boolean(health))} />
+                        Database {lampLabel(lampState(health?.database, Boolean(health)))}
+                    </li>
+                    <li>
+                        <span className="lamp" data-state={lampState(health?.redis, Boolean(health))} />
+                        Redis {lampLabel(lampState(health?.redis, Boolean(health)))}
+                    </li>
+                </ul>
+            )}
+            < Separator width={"0%"} height={"10px"} variant={"primary"} />
+            < Separator width={"100%"} height={"2px"} variant={"primary"} />
+            <br />
+            <SectionHeading heading={"Speicher"} subheading={"Datenbanknutzung"} centered={false} />
+            <br />
+            {storageLoading ? (
+                <p className="monitoring-muted">Laden…</p>
+            ) : storage ? (
+                <>
+                    <p className="monitoring-total">
+                        {formatBytes(storage.databaseBytes)} von ~{formatBytes(storage.capacityBytes)}
+                    </p>
+                    <div className="stack" aria-hidden="true">
+                        {storage.categories.map(item => (
+                            <span
+                                key={item.id}
+                                className="seg"
+                                data-id={item.id}
+                                style={{width: `${share(item.bytes, storage.capacityBytes)}%`}}
+                            />
+                        ))}
+                    </div>
+                    <ul className="usage">
+                        {storage.categories.map(item => (
+                            <li key={item.id}>
+                                <div className="usage-meta">
+                                    <span className="dot" data-id={item.id} />
+                                    <strong>{item.label}</strong>
+                                    {item.items > 0 && <small>{item.items}</small>}
+                                </div>
+                                <div className="track">
+                                    <span
+                                        className="fill"
+                                        data-id={item.id}
+                                        style={{width: `${share(item.bytes, storage.capacityBytes)}%`}}
+                                    />
+                                </div>
+                                <span className="size">{formatBytes(item.bytes)}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </>
+            ) : (
+                <p className="monitoring-muted">Speicherdaten konnten nicht geladen werden.</p>
+            )}
+            < Separator width={"0%"} height={"10px"} variant={"primary"} />
+            < Separator width={"100%"} height={"2px"} variant={"primary"} />
+            <br />
+            <SectionHeading heading={"Logs"} subheading={"Alle Logs der Letzten 7 Tage"} centered={false} />
+            <br />
             <div className="security-logs-window">
                 <div className="security-logs-header">
                     <div className="col-time">Zeitpunkt</div>
@@ -550,6 +693,7 @@ const AdminPage = () => {
     const Swagger = () => {
         return <div className="tab-page">
             <SectionHeading heading={"Backend API"} centered={false} actions={[{ icon: SquareTerminal, text: "Swagger öffnen", link: SWAGGER_PATH }]} />
+            <br />
             <div className="swagger-iframe">
                 <iframe
                     src={SWAGGER_PATH}

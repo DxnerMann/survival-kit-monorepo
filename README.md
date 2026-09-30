@@ -268,11 +268,8 @@ Redis keys use the prefix `rate:<bucket>:<ip>` for anonymous/IP based limits and
 
 ## Roadmap and ToDo's
 
-- [ ] Random Word generator game
 - [ ] Integrate Free-Room-Finder from Kai
 - [ ] Daily Phrase Rework from v2
-- [ ] Daily-Course-Chat Rework from v2 (Encrypted?, RichText, Images, GIFs, Videos?, Files)
-- [ ] QuickLink-Favourites and Widget
 
 ## Further Ideas
 

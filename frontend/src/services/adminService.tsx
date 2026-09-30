@@ -2,6 +2,7 @@ import {api, apiFetch, checkResponse} from "@/services/api.tsx";
 import type {SecurityLog} from "@/models/SecurityLog.tsx";
 import type {Page} from "@/models/Page.tsx";
 import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
+import type {AdminHealth, StorageUsage} from "@/models/AdminMonitoring.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -53,4 +54,26 @@ export async function setUserRole(userId: string, newRole: string) {
     });
 
     await checkResponse(response);
+}
+
+export async function fetchAdminHealth(): Promise<AdminHealth> {
+    const response = await apiFetch(`${API_URL}/admin/health`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+    await checkResponse(response);
+    return response.json();
+}
+
+export async function fetchStorageUsage(): Promise<StorageUsage> {
+    const response = await apiFetch(`${API_URL}/admin/monitoring/storage`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+    await checkResponse(response);
+    return response.json();
 }
