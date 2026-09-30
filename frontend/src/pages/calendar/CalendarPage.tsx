@@ -281,8 +281,8 @@ const CalendarPage = () => {
             background_color: "#0f111b",
             theme_color: "#0f111b",
             icons: [
-                { src: `${origin}/calendar/icon-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
-                { src: `${origin}/calendar/icon-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
+                { src: `${origin}/pwa/icon-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
+                { src: `${origin}/pwa/icon-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
             ],
         };
         const manifestUrl = URL.createObjectURL(new Blob(
@@ -297,7 +297,7 @@ const CalendarPage = () => {
 
         const appleIcon = document.createElement("link");
         appleIcon.rel = "apple-touch-icon";
-        appleIcon.href = "/calendar/icon-512.png";
+        appleIcon.href = "/pwa/icon-512.png";
         document.head.appendChild(appleIcon);
 
         const metas: Array<[string, string]> = [
