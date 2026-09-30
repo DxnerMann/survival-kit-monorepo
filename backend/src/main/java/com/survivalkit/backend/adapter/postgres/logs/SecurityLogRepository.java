@@ -44,9 +44,12 @@ public class SecurityLogRepository implements SecurityLogPersistancePort {
                     null
             );
         }
+        var continuationToken = logs.size() == pageSize
+                ? encode(logs.getLast().timestamp().toString())
+                : null;
         return new Page<>(
                 logs,
-                encode(logs.getLast().timestamp().toString())
+                continuationToken
         );
     }
 

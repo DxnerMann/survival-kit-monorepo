@@ -326,6 +326,12 @@
     outline-offset: 2px;
 }
 
+.security-logs-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
 .security-logs-window {
     width: 100%;
     background: var(--color-background-primary);

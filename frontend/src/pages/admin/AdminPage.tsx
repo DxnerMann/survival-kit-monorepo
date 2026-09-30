@@ -28,6 +28,7 @@ import {lectureService} from "@/services/lectureService.tsx";
 
 const SWAGGER_PATH = (import.meta.env.VITE_API_BASE_URL || "") + "/swagger-ui/index.html";
 const ADMIN_MEME_PAGE_SIZE = 50;
+const LOG_PAGE_SIZE = 20;
 
 const AdminPage = () => {
 
@@ -40,6 +41,7 @@ const AdminPage = () => {
     const [loading, setLoading] = useState(false);
     const [loadingLogs, setLoadingLogs] = useState(false);
     const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
+    const [logContinuation, setLogContinuation] = useState<string | null>(null);
     const [users, setUsers] = useState<ProfileSettings[]>([]);
     const [userContinuation, setUserContinuation] = useState<string | null>(null);
     const [adminMemes, setAdminMemes] = useState<Meme[]>([]);
@@ -200,16 +202,28 @@ const AdminPage = () => {
 
         setLoadingLogs(true);
         setSecurityLogs([]);
+        setLogContinuation(null);
 
-        let cursor: string | null = null;
+        try {
+            const res = await getLatestLogs(LOG_PAGE_SIZE, null);
+            setSecurityLogs(res.data);
+            setLogContinuation(res.continuation);
+        } finally {
+            setLoadingLogs(false);
+        }
+    };
 
-        do {
-            const res = await getLatestLogs(50, cursor);
+    const loadMoreLogs = async () => {
+        if (loadingLogs || !logContinuation) return;
+
+        setLoadingLogs(true);
+        try {
+            const res = await getLatestLogs(LOG_PAGE_SIZE, logContinuation);
             setSecurityLogs(prev => [...prev, ...res.data]);
-            cursor = res.continuation;
-        } while (cursor);
-
-        setLoadingLogs(false);
+            setLogContinuation(res.continuation);
+        } finally {
+            setLoadingLogs(false);
+        }
     };
 
     const loadMonitoring = async () => {
@@ -673,7 +687,7 @@ const AdminPage = () => {
                 </div>
 
                 <div className="security-logs-body">
-                    {[...securityLogs].reverse().map((log) => (
+                    {securityLogs.map((log) => (
                         <div className="security-log-row" key={log.timestamp}>
                             <div className="security-log-time">{formatTimestamp(log.timestamp)}</div>
                             <div className="security-log-type">
@@ -686,7 +700,10 @@ const AdminPage = () => {
                 </div>
             </div>
             <br />
-            <Button text="Aktualisieren" onClick={() => refreshLogs()} variant="primary" />
+            <div className="security-logs-actions">
+                <Button text="Aktualisieren" onClick={() => void refreshLogs()} variant="primary" disabled={loadingLogs} />
+                <Button text="Mehr laden" onClick={() => void loadMoreLogs()} variant="secondary" disabled={loadingLogs || !logContinuation} />
+            </div>
         </div>
     }
 
