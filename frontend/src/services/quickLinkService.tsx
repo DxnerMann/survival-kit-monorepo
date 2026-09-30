@@ -63,8 +63,6 @@ export const suggestLink = async (data: {
     });
 
     await checkResponse(response);
-
-    return response.json();
 };
 
 export const approveLink = async (data: {

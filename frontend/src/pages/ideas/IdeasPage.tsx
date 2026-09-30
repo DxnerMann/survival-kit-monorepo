@@ -103,9 +103,7 @@ const IdeasPage = () => {
             <FeedbackDialog
                 isOpen={showFeedbackDialog}
                 onCancel={() => setShowFeedbackDialog(false)}
-                onSubmit={(data) => {
-                    onFeedbackSubmit(data);
-                }}
+                onSubmit={onFeedbackSubmit}
             />
             {
                 feedbacks.map(feedback => <FeedbackItem title={feedback.title} description={feedback.description} author={feedback.authorUsername} type={feedback.type} date={formatDate(feedback.addedAt)} likes={feedback.likes} dislikes={feedback.dislikes} answer={feedback.answer} id={feedback.id} key={feedback.id} onDelete={(id) => onFeedbackDelete(id)} />)

@@ -23,8 +23,25 @@ export default function FeedbackDialog({
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [type, setType] = useState<FeedbackType>("OTHER");
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = () => {
+    const resetForm = () => {
+        setTitle("");
+        setDescription("");
+        setType("OTHER");
+        setSubmitting(false);
+    };
+
+    const handleCancel = () => {
+        resetForm();
+        onCancel();
+    };
+
+    const handleSubmit = async () => {
+        if (submitting) {
+            return;
+        }
+
         if (title === null || title === "") {
             snackbarService.showSnackbar({type: "error", text: "Titel kann nicht leer sein", showIcon: true});
             return;
@@ -35,11 +52,22 @@ export default function FeedbackDialog({
             return;
         }
 
-        onSubmit({
-            title: title,
-            description: description,
-            type: type,
-        });
+        setSubmitting(true);
+        try {
+            await onSubmit({
+                title: title,
+                description: description,
+                type: type,
+            });
+            resetForm();
+            onCancel();
+        } catch (error: unknown) {
+            if (!(error instanceof Error)) {
+                snackbarService.showSnackbar({type: "error", text: "Beitrag konnte nicht gesendet werden", showIcon: true});
+            }
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -47,9 +75,15 @@ export default function FeedbackDialog({
             isOpen={isOpen}
             title="Beitrag verfassen"
             subtitle="Dein Beitrag wird öffentlich mit angabe deines Benutzernamens gepostet."
-            onClose={onCancel}
+            onClose={handleCancel}
         >
-            <form className="dialog-form">
+            <form
+                className="dialog-form"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    void handleSubmit();
+                }}
+            >
                 <div className="form-group">
                     <label htmlFor="type">Typ</label>
                     <select
@@ -77,8 +111,8 @@ export default function FeedbackDialog({
                 <RichTextEditor value={description} onChange={setDescription} />
 
                 <DialogActions
-                    cancel={{text: "Abbrechen", onClick: onCancel}}
-                    confirm={{text: "Absenden", onClick: handleSubmit}}
+                    cancel={{text: "Abbrechen", onClick: handleCancel, disabled: submitting}}
+                    confirm={{text: "Absenden", type: "submit", disabled: submitting}}
                 />
             </form>
         </Dialog>

@@ -172,17 +172,13 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                 <FeedbackAnswerDialog
                     isOpen={showFeedbackAnswerDialog}
                     onCancel={() => setShowFeedbackAnswerDialog(false)}
-                    onSubmit={(data) => {
-                        onFeedbackAnswerSubmit(data);
-                    }}
+                    onSubmit={onFeedbackAnswerSubmit}
                     previousAnswer={answer}
                 />
                 <ConfirmDialog
                     isOpen={showDeleteDialog}
                     onCancel={() => setShowDeleteDialog(false)}
-                    onConfirm={() => {
-                        onFeedbackDelete();
-                    }}
+                    onConfirm={onFeedbackDelete}
                     title="Beitrag Löschen"
                     subtitle="Dieser Beitrag wird unwiederuflich gelöscht. Bist du sicher?"
                 />

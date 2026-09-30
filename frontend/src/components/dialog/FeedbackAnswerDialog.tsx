@@ -9,7 +9,7 @@ interface FeedbackAnswerDialogProps {
     onCancel: () => void;
     onSubmit: (data: {
         answer: string;
-    }) => void;
+    }) => void | Promise<void>;
     previousAnswer: string;
 }
 
@@ -20,16 +20,31 @@ export default function FeedbackAnswerDialog({
     previousAnswer,
 }: FeedbackAnswerDialogProps) {
     const [answer, setAnswer] = useState(previousAnswer);
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        if (submitting) {
+            return;
+        }
+
         if (answer === null || answer === "") {
             snackbarService.showSnackbar({type: "error", text: "Antwort kann nicht leer sein", showIcon: true});
             return;
         }
 
-        onSubmit({
-            answer: answer,
-        });
+        setSubmitting(true);
+        try {
+            await onSubmit({
+                answer: answer,
+            });
+            onCancel();
+        } catch (error: unknown) {
+            if (!(error instanceof Error)) {
+                snackbarService.showSnackbar({type: "error", text: "Antwort konnte nicht gesendet werden", showIcon: true});
+            }
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -49,8 +64,8 @@ export default function FeedbackAnswerDialog({
                 <RichTextEditor value={answer} onChange={setAnswer} />
 
                 <DialogActions
-                    cancel={{text: "Abbrechen", onClick: onCancel, type: "reset"}}
-                    confirm={{text: "Antworten", onClick: handleSubmit, type: "submit"}}
+                    cancel={{text: "Abbrechen", onClick: onCancel, disabled: submitting}}
+                    confirm={{text: "Antworten", type: "submit", disabled: submitting}}
                 />
             </form>
         </Dialog>

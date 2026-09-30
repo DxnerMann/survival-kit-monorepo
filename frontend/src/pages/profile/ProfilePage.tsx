@@ -357,7 +357,10 @@ const ProfilePage = () => {
             <ConfirmDialog
                 isOpen={showDeleteDialog}
                 onCancel={() => setShowDeleteDialog(false)}
-                onConfirm={() => handleAccountDeletion()}
+                onConfirm={() => {
+                    setShowDeleteDialog(false);
+                    return handleAccountDeletion();
+                }}
                 title={"Konto Löschen"}
                 subtitle={"Bist du sicher? Alle deine Daten werden unwiederuflich gelöscht."}
             />

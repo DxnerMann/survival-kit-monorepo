@@ -1,3 +1,4 @@
+import {useState} from "react";
 import Dialog from "@/components/dialog/Dialog";
 import DialogActions from "@/components/dialog/DialogActions";
 
@@ -6,7 +7,7 @@ interface ConfirmDialogProps {
     title: string;
     subtitle?: string;
     onCancel: () => void;
-    onConfirm: () => void;
+    onConfirm: () => void | Promise<void>;
     cancelText?: string;
     confirmText?: string;
     closeOnOverlayClick?: boolean;
@@ -22,6 +23,20 @@ export default function ConfirmDialog({
     confirmText = "Bestätigen",
     closeOnOverlayClick = true,
 }: ConfirmDialogProps) {
+    const [pending, setPending] = useState(false);
+
+    const handleConfirm = async () => {
+        if (pending) {
+            return;
+        }
+        setPending(true);
+        try {
+            await onConfirm();
+        } finally {
+            setPending(false);
+        }
+    };
+
     return (
         <Dialog
             isOpen={isOpen}
@@ -31,8 +46,8 @@ export default function ConfirmDialog({
             closeOnOverlayClick={closeOnOverlayClick}
             footer={
                 <DialogActions
-                    cancel={{text: cancelText, onClick: onCancel, type: "button"}}
-                    confirm={{text: confirmText, onClick: onConfirm, type: "button"}}
+                    cancel={{text: cancelText, onClick: onCancel, type: "button", disabled: pending}}
+                    confirm={{text: confirmText, onClick: () => void handleConfirm(), type: "button", disabled: pending}}
                 />
             }
         />
