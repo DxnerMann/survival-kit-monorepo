@@ -81,6 +81,18 @@ public class WebSocketSessionRegistry {
         return channels != null && channels.contains(channel);
     }
 
+    public Collection<WebSocketSession> getOpenSessionsForCourse(String course) {
+        if (course == null || course.isBlank()) {
+            return Set.of();
+        }
+        var normalized = course.trim();
+        return usersBySessionId.entrySet().stream()
+                .filter(entry -> entry.getValue().course() != null && normalized.equals(entry.getValue().course().trim()))
+                .map(entry -> sessionsById.get(entry.getKey()))
+                .filter(session -> session != null && session.isOpen())
+                .toList();
+    }
+
     public Collection<WebSocketSession> getSessionsForUser(String userId) {
         return usersBySessionId.entrySet().stream()
                 .filter(entry -> userId.equals(entry.getValue().userId()))

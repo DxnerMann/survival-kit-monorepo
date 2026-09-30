@@ -61,8 +61,8 @@
 }
 
 .chat-avatar {
-    width: 2.15rem;
-    height: 2.15rem;
+    width: 4.3rem;
+    height: 4.3rem;
     border-radius: 999px;
     object-fit: cover;
     background: var(--color-background-secondary);
@@ -84,6 +84,18 @@
     background: color-mix(in srgb, var(--color-primary-accent) 78%, #4a0000);
     color: #fff;
     border-radius: 1rem 1rem 0.3rem 1rem;
+}
+
+.chat-bubble--emoji,
+.chat-bubble--emoji.chat-bubble--mine {
+    background: transparent;
+    box-shadow: none;
+    padding: 0.1rem 0.15rem;
+}
+
+.chat-bubble--emoji .chat-bubble__text {
+    font-size: 2.8rem;
+    line-height: 1.15;
 }
 
 .chat-bubble__meta {
@@ -258,12 +270,19 @@
     background: var(--color-background-secondary);
 }
 
-.chat-input {
+.chat-input-wrap {
+    position: relative;
     flex: 1 1 auto;
+    min-width: 0;
+}
+
+.chat-input {
+    width: 100%;
+    box-sizing: border-box;
     resize: none;
     min-height: 2.6rem;
     max-height: 160px;
-    padding: 0.7rem 0.85rem;
+    padding: 0.7rem 2.6rem 0.7rem 0.85rem;
     border-radius: 1rem;
     border: 1px solid var(--color-border);
     background: var(--color-background-secondary);
@@ -275,6 +294,56 @@
 .chat-input:focus {
     outline: 2px solid color-mix(in srgb, var(--color-primary-accent) 50%, transparent);
     border-color: var(--color-primary-accent);
+}
+
+.chat-emoji-button {
+    position: absolute;
+    right: 0.3rem;
+    bottom: 0.3rem;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    background: transparent;
+}
+
+.chat-emoji-button:hover {
+    color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+}
+
+.chat-emoji-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.45rem);
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(8, 2.1rem);
+    gap: 0.15rem;
+    padding: 0.45rem;
+    border-radius: 0.9rem;
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 30px var(--color-shadow);
+}
+
+.chat-emoji-panel__item {
+    width: 2.1rem;
+    height: 2.1rem;
+    border: none;
+    border-radius: 0.45rem;
+    background: transparent;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.chat-emoji-panel__item:hover {
+    background: var(--color-background-secondary);
 }
 
 .chat-icon-button,

@@ -27,8 +27,16 @@ class WebSocketClient {
     private statusHandlers = new Set<WebSocketStatusHandler>();
     private pendingMessages: PendingMessage[] = [];
     private joinedChannels = new Set<string>();
+    private explicitDisconnect = false;
+    private reconnectAttempt = 0;
+    private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
     connect(): void {
+        this.explicitDisconnect = false;
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
         if (this.socket?.readyState === WebSocket.OPEN || this.socket?.readyState === WebSocket.CONNECTING) {
             return;
         }
@@ -41,6 +49,7 @@ class WebSocketClient {
             if (this.socket !== socket) {
                 return;
             }
+            this.reconnectAttempt = 0;
             this.setStatus("connected");
             this.flushPendingMessages();
             this.rejoinChannels();
@@ -67,10 +76,18 @@ class WebSocketClient {
             }
             this.socket = null;
             this.setStatus("disconnected");
+            if (!this.explicitDisconnect) {
+                this.scheduleReconnect();
+            }
         };
     }
 
     disconnect(): void {
+        this.explicitDisconnect = true;
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
         this.joinedChannels.clear();
         this.pendingMessages = [];
         this.socket?.close();
@@ -149,6 +166,18 @@ class WebSocketClient {
                 payload: null,
             });
         });
+    }
+
+    private scheduleReconnect(): void {
+        if (this.explicitDisconnect || this.reconnectTimer) {
+            return;
+        }
+        const delay = Math.min(1000 * 2 ** this.reconnectAttempt, 8000);
+        this.reconnectAttempt += 1;
+        this.reconnectTimer = setTimeout(() => {
+            this.reconnectTimer = null;
+            this.connect();
+        }, delay);
     }
 
     private setStatus(status: WebSocketStatus): void {

@@ -15,5 +15,7 @@ public interface WebSocketPort {
 
     void broadcastToChannel(String channel, WebSocketEnvelope envelope);
 
+    void broadcastChatMessage(String course, WebSocketEnvelope envelope);
+
     void broadcastChatCleared();
 }

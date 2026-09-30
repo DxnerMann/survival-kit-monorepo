@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Bold, Download, FileText, Italic, Paperclip, Send, Strikethrough, Underline, X} from "lucide-react";
+import {Bold, Download, FileText, Italic, Paperclip, Send, Smile, Strikethrough, Underline, X} from "lucide-react";
 import {useNavigate} from "react-router-dom";
 import type {ChatAttachment, ChatMessage} from "@/models/ChatMessage.tsx";
 import {chatLimits, chatService} from "@/services/chatService.tsx";
@@ -29,15 +29,62 @@ type Lightbox = {
     kind: "IMAGE" | "GIF" | "VIDEO";
 };
 
-const mergeMessages = (history: ChatMessage[], current: ChatMessage[]): ChatMessage[] => {
-    const ids = new Set(history.map(message => message.id));
-    const clientIds = new Set(history.flatMap(message => message.clientId ? [message.clientId] : []));
-    const pending = current.filter(message =>
-        message.id.startsWith("pending-")
-        && !ids.has(message.id)
-        && !(message.clientId && clientIds.has(message.clientId))
-    );
-    return [...history, ...pending];
+const EMOJI_CHOICES = [
+    "😀", "😁", "😂", "🤣", "😊", "😍", "😘", "😎",
+    "🤔", "😅", "😭", "😡", "😴", "🤯", "🥳", "😇",
+    "👍", "👎", "👏", "🙏", "💪", "👀", "🔥", "✨",
+    "❤️", "💔", "💯", "🎉", "💀", "🙈", "☕", "🍺",
+    "📚", "📝", "⏰", "💻", "🎯", "🚀", "🌈", "⭐",
+];
+
+const graphemeSegmenter = new Intl.Segmenter(undefined, {granularity: "grapheme"});
+
+const isLoneEmoji = (text: string | null | undefined): boolean => {
+    if (!text) {
+        return false;
+    }
+    const trimmed = text.trim();
+    if (!trimmed) {
+        return false;
+    }
+    const parts = [...graphemeSegmenter.segment(trimmed)];
+    if (parts.length !== 1) {
+        return false;
+    }
+    const grapheme = parts[0].segment;
+    if (/^[\p{L}\p{N}\p{P}\p{Z}]+$/u.test(grapheme)) {
+        return false;
+    }
+    return /\p{Extended_Pictographic}|\p{Emoji}/u.test(grapheme);
+};
+
+const absorbHistory = (history: ChatMessage[], current: ChatMessage[]): ChatMessage[] => {
+    const byId = new Map(current.map(message => [message.id, message]));
+    let changed = false;
+
+    for (const message of history) {
+        const pending = current.find(item =>
+            item.id.startsWith("pending-")
+            && message.clientId != null
+            && (item.clientId === message.clientId || item.id === `pending-${message.clientId}`)
+        );
+        if (pending) {
+            byId.delete(pending.id);
+            byId.set(message.id, message);
+            changed = true;
+            continue;
+        }
+        if (!byId.has(message.id)) {
+            byId.set(message.id, message);
+            changed = true;
+        }
+    }
+
+    if (!changed) {
+        return current;
+    }
+
+    return [...byId.values()].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
 };
 
 const formatChatTime = (iso: string) =>
@@ -151,8 +198,10 @@ const ChatPage = () => {
     const [pending, setPending] = useState<PendingAttachment[]>([]);
     const [sending, setSending] = useState(false);
     const [lightbox, setLightbox] = useState<Lightbox | null>(null);
+    const [emojiOpen, setEmojiOpen] = useState(false);
     const listRef = useRef<HTMLDivElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const emojiWrapRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const pendingClientIdRef = useRef<string | null>(null);
 
@@ -165,6 +214,41 @@ const ChatPage = () => {
         }
         el.style.height = "auto";
         el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    };
+
+    const insertEmoji = (emoji: string) => {
+        const field = textareaRef.current;
+        const start = field?.selectionStart ?? draft.length;
+        const end = field?.selectionEnd ?? draft.length;
+        const next = `${draft.slice(0, start)}${emoji}${draft.slice(end)}`;
+        setDraft(next);
+        setEmojiOpen(false);
+        const cursor = start + emoji.length;
+        requestAnimationFrame(() => {
+            const input = textareaRef.current;
+            if (!input) {
+                return;
+            }
+            input.focus();
+            input.setSelectionRange(cursor, cursor);
+            input.style.height = "auto";
+            input.style.height = `${Math.min(input.scrollHeight, 160)}px`;
+        });
+    };
+
+    const openEmojiPanel = () => {
+        const field = textareaRef.current;
+        if (!field) {
+            return;
+        }
+        field.focus();
+        const opener = (field as HTMLTextAreaElement & {showEmojiPicker?: () => void}).showEmojiPicker;
+        if (typeof opener === "function") {
+            opener.call(field);
+            setEmojiOpen(false);
+            return;
+        }
+        setEmojiOpen(open => !open);
     };
 
     const applyFormat = (marker: string) => {
@@ -205,7 +289,7 @@ const ChatPage = () => {
                 }
                 const history = await chatService.getMessages();
                 if (!cancelled) {
-                    setMessages(prev => mergeMessages(history, prev));
+                    setMessages(prev => absorbHistory(history, prev));
                 }
             } catch (err: unknown) {
                 snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
@@ -240,7 +324,9 @@ const ChatPage = () => {
                 });
                 return;
             }
-            if (envelope.channel !== channel) {
+            const incomingCourse = (envelope.payload as {course?: string} | null)?.course?.trim();
+            const forThisChat = envelope.channel === channel || (incomingCourse != null && incomingCourse === course);
+            if (!forThisChat) {
                 return;
             }
             if (envelope.type === WebSocketMessageType.CHAT_CLEARED) {
@@ -270,11 +356,42 @@ const ChatPage = () => {
             }
         });
 
+        const unsubscribeStatus = websocketService.onStatusChange(status => {
+            if (status === "connected") {
+                websocketService.joinChannel(channel);
+            }
+        });
+
         return () => {
             unsubscribe();
+            unsubscribeStatus();
             websocketService.leaveChannel(channel);
         };
-    }, [channel]);
+    }, [channel, course]);
+
+    useEffect(() => {
+        if (!course) {
+            return;
+        }
+
+        let cancelled = false;
+        const pull = async () => {
+            try {
+                const history = await chatService.getMessages();
+                if (!cancelled) {
+                    setMessages(prev => absorbHistory(history, prev));
+                }
+            } catch {
+                // A failed refresh must not clear messages that are already on screen.
+            }
+        };
+
+        const timer = window.setInterval(() => void pull(), 1000);
+        return () => {
+            cancelled = true;
+            window.clearInterval(timer);
+        };
+    }, [course]);
 
     useEffect(() => {
         const el = listRef.current;
@@ -282,6 +399,19 @@ const ChatPage = () => {
             el.scrollTop = el.scrollHeight;
         }
     }, [messages, pending, loading]);
+
+    useEffect(() => {
+        if (!emojiOpen) {
+            return;
+        }
+        const onPointerDown = (event: PointerEvent) => {
+            if (!emojiWrapRef.current?.contains(event.target as Node)) {
+                setEmojiOpen(false);
+            }
+        };
+        window.addEventListener("pointerdown", onPointerDown);
+        return () => window.removeEventListener("pointerdown", onPointerDown);
+    }, [emojiOpen]);
 
     useEffect(() => {
         if (!lightbox) {
@@ -436,6 +566,7 @@ const ChatPage = () => {
                 {messages.map(message => {
                     const mine = message.authorUserId === userId;
                     const pendingRow = message.id.startsWith("pending-");
+                    const loneEmoji = isLoneEmoji(message.text) && !(message.attachments?.length);
                     return (
                         <div
                             key={message.id}
@@ -449,7 +580,7 @@ const ChatPage = () => {
                                     alt=""
                                 />
                             )}
-                            <div className={`chat-bubble${mine ? " chat-bubble--mine" : ""}`}>
+                            <div className={`chat-bubble${mine ? " chat-bubble--mine" : ""}${loneEmoji ? " chat-bubble--emoji" : ""}`}>
                                 <div className="chat-bubble__meta">
                                     <span className="chat-bubble__author">{mine ? "Du" : message.authorUsername}</span>
                                     <span className="chat-bubble__time">{formatChatTime(message.createdAt)}</span>
@@ -535,38 +666,64 @@ const ChatPage = () => {
                     >
                         <Paperclip size={20} />
                     </button>
-                    <textarea
-                        ref={textareaRef}
-                        className="chat-input"
-                        rows={1}
-                        placeholder="Nachricht an deinen Kurs…"
-                        value={draft}
-                        onChange={event => {
-                            setDraft(event.target.value);
-                            resizeTextarea();
-                        }}
-                        onKeyDown={event => {
-                            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b") {
-                                event.preventDefault();
-                                applyFormat(formatMarkers.bold);
-                                return;
-                            }
-                            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "i") {
-                                event.preventDefault();
-                                applyFormat(formatMarkers.italic);
-                                return;
-                            }
-                            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "u") {
-                                event.preventDefault();
-                                applyFormat(formatMarkers.underline);
-                                return;
-                            }
-                            if (event.key === "Enter" && !event.shiftKey) {
-                                event.preventDefault();
-                                void send();
-                            }
-                        }}
-                    />
+                    <div className="chat-input-wrap" ref={emojiWrapRef}>
+                        {emojiOpen && (
+                            <div className="chat-emoji-panel" role="listbox" aria-label="Emoji">
+                                {EMOJI_CHOICES.map(emoji => (
+                                    <button
+                                        key={emoji}
+                                        type="button"
+                                        className="chat-emoji-panel__item"
+                                        onClick={() => insertEmoji(emoji)}
+                                    >
+                                        {emoji}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <textarea
+                            ref={textareaRef}
+                            className="chat-input"
+                            rows={1}
+                            placeholder="Nachricht an deinen Kurs…"
+                            value={draft}
+                            onChange={event => {
+                                setDraft(event.target.value);
+                                resizeTextarea();
+                            }}
+                            onKeyDown={event => {
+                                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b") {
+                                    event.preventDefault();
+                                    applyFormat(formatMarkers.bold);
+                                    return;
+                                }
+                                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "i") {
+                                    event.preventDefault();
+                                    applyFormat(formatMarkers.italic);
+                                    return;
+                                }
+                                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "u") {
+                                    event.preventDefault();
+                                    applyFormat(formatMarkers.underline);
+                                    return;
+                                }
+                                if (event.key === "Enter" && !event.shiftKey) {
+                                    event.preventDefault();
+                                    void send();
+                                }
+                            }}
+                        />
+                        <button
+                            type="button"
+                            className="chat-emoji-button"
+                            aria-label="Emoji"
+                            title="Emoji"
+                            onMouseDown={event => event.preventDefault()}
+                            onClick={openEmojiPanel}
+                        >
+                            <Smile size={18} />
+                        </button>
+                    </div>
                     <button
                         type="submit"
                         className="chat-send"

@@ -16,6 +16,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -85,6 +86,21 @@ public class WebSocketService implements WebSocketPort {
     @Override
     public void broadcastToChannel(String channel, WebSocketEnvelope envelope) {
         sendToChannel(channel, envelope, null);
+    }
+
+    @Override
+    public void broadcastChatMessage(String course, WebSocketEnvelope envelope) {
+        var delivered = new HashSet<String>();
+        var channel = WebSocketChannels.courseChat(course);
+        for (var session : sessionRegistry.getSessionsInChannel(channel)) {
+            delivered.add(session.getId());
+            sendToSession(session, envelope);
+        }
+        for (var session : sessionRegistry.getOpenSessionsForCourse(course)) {
+            if (delivered.add(session.getId())) {
+                sendToSession(session, envelope);
+            }
+        }
     }
 
     @Override
@@ -214,8 +230,8 @@ public class WebSocketService implements WebSocketPort {
                     request.clientId()
             );
             var courseChannel = WebSocketChannels.courseChat(message.course());
-            broadcastToChannel(
-                    courseChannel,
+            broadcastChatMessage(
+                    message.course(),
                     WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, courseChannel, objectMapper.valueToTree(message))
             );
         } catch (RuntimeException ex) {

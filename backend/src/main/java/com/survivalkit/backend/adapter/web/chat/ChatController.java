@@ -54,8 +54,8 @@ public class ChatController {
     public ResponseEntity<ChatMessage> postMessage(@RequestBody ChatSendRequest request) {
         var message = chatPort.postCurrentUserMessage(request.text(), request.attachmentIds(), request.clientId());
         var channel = WebSocketChannels.courseChat(message.course());
-        webSocketPort.broadcastToChannel(
-                channel,
+        webSocketPort.broadcastChatMessage(
+                message.course(),
                 WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, objectMapper.valueToTree(message))
         );
         return ResponseEntity.ok(message);
