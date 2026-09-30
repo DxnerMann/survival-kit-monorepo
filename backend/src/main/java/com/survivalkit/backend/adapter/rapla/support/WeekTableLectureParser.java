@@ -163,13 +163,34 @@ public final class WeekTableLectureParser {
         var style = cell.attr("style");
         if (style.contains("background-color:")) {
             var color = style.replaceAll(".*background-color:\\s*", "").replaceAll(";.*", "").trim();
-            return switch (color.toUpperCase()) {
-                case "#EEEEEE" -> Lecture.LectureType.LECTURE;
-                case "#FF0000" -> Lecture.LectureType.EXAM;
-                default -> Lecture.LectureType.OTHER;
-            };
+            if (isExamColor(color)) {
+                return Lecture.LectureType.EXAM;
+            }
+            if (color.equalsIgnoreCase("#EEEEEE")) {
+                return Lecture.LectureType.LECTURE;
+            }
         }
         return Lecture.LectureType.OTHER;
+    }
+
+    private static boolean isExamColor(String color) {
+        var hex = color.startsWith("#") ? color.substring(1) : color;
+        if (hex.length() == 3) {
+            hex = "" + hex.charAt(0) + hex.charAt(0)
+                    + hex.charAt(1) + hex.charAt(1)
+                    + hex.charAt(2) + hex.charAt(2);
+        }
+        if (hex.length() != 6) {
+            return false;
+        }
+        try {
+            var red = Integer.parseInt(hex.substring(0, 2), 16);
+            var green = Integer.parseInt(hex.substring(2, 4), 16);
+            var blue = Integer.parseInt(hex.substring(4, 6), 16);
+            return red >= 220 && red - green >= 80 && red - blue >= 80 && green < 180 && blue < 180;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
     }
 
     private static java.util.Optional<DayOfWeek> dayFromTooltip(Element cell) {

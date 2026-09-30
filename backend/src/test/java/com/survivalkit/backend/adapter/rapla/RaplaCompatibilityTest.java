@@ -169,6 +169,39 @@ class WeekTableLectureParserTest {
         assertEquals("TINF24B6", course);
     }
 
+    @Test
+    void mapsRedExamBlocksAndLeavesKlausurWeekAsOther() {
+        var html = """
+                <table class="week_table">
+                  <tr>
+                    <td class="week_header" colspan="1">Mo 14.12.</td>
+                  </tr>
+                  <tr>
+                    <td class="week_block" style="background-color:#ff6666">
+                      <a>09:00 -11:00<br/>Klausur Data Science</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="week_block" style="background-color:#c0e2ff">
+                      <a>07:30 -08:00<br/>Klausurwoche</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="week_block" style="background-color:#eeeeee">
+                      <a>10:00 -12:00<br/>Data Science</a>
+                    </td>
+                  </tr>
+                </table>
+                """;
+
+        var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
+
+        assertEquals(Lecture.LectureType.EXAM, lectures.get(0).type());
+        assertEquals("Klausur Data Science", lectures.get(0).title());
+        assertEquals(Lecture.LectureType.OTHER, lectures.get(1).type());
+        assertEquals(Lecture.LectureType.LECTURE, lectures.get(2).type());
+    }
+
     private String loadResource(String path) throws IOException {
         try (var stream = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(path))) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);

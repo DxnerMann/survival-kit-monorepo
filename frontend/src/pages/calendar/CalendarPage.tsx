@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type TouchEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import type { EventClickArg, EventContentArg } from "@fullcalendar/core";
 import deLocale from "@fullcalendar/core/locales/de";
-import { Book, Clock1, Download, MapPin, User, X } from "lucide-react";
+import { Book, Clock1, Download, MapPin, Settings, User, X } from "lucide-react";
 import { api } from "@/services/api.tsx";
-import type { Lecture } from "@/models/Lecture.tsx";
+import type { DayOfWeek, Lecture } from "@/models/Lecture.tsx";
 import type { LecturePlanResponse } from "@/models/LecturePlanResponse.tsx";
 import { lectureConversionUtil } from "@/services/lectureConversionUtil.tsx";
 import "@/pages/calendar/CalendarPage.css";
@@ -22,6 +22,47 @@ const TYPE_LABELS: Record<Lecture["type"], string> = {
     EXAM: "Prüfung",
     OTHER: "Sonstiges",
 };
+
+const WEEK_DAYS: DayOfWeek[] = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+
+const minutesOf = (time: string) => {
+    const [hours = 0, minutes = 0] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+};
+
+const clock = (totalMinutes: number) => {
+    const bounded = Math.min(24 * 60, Math.max(0, totalMinutes));
+    const hours = Math.floor(bounded / 60);
+    const minutes = bounded % 60;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
+};
+
+const planTimeRange = (items: Lecture[]) => {
+    if (items.length === 0) {
+        return { min: "08:00:00", max: "18:00:00" };
+    }
+    const start = Math.min(...items.map((lecture) => minutesOf(lecture.startTime)));
+    const end = Math.max(...items.map((lecture) => minutesOf(lecture.endTime)));
+    return {
+        min: clock(Math.floor(start / 60) * 60),
+        max: clock(Math.ceil((end + 120) / 60) * 60),
+    };
+};
+
+const hiddenStorageKey = (course: string) => `calendar-hidden:${course}`;
+
+const readHiddenTitles = (course: string): string[] => {
+    try {
+        const stored = localStorage.getItem(hiddenStorageKey(course));
+        const parsed: unknown = stored ? JSON.parse(stored) : [];
+        return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+    } catch {
+        return [];
+    }
+};
+
+const isTitleHidden = (title: string, hidden: string[]) =>
+    hidden.some((entry) => title.trim().includes(entry.trim()));
 
 const STORED_FILE_KEY = "calendar-source";
 
@@ -130,6 +171,17 @@ const readCourseName = async (file: string): Promise<string> => {
     return text;
 };
 
+const readSemesterNames = async (course: string): Promise<string[]> => {
+    const response = await fetch(
+        `${api.baseUrl}/lecture/all?course=${encodeURIComponent(course)}`,
+        { credentials: "omit" }
+    );
+    if (!response.ok) {
+        throw new Error("names");
+    }
+    return response.json() as Promise<string[]>;
+};
+
 const readWeek = async (file: string, weekOffset: number): Promise<Lecture[]> => {
     const response = await fetch(
         `${api.baseUrl}/lecture/week?weekOffset=${weekOffset}&raplaUrl=${encodeURIComponent(file)}`,
@@ -164,6 +216,10 @@ const CalendarPage = () => {
     const [weekOffset, setWeekOffset] = useState(0);
     const [dayIndex, setDayIndex] = useState(todayIndex);
     const [title, setTitle] = useState("Stundenplan");
+    const [courseName, setCourseName] = useState("");
+    const [semesterNames, setSemesterNames] = useState<string[]>([]);
+    const [hiddenTitles, setHiddenTitles] = useState<string[]>([]);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const [lectures, setLectures] = useState<Lecture[]>([]);
     const [loading, setLoading] = useState(Boolean(source));
     const [failed, setFailed] = useState(false);
@@ -174,6 +230,8 @@ const CalendarPage = () => {
 
     const cacheRef = useRef(new Map<string, Lecture[]>());
     const touchRef = useRef<{ x: number; y: number } | null>(null);
+    const bodyRef = useRef<HTMLDivElement>(null);
+    const [slotArea, setSlotArea] = useState(0);
 
     const monday = useMemo(() => mondayOfWeek(weekOffset), [weekOffset]);
     const visibleDate = view === "day" ? addDays(monday, dayIndex) : monday;
@@ -181,32 +239,47 @@ const CalendarPage = () => {
         ? formatDayTitle(visibleDate)
         : `${formatShort(monday)} – ${formatShort(addDays(monday, 6))}`;
 
+    const shownLectures = useMemo(
+        () => lectures.filter((lecture) => !isTitleHidden(lecture.title, hiddenTitles)),
+        [lectures, hiddenTitles]
+    );
+
     const hiddenDays = useMemo(() => {
         if (view === "day") {
             return [];
         }
         const days: number[] = [];
-        if (!lectures.some((lecture) => lecture.day === "SUNDAY")) {
+        if (!shownLectures.some((lecture) => lecture.day === "SUNDAY")) {
             days.push(0);
         }
-        if (!lectures.some((lecture) => lecture.day === "SATURDAY")) {
+        if (!shownLectures.some((lecture) => lecture.day === "SATURDAY")) {
             days.push(6);
         }
         return days;
-    }, [lectures, view]);
+    }, [shownLectures, view]);
+
+    const rangeLectures = useMemo(() => {
+        if (view !== "day") {
+            return shownLectures;
+        }
+        const forDay = shownLectures.filter((lecture) => lecture.day === WEEK_DAYS[dayIndex]);
+        return forDay.length > 0 ? forDay : shownLectures;
+    }, [shownLectures, view, dayIndex]);
+
+    const timeRange = useMemo(() => planTimeRange(rangeLectures), [rangeLectures]);
+
+    const slotLayout = useMemo(() => {
+        const slots = Math.max(1, (minutesOf(timeRange.max) - minutesOf(timeRange.min)) / 30);
+        const fitted = Math.floor(slotArea / slots);
+        const minSlot = 22;
+        const fits = fitted >= minSlot;
+        return { height: fits ? fitted : minSlot, fits };
+    }, [timeRange, slotArea]);
 
     const events = useMemo(
-        () => lectureConversionUtil.toCalendarEvents(lectures, COLORS, weekOffset),
-        [lectures, weekOffset]
+        () => lectureConversionUtil.toCalendarEvents(shownLectures, COLORS, weekOffset),
+        [shownLectures, weekOffset]
     );
-
-    const scrollTime = useMemo(() => {
-        if (weekOffset !== 0) {
-            return "08:00:00";
-        }
-        const hour = Math.max(7, new Date().getHours() - 1);
-        return `${String(Math.min(hour, 18)).padStart(2, "0")}:00:00`;
-    }, [weekOffset]);
 
     useEffect(() => {
         document.documentElement.classList.add("calendar-app-active");
@@ -243,15 +316,36 @@ const CalendarPage = () => {
         }
 
         let cancelled = false;
+        setSettingsOpen(false);
         readCourseName(source)
-            .then((course) => {
-                if (!cancelled && course) {
-                    setTitle(course);
+            .then(async (course) => {
+                if (cancelled || !course) {
+                    if (!cancelled) {
+                        setTitle("Stundenplan");
+                        setCourseName("");
+                        setSemesterNames([]);
+                    }
+                    return;
+                }
+                setTitle(course);
+                setCourseName(course);
+                setHiddenTitles(readHiddenTitles(course));
+                try {
+                    const names = await readSemesterNames(course);
+                    if (!cancelled) {
+                        setSemesterNames(names);
+                    }
+                } catch {
+                    if (!cancelled) {
+                        setSemesterNames([]);
+                    }
                 }
             })
             .catch(() => {
                 if (!cancelled) {
                     setTitle("Stundenplan");
+                    setCourseName("");
+                    setSemesterNames([]);
                 }
             });
 
@@ -259,6 +353,22 @@ const CalendarPage = () => {
             cancelled = true;
         };
     }, [source]);
+
+    useEffect(() => {
+        const node = bodyRef.current;
+        if (!node) {
+            return;
+        }
+        const measure = () => {
+            const header = node.querySelector(".fc-scrollgrid-section-header");
+            const headerHeight = header?.getBoundingClientRect().height ?? 36;
+            setSlotArea(Math.max(0, node.clientHeight - headerHeight));
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [source, failed, loading, view, timeRange.min, timeRange.max]);
 
     useEffect(() => {
         if (!source) {
@@ -395,8 +505,20 @@ const CalendarPage = () => {
         });
     };
 
+    const toggleVisible = (name: string) => {
+        setHiddenTitles((current) => {
+            const next = current.includes(name)
+                ? current.filter((item) => item !== name)
+                : [...current, name];
+            if (courseName) {
+                localStorage.setItem(hiddenStorageKey(courseName), JSON.stringify(next));
+            }
+            return next;
+        });
+    };
+
     const onTouchStart = (event: TouchEvent) => {
-        if (selected) {
+        if (selected || settingsOpen) {
             return;
         }
         const touch = event.changedTouches[0];
@@ -406,7 +528,7 @@ const CalendarPage = () => {
     const onTouchEnd = (event: TouchEvent) => {
         const start = touchRef.current;
         touchRef.current = null;
-        if (!start || selected || !source) {
+        if (!start || selected || settingsOpen || !source) {
             return;
         }
         const touch = event.changedTouches[0];
@@ -455,6 +577,14 @@ const CalendarPage = () => {
                                 <Download size={16} />
                             </button>
                         )}
+                        <button
+                            type="button"
+                            className="cal-app__install"
+                            onClick={() => setSettingsOpen(true)}
+                            aria-label="Veranstaltungen filtern"
+                        >
+                            <Settings size={16} />
+                        </button>
                         <div className="cal-app__toggle" role="group" aria-label="Ansicht">
                             <button
                                 type="button"
@@ -482,6 +612,7 @@ const CalendarPage = () => {
             )}
 
             <div
+                ref={bodyRef}
                 className="cal-app__body"
                 onTouchStart={onTouchStart}
                 onTouchEnd={onTouchEnd}
@@ -508,31 +639,75 @@ const CalendarPage = () => {
                     <p className="cal-app__message">Wird geladen…</p>
                 )}
                 {source && !failed && !(loading && lectures.length === 0) && (
-                    <FullCalendar
-                        key={`${view}-${toDateKey(visibleDate)}-${hiddenDays.join("")}`}
-                        plugins={[timeGridPlugin]}
-                        initialView={view === "day" ? "timeGridDay" : "timeGridWeek"}
-                        initialDate={toDateKey(visibleDate)}
-                        locale={deLocale}
-                        firstDay={1}
-                        headerToolbar={false}
-                        allDaySlot={false}
-                        nowIndicator
-                        height="100%"
-                        slotMinTime="07:00:00"
-                        slotMaxTime="21:00:00"
-                        scrollTime={scrollTime}
-                        slotDuration="00:30:00"
-                        slotLabelInterval="01:00:00"
-                        hiddenDays={hiddenDays}
-                        events={events}
-                        eventClick={onEventClick}
-                        eventContent={(arg) => <EventCard arg={arg} compact={view === "week"} />}
-                        dayHeaderFormat={{ weekday: "short" }}
-                        slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
-                    />
+                    <div
+                        className={`cal-plan ${slotLayout.fits ? "cal-plan--fit" : ""}`}
+                        style={{ "--cal-slot": `${slotLayout.height}px` } as CSSProperties}
+                    >
+                        <FullCalendar
+                            key={`${view}-${toDateKey(visibleDate)}-${hiddenDays.join("")}-${timeRange.min}-${timeRange.max}`}
+                            plugins={[timeGridPlugin]}
+                            initialView={view === "day" ? "timeGridDay" : "timeGridWeek"}
+                            initialDate={toDateKey(visibleDate)}
+                            locale={deLocale}
+                            firstDay={1}
+                            headerToolbar={false}
+                            allDaySlot={false}
+                            nowIndicator
+                            height="100%"
+                            slotMinTime={timeRange.min}
+                            slotMaxTime={timeRange.max}
+                            scrollTime={timeRange.min}
+                            slotDuration="00:30:00"
+                            slotLabelInterval="01:00:00"
+                            hiddenDays={hiddenDays}
+                            events={events}
+                            eventClick={onEventClick}
+                            eventContent={(arg) => <EventCard arg={arg} compact={view === "week"} />}
+                            dayHeaderFormat={{ weekday: "short" }}
+                            slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+                        />
+                    </div>
                 )}
             </div>
+
+            {settingsOpen && (
+                <div className="cal-sheet-backdrop" onClick={() => setSettingsOpen(false)}>
+                    <section
+                        className="cal-sheet"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Veranstaltungen"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="cal-sheet__header">
+                            <div>
+                                <h2>Veranstaltungen</h2>
+                            </div>
+                            <button type="button" className="cal-sheet__close" onClick={() => setSettingsOpen(false)} aria-label="Schließen">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        {semesterNames.length === 0 ? (
+                            <p className="cal-settings__empty">Keine Veranstaltungen für dieses Semester.</p>
+                        ) : (
+                            <ul className="cal-settings__list">
+                                {semesterNames.map((name) => (
+                                    <li key={name}>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={!hiddenTitles.includes(name)}
+                                                onChange={() => toggleVisible(name)}
+                                            />
+                                            <span>{name}</span>
+                                        </label>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </section>
+                </div>
+            )}
 
             {selected && (
                 <div className="cal-sheet-backdrop" onClick={() => setSelected(null)}>

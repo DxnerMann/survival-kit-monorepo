@@ -103,6 +103,7 @@ html.calendar-app-active #root {
     flex: 1;
     min-height: 0;
     position: relative;
+    overflow: hidden;
     touch-action: pan-y;
 }
 
@@ -175,10 +176,29 @@ html.calendar-app-active #root {
     background: transparent !important;
 }
 
+.cal-plan {
+    height: 100%;
+    min-height: 0;
+}
+
+.cal-app .fc-theme-standard td,
+.cal-app .fc-theme-standard th,
 .cal-app .fc-scrollgrid,
-.cal-app .fc-scrollgrid td,
-.cal-app .fc-scrollgrid th {
-    border-color: var(--color-border) !important;
+.cal-app .fc-scrollgrid-section > td {
+    border: 0 !important;
+}
+
+.cal-app .fc-theme-standard .fc-timegrid-slot:not(.fc-timegrid-slot-minor) {
+    border-top: 1px solid var(--color-border) !important;
+}
+
+.cal-app .fc-theme-standard .fc-timegrid-col + .fc-timegrid-col,
+.cal-app .fc-theme-standard th.fc-col-header-cell + th.fc-col-header-cell {
+    border-left: 1px solid var(--color-border) !important;
+}
+
+.cal-app .fc-theme-standard th.fc-col-header-cell {
+    border-bottom: 1px solid var(--color-border) !important;
 }
 
 .cal-app .fc-col-header-cell {
@@ -203,11 +223,11 @@ html.calendar-app-active #root {
 }
 
 .cal-app .fc-timegrid-slot {
-    height: 26px !important;
+    height: var(--cal-slot, 22px) !important;
 }
 
-.cal-app--day .fc-timegrid-slot {
-    height: 36px !important;
+.cal-plan--fit .fc-scroller {
+    overflow: hidden !important;
 }
 
 .cal-app .fc-timegrid-slot-label {
@@ -341,6 +361,35 @@ html.calendar-app-active #root {
 
 .cal-sheet__list dd {
     font-size: 14px;
+}
+
+.cal-settings__empty {
+    margin: 8px 0 0;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+}
+
+.cal-settings__list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    max-height: min(60dvh, 480px);
+    overflow-y: auto;
+}
+
+.cal-settings__list label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 2px;
+    border-top: 1px solid var(--color-border);
+    cursor: pointer;
+}
+
+.cal-settings__list input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary-accent);
 }
 
 @media (min-width: 800px) {

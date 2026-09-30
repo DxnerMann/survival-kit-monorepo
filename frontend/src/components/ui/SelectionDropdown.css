@@ -54,10 +54,7 @@
 }
 
 .selection-dropdown-menu {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    left: 0;
-    width: 100%;
+    position: fixed;
     max-height: 280px;
     overflow-y: auto;
     background: var(--color-background-primary);
