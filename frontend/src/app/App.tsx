@@ -7,7 +7,7 @@ import CalendarPage from "@/pages/calendar/CalendarPage.tsx";
 const AppShell = () => {
     const { pathname } = useLocation();
 
-    if (pathname === "/calendar") {
+    if (pathname === "/calendar" || pathname.startsWith("/calendar/")) {
         return <CalendarPage />;
     }
 

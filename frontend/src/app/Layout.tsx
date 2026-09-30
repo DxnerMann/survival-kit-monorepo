@@ -20,14 +20,15 @@ import Imprint from "@/pages/legal/Imprint.tsx";
 import ReleaseNotesPage from "@/pages/release-notes/ReleaseNotesPage.tsx";
 import MaintananceInfoPage from "@/pages/maintenance/MaintananceInfoPage.tsx";
 import MemeWallPage from "@/pages/memewall/MemeWallPage.tsx";
+import CalendarPage from "@/pages/calendar/CalendarPage.tsx";
 
-const HIDDEN_HEADER_ROUTES = ['/login']
-const HIDDEN_FOOTER_ROUTES = ['/login', '/chat', '/presentation-game']
+const HIDDEN_HEADER_ROUTES = ['/login', '/calendar']
+const HIDDEN_FOOTER_ROUTES = ['/login', '/chat', '/presentation-game', '/calendar']
 const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
 
 const Layout = () => {
     const { pathname } = useLocation()
-    const showHeader = !HIDDEN_HEADER_ROUTES.includes(pathname)
+    const showHeader = !HIDDEN_HEADER_ROUTES.includes(pathname) && !pathname.startsWith("/calendar/")
     const showFooter = !HIDDEN_FOOTER_ROUTES.some(route =>
         pathname === route || pathname.startsWith(`${route}/`)
     );
@@ -62,6 +63,7 @@ const Layout = () => {
                             </GuestRouter>
                         }
                     />
+                    <Route path="/calendar" element={<CalendarPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </main>

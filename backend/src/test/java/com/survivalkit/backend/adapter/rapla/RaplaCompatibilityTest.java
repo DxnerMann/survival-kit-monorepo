@@ -93,6 +93,19 @@ class RaplaAdapterFormattingTest {
     }
 
     @Test
+    void v2WeekRequestKeepsEncodedUser() {
+        var uri = v2Adapter.buildWeekRequestUri(
+                "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6",
+                java.time.LocalDate.of(2026, 9, 28)
+        );
+
+        assertEquals(
+                "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6&day=28&month=9&year=2026",
+                uri.toString()
+        );
+    }
+
+    @Test
     void v2FormatToBaseUrlKeepsSaltAndKey() {
         var formatted = v2Adapter.formatToBaseUrl(
                 "https://rapla.dhbw.de/rapla/calendar?salt=abc&key=def&day=3&month=8&year=2026"

@@ -5,7 +5,6 @@ import com.survivalkit.backend.adapter.rapla.support.WeekTableLectureParser;
 import com.survivalkit.backend.shared.Lecture;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -75,13 +74,13 @@ public class RaplaAdapterV2 implements RaplaAdapter {
 
     @Override
     public URI buildWeekRequestUri(String baseUrl, LocalDate monday) {
-        return UriComponentsBuilder
-                .fromUriString(formatToBaseUrl(baseUrl))
-                .queryParam("day", monday.getDayOfMonth())
-                .queryParam("month", monday.getMonthValue())
-                .queryParam("year", monday.getYear())
-                .build()
-                .toUri();
+        var formatted = formatToBaseUrl(baseUrl);
+        var separator = formatted.contains("?") ? "&" : "?";
+        return URI.create(formatted
+                + separator
+                + "day=" + monday.getDayOfMonth()
+                + "&month=" + monday.getMonthValue()
+                + "&year=" + monday.getYear());
     }
 
     @Override

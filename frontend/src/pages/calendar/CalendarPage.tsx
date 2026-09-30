@@ -23,7 +23,48 @@ const TYPE_LABELS: Record<Lecture["type"], string> = {
     OTHER: "Sonstiges",
 };
 
-const STORED_FILE_KEY = "calendar-file";
+const STORED_FILE_KEY = "calendar-source";
+
+const RAPLA_EXTRA_KEYS = ["user", "salt", "key", "day", "month", "year", "next", "pages"];
+
+const readPlanSource = (params: URLSearchParams): string => {
+    const source = params.get("source")?.trim() ?? "";
+    const fileValues = params.getAll("file").map((value) => value.trim()).filter(Boolean);
+    const base = source || fileValues[0] || "";
+    if (!base.startsWith("http")) {
+        return base;
+    }
+
+    let url: URL;
+    try {
+        url = new URL(base);
+    } catch {
+        return base;
+    }
+
+    const host = url.hostname.toLowerCase();
+    const raplaHost = host === "rapla.dhbw.de" || (host.startsWith("rapla.") && host.endsWith(".dhbw.de"));
+    if (!raplaHost) {
+        return base;
+    }
+
+    const raplaFile = source ? fileValues[0] : fileValues[1];
+    if (raplaFile && !url.searchParams.has("file")) {
+        url.searchParams.set("file", raplaFile);
+    }
+
+    for (const key of RAPLA_EXTRA_KEYS) {
+        if (url.searchParams.has(key)) {
+            continue;
+        }
+        const extra = params.get(key);
+        if (extra) {
+            url.searchParams.set(key, extra);
+        }
+    }
+
+    return url.toString();
+};
 
 type ViewMode = "week" | "day";
 
@@ -115,9 +156,8 @@ const EventCard = ({ arg, compact }: { arg: EventContentArg; compact: boolean })
 const CalendarPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const queryFile = searchParams.get("file")?.trim() ?? "";
+    const source = readPlanSource(searchParams);
     const [standalone] = useState(isStandaloneDisplay);
-    const file = queryFile;
     const [linkInput, setLinkInput] = useState("");
 
     const [view, setView] = useState<ViewMode>("week");
@@ -125,14 +165,14 @@ const CalendarPage = () => {
     const [dayIndex, setDayIndex] = useState(todayIndex);
     const [title, setTitle] = useState("Stundenplan");
     const [lectures, setLectures] = useState<Lecture[]>([]);
-    const [loading, setLoading] = useState(Boolean(file));
+    const [loading, setLoading] = useState(Boolean(source));
     const [failed, setFailed] = useState(false);
     const [selected, setSelected] = useState<Lecture | null>(null);
     const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
     const [iosInstallable, setIosInstallable] = useState(false);
     const [iosHint, setIosHint] = useState(false);
 
-    const cacheRef = useRef(new Map<number, Lecture[]>());
+    const cacheRef = useRef(new Map<string, Lecture[]>());
     const touchRef = useRef<{ x: number; y: number } | null>(null);
 
     const monday = useMemo(() => mondayOfWeek(weekOffset), [weekOffset]);
@@ -185,25 +225,25 @@ const CalendarPage = () => {
     }, [title]);
 
     useEffect(() => {
-        if (queryFile) {
-            localStorage.setItem(STORED_FILE_KEY, queryFile);
+        if (source) {
+            localStorage.setItem(STORED_FILE_KEY, source);
         }
-    }, [queryFile]);
+    }, [source]);
 
     useEffect(() => {
-        if (!file || !("serviceWorker" in navigator)) {
+        if (!source || !("serviceWorker" in navigator)) {
             return;
         }
         navigator.serviceWorker.register("/calendar-sw.js").catch(() => undefined);
-    }, [file]);
+    }, [source]);
 
     useEffect(() => {
-        if (!file) {
+        if (!source) {
             return;
         }
 
         let cancelled = false;
-        readCourseName(file)
+        readCourseName(source)
             .then((course) => {
                 if (!cancelled && course) {
                     setTitle(course);
@@ -218,14 +258,15 @@ const CalendarPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [file]);
+    }, [source]);
 
     useEffect(() => {
-        if (!file) {
+        if (!source) {
             return;
         }
 
-        const cached = cacheRef.current.get(weekOffset);
+        const cacheKey = `${source}:${weekOffset}`;
+        const cached = cacheRef.current.get(cacheKey);
         if (cached) {
             setLectures(cached);
             setFailed(false);
@@ -236,12 +277,12 @@ const CalendarPage = () => {
         let cancelled = false;
         setLoading(true);
         setFailed(false);
-        readWeek(file, weekOffset)
+        readWeek(source, weekOffset)
             .then((nextLectures) => {
                 if (cancelled) {
                     return;
                 }
-                cacheRef.current.set(weekOffset, nextLectures);
+                cacheRef.current.set(cacheKey, nextLectures);
                 setLectures(nextLectures);
             })
             .catch(() => {
@@ -259,16 +300,16 @@ const CalendarPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [file, weekOffset]);
+    }, [source, weekOffset]);
 
     useEffect(() => {
-        if (!file) {
+        if (!source) {
             return;
         }
 
         const origin = window.location.origin;
-        const startUrl = queryFile
-            ? `${origin}/calendar?file=${encodeURIComponent(queryFile)}`
+        const startUrl = source
+            ? `${origin}/calendar?source=${encodeURIComponent(source)}`
             : `${origin}/calendar`;
         const manifest = {
             id: startUrl,
@@ -331,7 +372,7 @@ const CalendarPage = () => {
             URL.revokeObjectURL(manifestUrl);
             window.removeEventListener("beforeinstallprompt", onInstallPrompt);
         };
-    }, [file, queryFile, title]);
+    }, [source, title]);
 
     const shift = (direction: 1 | -1) => {
         setSelected(null);
@@ -365,7 +406,7 @@ const CalendarPage = () => {
     const onTouchEnd = (event: TouchEvent) => {
         const start = touchRef.current;
         touchRef.current = null;
-        if (!start || selected || !file) {
+        if (!start || selected || !source) {
             return;
         }
         const touch = event.changedTouches[0];
@@ -383,7 +424,7 @@ const CalendarPage = () => {
         if (!trimmed) {
             return;
         }
-        navigate(`/calendar?file=${encodeURIComponent(trimmed)}`);
+        navigate(`/calendar?source=${encodeURIComponent(trimmed)}`);
     };
 
     const install = async () => {
@@ -404,10 +445,10 @@ const CalendarPage = () => {
         <div className={`cal-app ${view === "day" ? "cal-app--day" : "cal-app--week"}`}>
             <header className="cal-app__header">
                 <div className="cal-app__heading">
-                    <h1 className="cal-app__title">{file ? title : "Stundenplan"}</h1>
-                    {file && <p className="cal-app__range">{rangeLabel}</p>}
+                    <h1 className="cal-app__title">{source ? title : "Stundenplan"}</h1>
+                    {source && <p className="cal-app__range">{rangeLabel}</p>}
                 </div>
-                {file && (
+                {source && (
                     <div className="cal-app__actions">
                         {(installPrompt || iosInstallable) && !standalone && (
                             <button type="button" className="cal-app__install" onClick={install} aria-label="App installieren">
@@ -436,7 +477,7 @@ const CalendarPage = () => {
                 )}
             </header>
 
-            {iosHint && !standalone && file && (
+            {iosHint && !standalone && source && (
                 <p className="cal-app__ios-hint">Teilen, dann „Zum Home-Bildschirm“.</p>
             )}
 
@@ -445,11 +486,11 @@ const CalendarPage = () => {
                 onTouchStart={onTouchStart}
                 onTouchEnd={onTouchEnd}
             >
-                {!file && (
+                {!source && (
                     <form className="cal-app__link-form" onSubmit={openLink}>
-                        <label htmlFor="calendar-file">Rapla-Link</label>
+                        <label htmlFor="calendar-source">Rapla-Link</label>
                         <input
-                            id="calendar-file"
+                            id="calendar-source"
                             type="url"
                             inputMode="url"
                             autoComplete="off"
@@ -460,13 +501,13 @@ const CalendarPage = () => {
                         <button type="submit" disabled={linkInput.trim() === ""}>Öffnen</button>
                     </form>
                 )}
-                {file && failed && (
+                {source && failed && (
                     <p className="cal-app__message">Plan konnte nicht geladen werden.</p>
                 )}
-                {file && !failed && loading && lectures.length === 0 && (
+                {source && !failed && loading && lectures.length === 0 && (
                     <p className="cal-app__message">Wird geladen…</p>
                 )}
-                {file && !failed && !(loading && lectures.length === 0) && (
+                {source && !failed && !(loading && lectures.length === 0) && (
                     <FullCalendar
                         key={`${view}-${toDateKey(visibleDate)}-${hiddenDays.join("")}`}
                         plugins={[timeGridPlugin]}
