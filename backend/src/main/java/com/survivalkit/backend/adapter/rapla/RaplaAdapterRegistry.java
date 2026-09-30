@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class RaplaAdapterRegistry {
@@ -29,12 +30,8 @@ public class RaplaAdapterRegistry {
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported Rapla URL: " + url));
     }
 
-    public RaplaAdapter getById(String adapterId) {
-        var adapter = adaptersById.get(adapterId);
-        if (adapter == null) {
-            throw new IllegalArgumentException("Unknown Rapla adapter: " + adapterId);
-        }
-        return adapter;
+    public Optional<RaplaAdapter> findById(String adapterId) {
+        return Optional.ofNullable(adaptersById.get(adapterId));
     }
 
     public List<RaplaAdapter> all() {

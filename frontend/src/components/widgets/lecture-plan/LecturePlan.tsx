@@ -42,6 +42,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [raplaNotice, setRaplaNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [planMissing, setPlanMissing] = useState(false);
 
     const [decodedData, setDecodedData] = useState<LecturePlanData>(() => {
         try {
@@ -76,6 +77,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
         if (isPreview || selectedCourse === "") {
             setLoading(false);
             setError(null);
+            setPlanMissing(false);
             setRaplaNotice(null);
             return;
         }
@@ -84,6 +86,13 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
             setError(null);
             try {
                 const data = await lectureService.getLecturesForWeek(weekOffset, decodedData.course);
+                if (data.linked === false) {
+                    setPlanMissing(true);
+                    setLectures([]);
+                    setRaplaNotice(null);
+                    return;
+                }
+                setPlanMissing(false);
                 setRaplaNotice(data.notice);
                 setLectures(data.lectures.filter(lecture => {
                     const isHidden = decodedData.hiddenLectures.some(hiddenText =>
@@ -93,6 +102,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 }));
             } catch (err: unknown) {
                 setLectures([]);
+                setPlanMissing(false);
                 setRaplaNotice(null);
                 setError(getErrorText(err));
             } finally {
@@ -262,7 +272,11 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                                     ? <WidgetStatus status="loading" />
                                     : error
                                         ? <WidgetStatus status="error" message={error} />
-                                        : <>
+                                        : planMissing
+                                            ? <div className="no-course-set-info">
+                                                Für diesen Kurs ist kein Stundenplan hinterlegt.
+                                            </div>
+                                            : <>
                                             {raplaNotice && (
                                                 <div className="lecture-plan-notice" role="status">
                                                     {raplaNotice}

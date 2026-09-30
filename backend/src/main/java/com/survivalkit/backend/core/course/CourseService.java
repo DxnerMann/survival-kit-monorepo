@@ -1,7 +1,6 @@
 package com.survivalkit.backend.core.course;
 
 import com.survivalkit.backend.adapter.postgres.course.CoursePersistancePort;
-import com.survivalkit.backend.adapter.rapla.RaplaAdapterRegistry;
 import com.survivalkit.backend.adapter.rapla.RaplaApiPort;
 import org.springframework.stereotype.Service;
 
@@ -12,16 +11,13 @@ public class CourseService implements CoursePort {
 
     private final RaplaApiPort raplaApiPort;
     private final CoursePersistancePort coursePersistancePort;
-    private final RaplaAdapterRegistry adapterRegistry;
 
     public CourseService(
             RaplaApiPort raplaApiPort,
-            CoursePersistancePort coursePersistancePort,
-            RaplaAdapterRegistry adapterRegistry
+            CoursePersistancePort coursePersistancePort
     ) {
         this.raplaApiPort = raplaApiPort;
         this.coursePersistancePort = coursePersistancePort;
-        this.adapterRegistry = adapterRegistry;
     }
 
     @Override
@@ -33,8 +29,7 @@ public class CourseService implements CoursePort {
     public String extract(String raplaUrl) {
         var baseUrl = raplaApiPort.formatToBaseUrl(raplaUrl);
         var extractedCourse = raplaApiPort.extractCourse(baseUrl);
-        var adapterId = adapterRegistry.resolveForUrl(baseUrl).id();
-        coursePersistancePort.saveRaplaUrl(extractedCourse, baseUrl, adapterId);
+        coursePersistancePort.saveRaplaUrl(extractedCourse, baseUrl);
         return extractedCourse;
     }
 }

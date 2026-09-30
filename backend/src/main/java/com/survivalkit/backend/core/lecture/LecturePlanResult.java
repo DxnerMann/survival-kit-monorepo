@@ -6,5 +6,6 @@ import java.util.List;
 
 public record LecturePlanResult(
         List<Lecture> lectures,
-        String notice
+        String notice,
+        boolean linked
 ) {}

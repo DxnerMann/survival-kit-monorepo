@@ -5,7 +5,7 @@ import java.util.Optional;
 
 public interface CoursePersistancePort {
 
-    void saveRaplaUrl(String course, String raplaBaseUrl, String raplaVersion);
+    void saveRaplaUrl(String course, String raplaBaseUrl);
 
     Optional<CourseRaplaConfig> getCourseRaplaConfig(String course);
 

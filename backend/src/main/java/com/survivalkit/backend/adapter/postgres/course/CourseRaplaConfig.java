@@ -1,12 +1,10 @@
 package com.survivalkit.backend.adapter.postgres.course;
 
-import java.util.Map;
-
 public record CourseRaplaConfig(
         String course,
-        Map<String, String> urlsByVersion
+        String url
 ) {
-    public boolean hasAnyUrl() {
-        return !urlsByVersion.isEmpty();
+    public boolean hasUrl() {
+        return url != null && !url.isBlank();
     }
 }

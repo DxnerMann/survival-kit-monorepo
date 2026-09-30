@@ -1,21 +1,23 @@
 package com.survivalkit.backend.adapter.rapla;
 
 import com.survivalkit.backend.adapter.postgres.course.CourseRaplaConfig;
-import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapterV2;
-import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapterV1;
 import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapter;
+import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapterV2;
 import com.survivalkit.backend.adapter.rapla.support.WeekTableLectureParser;
+import com.survivalkit.backend.adapter.web.ErrorCode;
+import com.survivalkit.backend.shared.Lecture;
 import org.jsoup.Jsoup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.Map;
+import java.time.DayOfWeek;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RaplaAdapterRegistryTest {
@@ -24,18 +26,7 @@ class RaplaAdapterRegistryTest {
 
     @BeforeEach
     void setUp() {
-        registry = new RaplaAdapterRegistry(java.util.List.of(
-                new RaplaAdapterV1(),
-                new RaplaAdapterV2()
-        ));
-    }
-
-    @Test
-    void resolvesV1KarlsruheUrl() {
-        var adapter = registry.resolveForUrl(
-                "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
-        );
-        assertEquals(RaplaAdapter.V1, adapter.id());
+        registry = new RaplaAdapterRegistry(java.util.List.of(new RaplaAdapterV2()));
     }
 
     @Test
@@ -45,94 +36,49 @@ class RaplaAdapterRegistryTest {
         );
         assertEquals(RaplaAdapter.V2, adapter.id());
     }
+
+    @Test
+    void rejectsLegacyKarlsruheUrl() {
+        assertThrows(IllegalArgumentException.class, () -> registry.resolveForUrl(
+                "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
+        ));
+    }
 }
 
 class RaplaUrlResolverTest {
 
-    @Test
-    void usesV1BeforeCutoff() {
-        var resolved = resolverWithDate(LocalDate.of(2026, 9, 30)).resolve(configWithBothUrls());
-
-        assertEquals(RaplaAdapter.V1, resolved.adapterId());
-        assertTrue(resolved.notice().isEmpty());
-    }
+    private final RaplaUrlResolver resolver = new RaplaUrlResolver(
+            new RaplaAdapterRegistry(java.util.List.of(new RaplaAdapterV2()))
+    );
 
     @Test
-    void usesV2AfterCutoffWhenAvailable() {
-        var resolved = resolverWithDate(LocalDate.of(2026, 10, 1)).resolve(configWithBothUrls());
+    void resolvesStoredUrl() {
+        var resolved = resolver.resolve(new CourseRaplaConfig(
+                "TINF24B6",
+                "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6"
+        ));
 
         assertEquals(RaplaAdapter.V2, resolved.adapterId());
+        assertEquals(
+                "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6",
+                resolved.url()
+        );
         assertTrue(resolved.notice().isEmpty());
     }
 
     @Test
-    void fallsBackToV1WithNoticeAfterCutoff() {
-        var resolved = resolverWithDate(LocalDate.of(2026, 10, 1)).resolve(
-                new CourseRaplaConfig(
-                        "TINF24B6",
-                        Map.of(
-                                RaplaAdapter.V1,
-                                "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
-                        )
-                )
-        );
-
-        assertEquals(RaplaAdapter.V1, resolved.adapterId());
-        assertEquals(RaplaMigration.LEGACY_IN_USE_NOTICE, resolved.notice().orElseThrow());
-    }
-
-    @Test
-    void directV1UrlAfterCutoffShowsNotice() {
-        var resolved = resolverWithDate(LocalDate.of(2026, 10, 1)).resolveDirectUrl(
-                "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
-        );
-
-        assertEquals(RaplaAdapter.V1, resolved.adapterId());
-        assertEquals(RaplaMigration.LEGACY_IN_USE_NOTICE, resolved.notice().orElseThrow());
-    }
-
-    private CourseRaplaConfig configWithBothUrls() {
-        return new CourseRaplaConfig(
-                "TINF24B6",
-                Map.of(
-                        RaplaAdapter.V1,
-                        "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6",
-                        RaplaAdapter.V2,
-                        "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6"
-                )
-        );
-    }
-
-    private RaplaUrlResolver resolverWithDate(LocalDate date) {
-        var registry = new RaplaAdapterRegistry(java.util.List.of(
-                new RaplaAdapterV1(),
-                new RaplaAdapterV2()
+    void rejectsCourseWithoutUrl() {
+        var error = assertThrows(IllegalArgumentException.class, () -> resolver.resolve(
+                new CourseRaplaConfig("TINF24B6", " ")
         ));
-        return new RaplaUrlResolver(registry) {
-            @Override
-            protected LocalDate today() {
-                return date;
-            }
-        };
+
+        assertEquals(ErrorCode.COURSE_NOT_FOUND.getCode(), error.getMessage());
     }
 }
 
 class RaplaAdapterFormattingTest {
 
-    private final RaplaAdapter v1Adapter = new RaplaAdapterV1();
     private final RaplaAdapter v2Adapter = new RaplaAdapterV2();
-
-    @Test
-    void v1FormatToBaseUrlStripsWeekParams() {
-        var formatted = v1Adapter.formatToBaseUrl(
-                "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6&day=3&month=8&year=2026"
-        );
-
-        assertEquals(
-                "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6",
-                formatted
-        );
-    }
 
     @Test
     void v2FormatToBaseUrlStripsWeekParams() {
@@ -145,12 +91,24 @@ class RaplaAdapterFormattingTest {
                 formatted
         );
     }
+
+    @Test
+    void v2FormatToBaseUrlKeepsSaltAndKey() {
+        var formatted = v2Adapter.formatToBaseUrl(
+                "https://rapla.dhbw.de/rapla/calendar?salt=abc&key=def&day=3&month=8&year=2026"
+        );
+
+        assertEquals(
+                "https://rapla.dhbw.de/rapla/calendar?salt=abc&key=def",
+                formatted
+        );
+    }
 }
 
 class WeekTableLectureParserTest {
 
     @Test
-    void parsesV1WeekHtml() throws IOException {
+    void parsesLegacyWeekHtml() throws IOException {
         var html = loadResource("rapla/legacy-week.html");
         var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
 
@@ -172,6 +130,22 @@ class WeekTableLectureParserTest {
     }
 
     @Test
+    void parsesCurrentRaplaWeekMarkup() throws IOException {
+        var html = loadResource("rapla/v2-live-week.html");
+        var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
+
+        assertEquals(1, lectures.size());
+        var lecture = lectures.getFirst();
+        assertEquals("Data Science", lecture.title());
+        assertEquals("08:30", lecture.startTime());
+        assertEquals("12:45", lecture.endTime());
+        assertEquals(DayOfWeek.WEDNESDAY, lecture.day());
+        assertEquals(Lecture.LectureType.LECTURE, lecture.type());
+        assertEquals(List.of("E209 Hörsaal"), lecture.rooms());
+        assertEquals(List.of("KA-TINF24B6"), lecture.courses());
+    }
+
+    @Test
     void v2AdapterExtractsCourseFromTitle() throws IOException {
         var html = loadResource("rapla/new-week.html");
         var course = new RaplaAdapterV2().extractCourse(
@@ -180,22 +154,6 @@ class WeekTableLectureParserTest {
         );
 
         assertEquals("TINF24B6", course);
-    }
-
-    @Test
-    void v1AdapterPrefersTitleOverFileParam() throws IOException {
-        var html = loadResource("rapla/legacy-week.html");
-        var course = new RaplaAdapterV1().extractCourse(
-                Jsoup.parse(html),
-                "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=li&file=TINF24B6"
-        );
-
-        assertEquals("TINF24B6", course);
-    }
-
-    @Test
-    void cutoffDateIsFirstOfOctober2026() {
-        assertEquals(LocalDate.of(2026, 10, 1), RaplaMigration.NEW_RAPLA_CUTOFF);
     }
 
     private String loadResource(String path) throws IOException {

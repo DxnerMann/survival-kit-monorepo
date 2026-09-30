@@ -14,7 +14,6 @@ import java.util.Set;
 public final class RaplaUrlSupport {
 
     private static final Set<String> ALLOWED_RAPLA_HOSTS = Set.of(
-            "rapla.dhbw-karlsruhe.de",
             "rapla.dhbw.de"
     );
 

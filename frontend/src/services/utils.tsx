@@ -2,10 +2,17 @@ import { useState, useRef, useCallback, useEffect } from "react";
 
 
 export const formatTimeMs = (ms: number) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
     const centiseconds = Math.floor((ms % 1000) / 10);
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
+    const totalSeconds = Math.floor(ms / 1000);
+    const seconds = totalSeconds % 60;
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const minutes = totalMinutes % 60;
+    const hours = Math.floor(totalMinutes / 60);
+    const clock = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(centiseconds).padStart(2, "0")}`;
+    if (hours < 1) {
+        return clock;
+    }
+    return `${String(hours).padStart(2, "0")}:${clock}`;
 };
 
 export const formatTimestamp = (timestamp: string) => {

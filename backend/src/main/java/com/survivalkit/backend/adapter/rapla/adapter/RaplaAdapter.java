@@ -6,10 +6,8 @@ import org.jsoup.nodes.Document;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 public interface RaplaAdapter {
-    String V1 = "v1";
     String V2 = "v2";
     String id();
     boolean supports(String url);
@@ -17,6 +15,4 @@ public interface RaplaAdapter {
     URI buildWeekRequestUri(String baseUrl, LocalDate monday);
     String extractCourse(Document document, String baseUrl);
     List<Lecture> parseLectures(Document document);
-    int preferenceOrderAt(LocalDate date);
-    Optional<String> deprecationNoticeWhenUsedAt(LocalDate date);
 }

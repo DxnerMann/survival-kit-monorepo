@@ -1,6 +1,5 @@
 package com.survivalkit.backend.adapter.rapla.adapter;
 
-import com.survivalkit.backend.adapter.rapla.RaplaMigration;
 import com.survivalkit.backend.adapter.rapla.support.RaplaUrlSupport;
 import com.survivalkit.backend.adapter.rapla.support.WeekTableLectureParser;
 import com.survivalkit.backend.shared.Lecture;
@@ -11,7 +10,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class RaplaAdapterV2 implements RaplaAdapter {
@@ -94,16 +92,6 @@ public class RaplaAdapterV2 implements RaplaAdapter {
     @Override
     public List<Lecture> parseLectures(Document document) {
         return WeekTableLectureParser.parse(document);
-    }
-
-    @Override
-    public int preferenceOrderAt(LocalDate date) {
-        return date.isBefore(RaplaMigration.NEW_RAPLA_CUTOFF) ? 100 : 0;
-    }
-
-    @Override
-    public Optional<String> deprecationNoticeWhenUsedAt(LocalDate date) {
-        return Optional.empty();
     }
 
     private boolean isCentralRaplaHost(String host) {
