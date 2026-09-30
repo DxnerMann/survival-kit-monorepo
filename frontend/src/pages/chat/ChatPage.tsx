@@ -94,6 +94,8 @@ const formatChatTime = (iso: string) =>
         minute: "2-digit",
     });
 
+const sameChatMinute = (left: string, right: string) => formatChatTime(left) === formatChatTime(right);
+
 const downloadBlob = async (url: string, filename: string) => {
     const blob = await fetch(url).then(response => response.blob());
     const href = URL.createObjectURL(blob);
@@ -563,28 +565,42 @@ const ChatPage = () => {
                 {messages.length === 0 && (
                     <div className="chat-list-empty">Noch keine Nachrichten heute. Schreib die erste.</div>
                 )}
-                {messages.map(message => {
+                {messages.map((message, index) => {
                     const mine = message.authorUserId === userId;
                     const pendingRow = message.id.startsWith("pending-");
                     const loneEmoji = isLoneEmoji(message.text) && !(message.attachments?.length);
+                    const previous = index > 0 ? messages[index - 1] : null;
+                    const continued = previous != null && previous.authorUserId === message.authorUserId;
+                    const showTime = previous == null
+                        || previous.authorUserId !== message.authorUserId
+                        || !sameChatMinute(previous.createdAt, message.createdAt);
+                    const avatar = continued
+                        ? <span className="chat-avatar chat-avatar--spacer" aria-hidden />
+                        : (
+                            <img
+                                className="chat-avatar"
+                                style={{borderColor: message.authorColor || (mine ? profileColor : "#ffffff")}}
+                                src={`${API_URL}/profile/img/${message.authorUserId}`}
+                                alt=""
+                            />
+                        );
                     return (
                         <div
                             key={message.id}
-                            className={`chat-row${mine ? " chat-row--mine" : ""}${pendingRow ? " chat-row--pending" : ""}`}
+                            className={`chat-row${mine ? " chat-row--mine" : ""}${pendingRow ? " chat-row--pending" : ""}${continued ? " chat-row--continued" : ""}`}
                         >
-                            {!mine && (
-                                <img
-                                    className="chat-avatar"
-                                    style={{borderColor: message.authorColor || "#ffffff"}}
-                                    src={`${API_URL}/profile/img/${message.authorUserId}`}
-                                    alt=""
-                                />
-                            )}
+                            {!mine && avatar}
                             <div className={`chat-bubble${mine ? " chat-bubble--mine" : ""}${loneEmoji ? " chat-bubble--emoji" : ""}`}>
-                                <div className="chat-bubble__meta">
-                                    <span className="chat-bubble__author">{mine ? "Du" : message.authorUsername}</span>
-                                    <span className="chat-bubble__time">{formatChatTime(message.createdAt)}</span>
-                                </div>
+                                {(!continued || showTime) && (
+                                    <div className="chat-bubble__meta">
+                                        {!continued && (
+                                            <span className="chat-bubble__author">{mine ? "Du" : message.authorUsername}</span>
+                                        )}
+                                        {showTime && (
+                                            <span className="chat-bubble__time">{formatChatTime(message.createdAt)}</span>
+                                        )}
+                                    </div>
+                                )}
                                 {message.text && <ChatFormattedText text={message.text} />}
                                 {message.attachments?.length > 0 && (
                                     <div className="chat-bubble__attachments">
@@ -594,14 +610,7 @@ const ChatPage = () => {
                                     </div>
                                 )}
                             </div>
-                            {mine && (
-                                <img
-                                    className="chat-avatar"
-                                    style={{borderColor: message.authorColor || profileColor}}
-                                    src={`${API_URL}/profile/img/${message.authorUserId}`}
-                                    alt=""
-                                />
-                            )}
+                            {mine && avatar}
                         </div>
                     );
                 })}

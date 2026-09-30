@@ -60,15 +60,24 @@
     opacity: 0.72;
 }
 
+.chat-row--continued {
+    margin-top: -0.45rem;
+}
+
 .chat-avatar {
-    width: 4.3rem;
-    height: 4.3rem;
+    width: 3.2rem;
+    height: 3.2rem;
     border-radius: 999px;
     object-fit: cover;
     background: var(--color-background-secondary);
     flex: 0 0 auto;
     box-sizing: border-box;
     border: 3px solid #ffffff;
+}
+
+.chat-avatar--spacer {
+    border-color: transparent;
+    background: transparent;
 }
 
 .chat-bubble {
