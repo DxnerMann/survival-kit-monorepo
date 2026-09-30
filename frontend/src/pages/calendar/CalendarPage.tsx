@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type TouchEvent } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import type { EventClickArg, EventContentArg } from "@fullcalendar/core";
@@ -113,10 +113,12 @@ const EventCard = ({ arg, compact }: { arg: EventContentArg; compact: boolean })
 };
 
 const CalendarPage = () => {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const queryFile = searchParams.get("file")?.trim() ?? "";
     const [standalone] = useState(isStandaloneDisplay);
-    const file = queryFile || (standalone ? localStorage.getItem(STORED_FILE_KEY) ?? "" : "");
+    const file = queryFile;
+    const [linkInput, setLinkInput] = useState("");
 
     const [view, setView] = useState<ViewMode>("week");
     const [weekOffset, setWeekOffset] = useState(0);
@@ -375,6 +377,15 @@ const CalendarPage = () => {
         shift(deltaX < 0 ? 1 : -1);
     };
 
+    const openLink = (event: FormEvent) => {
+        event.preventDefault();
+        const trimmed = linkInput.trim();
+        if (!trimmed) {
+            return;
+        }
+        navigate(`/calendar?file=${encodeURIComponent(trimmed)}`);
+    };
+
     const install = async () => {
         if (!installPrompt) {
             setIosHint((open) => !open);
@@ -435,7 +446,19 @@ const CalendarPage = () => {
                 onTouchEnd={onTouchEnd}
             >
                 {!file && (
-                    <p className="cal-app__message">Kein Plan vorhanden.</p>
+                    <form className="cal-app__link-form" onSubmit={openLink}>
+                        <label htmlFor="calendar-file">Rapla-Link</label>
+                        <input
+                            id="calendar-file"
+                            type="url"
+                            inputMode="url"
+                            autoComplete="off"
+                            placeholder="https://rapla.dhbw.de/…"
+                            value={linkInput}
+                            onChange={(event) => setLinkInput(event.target.value)}
+                        />
+                        <button type="submit" disabled={linkInput.trim() === ""}>Öffnen</button>
+                    </form>
                 )}
                 {file && failed && (
                     <p className="cal-app__message">Plan konnte nicht geladen werden.</p>
