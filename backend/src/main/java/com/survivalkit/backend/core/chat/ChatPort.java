@@ -24,5 +24,7 @@ public interface ChatPort {
             String clientId
     );
 
+    ChatMessage postCurrentUserMessage(String text, List<String> attachmentIds, String clientId);
+
     void deleteAll();
 }

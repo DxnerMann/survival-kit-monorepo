@@ -37,7 +37,8 @@ public class CourseChannelAccessValidatorImpl implements CourseChannelAccessVali
             return Optional.of("NO_COURSE_SET");
         }
 
-        if (parsedChannel.get().course() == null || !parsedChannel.get().course().equals(user.course())) {
+        var channelCourse = parsedChannel.get().course() == null ? "" : parsedChannel.get().course().trim();
+        if (!channelCourse.equals(user.course().trim())) {
             return Optional.of("COURSE_MISMATCH");
         }
 

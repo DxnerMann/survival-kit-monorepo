@@ -62,11 +62,13 @@ export async function uploadProfileImage(file: File | Blob, isGif: boolean): Pro
 export async function updateUsernameAndColor(data: {
     color?: string;
     username?: string;
+    accentColor?: string | null;
 }) {
     const params = new URLSearchParams();
 
     if (data.color) params.append("color", data.color);
     if (data.username) params.append("username", data.username);
+    if ("accentColor" in data) params.append("accentColor", data.accentColor ?? "");
 
     const response = await apiFetch(`${API_URL}/profile?${params}`, {
         method: "PUT",

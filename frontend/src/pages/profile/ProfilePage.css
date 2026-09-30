@@ -132,6 +132,12 @@
     align-items: center;
 }
 
+.profile-accent-hint {
+    margin: 0.75rem 0;
+    color: var(--color-text-secondary);
+    max-width: 40rem;
+}
+
 .profile-page-settings-section {
     margin-bottom: 2rem;
 }

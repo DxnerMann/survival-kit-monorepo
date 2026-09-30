@@ -7,6 +7,7 @@ import Separator from "@/components/ui/Separator.tsx";
 import NavIcon from "@/components/layout/NavIcon.tsx";
 import {getUserRole, isAdmin} from "@/services/tokenService.tsx";
 import {fetchProfileSettings} from "@/services/userService.tsx";
+import {applyAccentOverride} from "@/services/accentColor.ts";
 
 const Header = () => {
     const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Header = () => {
     useEffect(() => {
         if (isGuest) {
             setCourse(null);
+            applyAccentOverride(null);
             return;
         }
 
@@ -28,6 +30,7 @@ const Header = () => {
             .then(profile => {
                 if (!cancelled) {
                     setCourse(profile.course?.trim() || null);
+                    applyAccentOverride(profile.accentColor);
                 }
             })
             .catch(() => {

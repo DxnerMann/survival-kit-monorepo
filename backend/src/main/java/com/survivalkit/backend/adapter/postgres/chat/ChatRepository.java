@@ -76,6 +76,7 @@ public class ChatRepository implements ChatPersistancePort {
                         rs.getString("course"),
                         rs.getString("authorUserId"),
                         rs.getString("authorUsername"),
+                        rs.getString("authorColor"),
                         rs.getString("body"),
                         toInstant(rs.getTimestamp("createdAt")),
                         List.of(),
@@ -111,6 +112,7 @@ public class ChatRepository implements ChatPersistancePort {
                     row.course(),
                     row.authorUserId(),
                     row.authorUsername(),
+                    row.authorColor(),
                     row.text(),
                     row.createdAt(),
                     byMessage.getOrDefault(row.id(), List.of()),
@@ -198,14 +200,15 @@ public class ChatRepository implements ChatPersistancePort {
             SET messageId = :messageId
             WHERE id IN (:ids)
               AND authorUserId = :authorUserId
-              AND course = :course
+              AND TRIM(course) = TRIM(:course)
               AND messageId IS NULL
             """),
         GET_MESSAGES("""
-            SELECT id, course, authorUserId, authorUsername, body, createdAt
-            FROM chatMessages
-            WHERE course = :course AND createdAt >= :since
-            ORDER BY createdAt ASC
+            SELECT m.id, m.course, m.authorUserId, m.authorUsername, u.color AS authorColor, m.body, m.createdAt
+            FROM chatMessages m
+            LEFT JOIN users u ON u.id = m.authorUserId
+            WHERE TRIM(m.course) = TRIM(:course) AND m.createdAt >= :since
+            ORDER BY m.createdAt ASC
             """),
         GET_ATTACHMENTS_FOR_MESSAGES("""
             SELECT id, messageId, filename, contentType, byteSize, durationMs, kind
@@ -216,14 +219,14 @@ public class ChatRepository implements ChatPersistancePort {
         GET_ATTACHMENT("""
             SELECT id, filename, contentType, data
             FROM chatAttachments
-            WHERE id = :id AND course = :course
+            WHERE id = :id AND TRIM(course) = TRIM(:course)
             """),
         COUNT_OWN_UNLINKED("""
             SELECT COUNT(*)
             FROM chatAttachments
             WHERE id IN (:ids)
               AND authorUserId = :authorUserId
-              AND course = :course
+              AND TRIM(course) = TRIM(:course)
               AND messageId IS NULL
             """),
         DELETE_ATTACHMENTS("DELETE FROM chatAttachments"),

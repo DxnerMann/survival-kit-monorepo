@@ -73,6 +73,11 @@ export default function GameSuggestionDialog({
                 url,
             });
             resetForm();
+            onCancel();
+        } catch (error: unknown) {
+            if (!(error instanceof Error)) {
+                snackbarService.showSnackbar({type: "error", text: "Vorschlag konnte nicht gesendet werden", showIcon: true});
+            }
         } finally {
             setSubmitting(false);
         }

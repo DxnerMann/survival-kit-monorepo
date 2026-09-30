@@ -10,6 +10,7 @@ public record ChatMessage(
         String course,
         String authorUserId,
         String authorUsername,
+        String authorColor,
         String text,
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         Instant createdAt,

@@ -24,6 +24,7 @@ import {useNavigate} from "react-router-dom";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.tsx";
 import ChangeEmailDialog from "@/components/dialog/ChangeEmailDialog.tsx";
 import {useCountdownTimer} from "@/services/utils.tsx";
+import {applyAccentOverride, readThemeAccent} from "@/services/accentColor.ts";
 
 const API_URL = api.baseUrl;
 
@@ -35,6 +36,7 @@ const ProfilePage = () => {
     const [isPictureDialogOpen, setIsPictureDialogOpen] = useState(false);
     const [avatarVersion, setAvatarVersion] = useState(0);
     const [profileColor, setProfileColor] = useState("");
+    const [accentColor, setAccentColor] = useState<string | null>(null);
     const [username, setUsername] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [oldPassword, setOldPassword] = useState("");
@@ -52,6 +54,8 @@ const ProfilePage = () => {
             setprofileSettings(profileSettings);
             setSelectedCourse(profileSettings.course ?? "");
             setProfileColor(profileSettings.color);
+            setAccentColor(profileSettings.accentColor ?? null);
+            applyAccentOverride(profileSettings.accentColor);
             setUsername(profileSettings.username);
             setIsVerified(profileSettings.isVerified);
         }
@@ -74,11 +78,14 @@ const ProfilePage = () => {
             profileSettings !== undefined && profileColor !== profileSettings.color;
         const usernameChanged =
             profileSettings !== undefined && username !== profileSettings.username;
+        const savedAccent = profileSettings?.accentColor ?? null;
+        const accentChanged = profileSettings !== undefined && accentColor !== savedAccent;
 
         try {
             const updates: {
                 color?: string;
                 username?: string;
+                accentColor?: string | null;
             } = {};
 
             if (colorChanged) {
@@ -89,11 +96,17 @@ const ProfilePage = () => {
                 updates.username = username;
             }
 
-            if (colorChanged || usernameChanged) {
+            if (accentChanged) {
+                updates.accentColor = accentColor;
+            }
+
+            if (colorChanged || usernameChanged || accentChanged) {
                 await updateUsernameAndColor(updates);
+                applyAccentOverride(accentColor);
                 setprofileSettings({
                     username: username,
                     color: profileColor,
+                    accentColor: accentColor,
                     course: profileSettings.course,
                     firstname: profileSettings.firstname,
                     lastname: profileSettings.lastname,
@@ -261,6 +274,30 @@ const ProfilePage = () => {
                     <div className="profile-settings-color-picker-wrapper">
                         <ColorPicker startValue={profileColor} onChange={(value) => setProfileColor(value)} />
                     </div>
+                </div>
+                <div className="profile-page-settings-section">
+                    <h2 className="profile-page-subheading">Akzentfarbe</h2>
+                    <div className="profile-settings-color-picker-wrapper">
+                        <ColorPicker
+                            startValue={accentColor ?? readThemeAccent()}
+                            onChange={(value) => {
+                                setAccentColor(value);
+                                applyAccentOverride(value);
+                            }}
+                        />
+                    </div>
+                    <p className="profile-accent-hint">
+                        Ohne eigene Farbe gilt die Standard-Akzentfarbe des hellen bzw. dunklen Designs. Eine eigene Farbe ersetzt das Rot in der ganzen App.
+                    </p>
+                    <Button
+                        text="Auf Standard zurücksetzen"
+                        variant="secondary"
+                        disabled={accentColor === null}
+                        onClick={() => {
+                            setAccentColor(null);
+                            applyAccentOverride(null);
+                        }}
+                    />
                 </div>
                 < Button text={"Speichern"} onClick={() => handleSave()} />
             </div>

@@ -14,6 +14,7 @@ export type ChatMessage = {
     course: string;
     authorUserId: string;
     authorUsername: string;
+    authorColor?: string | null;
     text: string | null;
     createdAt: string;
     attachments: ChatAttachment[];

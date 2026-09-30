@@ -213,9 +213,10 @@ public class WebSocketService implements WebSocketPort {
                     request.attachmentIds(),
                     request.clientId()
             );
+            var courseChannel = WebSocketChannels.courseChat(message.course());
             broadcastToChannel(
-                    channel,
-                    WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, objectMapper.valueToTree(message))
+                    courseChannel,
+                    WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, courseChannel, objectMapper.valueToTree(message))
             );
         } catch (RuntimeException ex) {
             sendError(session, ex.getMessage() != null ? ex.getMessage() : "CHAT_ERROR", "Nachricht konnte nicht gesendet werden.");

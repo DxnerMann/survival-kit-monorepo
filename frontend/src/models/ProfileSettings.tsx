@@ -6,6 +6,7 @@ export type ProfileSettings = {
     email: string,
     username: string,
     color: string,
+    accentColor?: string | null,
     userId: string
     isVerified: boolean,
 }

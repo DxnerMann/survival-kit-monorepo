@@ -29,6 +29,17 @@ type Lightbox = {
     kind: "IMAGE" | "GIF" | "VIDEO";
 };
 
+const mergeMessages = (history: ChatMessage[], current: ChatMessage[]): ChatMessage[] => {
+    const ids = new Set(history.map(message => message.id));
+    const clientIds = new Set(history.flatMap(message => message.clientId ? [message.clientId] : []));
+    const pending = current.filter(message =>
+        message.id.startsWith("pending-")
+        && !ids.has(message.id)
+        && !(message.clientId && clientIds.has(message.clientId))
+    );
+    return [...history, ...pending];
+};
+
 const formatChatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString("de-DE", {
         timeZone: "Europe/Berlin",
@@ -133,6 +144,7 @@ const ChatPage = () => {
     const [course, setCourse] = useState<string | null>(null);
     const [userId, setUserId] = useState("");
     const [username, setUsername] = useState("");
+    const [profileColor, setProfileColor] = useState("#ffffff");
     const [loading, setLoading] = useState(true);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [draft, setDraft] = useState("");
@@ -184,6 +196,7 @@ const ChatPage = () => {
                 }
                 setUserId(profile.userId);
                 setUsername(profile.username);
+                setProfileColor(profile.color || "#ffffff");
                 const nextCourse = profile.course?.trim() || "";
                 setCourse(nextCourse || null);
                 if (!nextCourse) {
@@ -192,7 +205,7 @@ const ChatPage = () => {
                 }
                 const history = await chatService.getMessages();
                 if (!cancelled) {
-                    setMessages(history);
+                    setMessages(prev => mergeMessages(history, prev));
                 }
             } catch (err: unknown) {
                 snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
@@ -214,11 +227,19 @@ const ChatPage = () => {
             return;
         }
 
-        websocketService.disconnect();
         websocketService.connect();
         websocketService.joinChannel(channel);
 
         const unsubscribe = websocketService.subscribe(envelope => {
+            if (envelope.type === WebSocketMessageType.ERROR && (envelope.channel == null || envelope.channel === channel)) {
+                const payload = envelope.payload as {code?: string; message?: string};
+                snackbarService.showSnackbar({
+                    type: "error",
+                    text: payload?.code ? getErrorText({errorCode: payload.code}) : (payload?.message ?? "Chat-Fehler"),
+                    showIcon: true,
+                });
+                return;
+            }
             if (envelope.channel !== channel) {
                 return;
             }
@@ -246,19 +267,6 @@ const ChatPage = () => {
                 if (incoming.clientId && pendingClientIdRef.current === incoming.clientId) {
                     pendingClientIdRef.current = null;
                 }
-            }
-            if (envelope.type === WebSocketMessageType.ERROR) {
-                const failedId = pendingClientIdRef.current;
-                if (failedId) {
-                    setMessages(prev => prev.filter(item => item.clientId !== failedId && item.id !== `pending-${failedId}`));
-                    pendingClientIdRef.current = null;
-                }
-                const payload = envelope.payload as {code?: string; message?: string};
-                snackbarService.showSnackbar({
-                    type: "error",
-                    text: payload?.code ? getErrorText({errorCode: payload.code}) : (payload?.message ?? "Chat-Fehler"),
-                    showIcon: true,
-                });
             }
         });
 
@@ -360,6 +368,7 @@ const ChatPage = () => {
             createdAt: new Date().toISOString(),
             attachments,
             clientId,
+            authorColor: profileColor,
         };
 
         setSending(true);
@@ -373,7 +382,29 @@ const ChatPage = () => {
         }
 
         try {
-            websocketService.sendMessage(channel, {text, attachmentIds, clientId});
+            const saved = await chatService.postMessage({
+                text: text || null,
+                attachmentIds,
+                clientId,
+            });
+            pendingClientIdRef.current = null;
+            setMessages(prev => {
+                const idx = prev.findIndex(item =>
+                    item.clientId === clientId || item.id === `pending-${clientId}` || item.id === saved.id
+                );
+                if (idx < 0) {
+                    return [...prev, saved];
+                }
+                const next = [...prev];
+                next[idx] = saved;
+                return next;
+            });
+        } catch (err: unknown) {
+            setMessages(prev => prev.filter(item => item.clientId !== clientId && item.id !== `pending-${clientId}`));
+            pendingClientIdRef.current = null;
+            if (!(err instanceof Error) || err.name === "TypeError") {
+                snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
+            }
         } finally {
             setSending(false);
         }
@@ -413,6 +444,7 @@ const ChatPage = () => {
                             {!mine && (
                                 <img
                                     className="chat-avatar"
+                                    style={{borderColor: message.authorColor || "#ffffff"}}
                                     src={`${API_URL}/profile/img/${message.authorUserId}`}
                                     alt=""
                                 />
@@ -434,6 +466,7 @@ const ChatPage = () => {
                             {mine && (
                                 <img
                                     className="chat-avatar"
+                                    style={{borderColor: message.authorColor || profileColor}}
                                     src={`${API_URL}/profile/img/${message.authorUserId}`}
                                     alt=""
                                 />

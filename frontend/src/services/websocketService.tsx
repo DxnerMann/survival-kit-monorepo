@@ -34,15 +34,19 @@ class WebSocketClient {
         }
 
         this.setStatus("connecting");
-        this.socket = new WebSocket(getWebSocketUrl());
+        const socket = new WebSocket(getWebSocketUrl());
+        this.socket = socket;
 
-        this.socket.onopen = () => {
+        socket.onopen = () => {
+            if (this.socket !== socket) {
+                return;
+            }
             this.setStatus("connected");
             this.flushPendingMessages();
             this.rejoinChannels();
         };
 
-        this.socket.onmessage = (event) => {
+        socket.onmessage = (event) => {
             try {
                 const envelope = JSON.parse(event.data) as WebSocketEnvelope;
                 this.messageHandlers.forEach(handler => handler(envelope));
@@ -51,11 +55,16 @@ class WebSocketClient {
             }
         };
 
-        this.socket.onerror = () => {
-            this.setStatus("disconnected");
+        socket.onerror = () => {
+            if (this.socket === socket) {
+                this.setStatus("disconnected");
+            }
         };
 
-        this.socket.onclose = () => {
+        socket.onclose = () => {
+            if (this.socket !== socket) {
+                return;
+            }
             this.socket = null;
             this.setStatus("disconnected");
         };

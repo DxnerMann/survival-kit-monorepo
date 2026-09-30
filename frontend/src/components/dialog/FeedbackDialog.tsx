@@ -12,7 +12,7 @@ interface FeedbackDialogProps {
         title: string;
         description: string;
         type: FeedbackType;
-    }) => void;
+    }) => void | Promise<void>;
 }
 
 export default function FeedbackDialog({

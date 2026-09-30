@@ -139,6 +139,15 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public void updateAccentColor(String userId, String accentColor) {
+        jdbcClient.sql(Statements.UPDATE_ACCENT_COLOR.sql)
+                .paramSource(new MapSqlParameterSource()
+                        .addValue("accentColor", accentColor, java.sql.Types.VARCHAR)
+                        .addValue("id", userId)
+                ).update();
+    }
+
+    @Override
     public void updatePassword(String userId, String newPassword) {
         jdbcClient.sql(Statements.UPDATE_PASSWORD.sql)
                 .paramSource(new MapSqlParameterSource("password", newPassword)
@@ -305,7 +314,7 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         USER_PROFILE(
         """
-                SELECT firstname, lastname, course, role, email, username, color, id as userId, isverified FROM users WHERE id = :id;
+                SELECT firstname, lastname, course, role, email, username, color, accentColor, id as userId, isverified FROM users WHERE id = :id;
             """
         ),
         // language=sql
@@ -324,6 +333,12 @@ public class UserRepository implements UserPersistancePort {
         UPDATE_COLOR(
         """
                 UPDATE users SET color = :color WHERE id = :id 
+            """
+        ),
+        // language=sql
+        UPDATE_ACCENT_COLOR(
+        """
+                UPDATE users SET accentColor = :accentColor WHERE id = :id
             """
         ),
         // language=sql
@@ -353,7 +368,7 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         GET_USERS(
                 """
-                        SELECT firstname, lastname, course, role, email, username, color, id as userId, isverified
+                        SELECT firstname, lastname, course, role, email, username, color, accentColor, id as userId, isverified
                         FROM users
                         WHERE (:continuation::TEXT IS NULL OR id > :continuation)
                         ORDER BY id

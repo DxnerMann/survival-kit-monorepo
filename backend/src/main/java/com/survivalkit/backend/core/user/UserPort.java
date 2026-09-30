@@ -17,6 +17,7 @@ public interface UserPort {
     ImgWrapper getDefaultProfilePicture();
     void updateUsername(String newUsername);
     void updateColor(String newColor);
+    void updateAccentColor(String newColor);
     Page<UserProfile> getUsers(Integer pageSize, String continuation);
     void promote(String userId, RoleLevel role);
 }

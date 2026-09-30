@@ -5,7 +5,8 @@
 /* LIGHT THEME */
 
 .light-theme {
-    --color-primary-accent: #ff0000;
+    --color-accent-default: #ff0000;
+    --color-primary-accent: var(--color-accent-override, var(--color-accent-default));
     --color-secondary-accent: #5e1010;
 
     --color-background-primary: #fff8e6;
@@ -29,7 +30,8 @@
 /* DARK THEME */
 
 .dark-theme {
-    --color-primary-accent: #ff0000;
+    --color-accent-default: #ff0000;
+    --color-primary-accent: var(--color-accent-override, var(--color-accent-default));
     --color-secondary-accent: #6a0000;
 
     --color-background-primary: #0f111b;

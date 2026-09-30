@@ -158,6 +158,20 @@ public class UserService implements UserPort {
     }
 
     @Override
+    public void updateAccentColor(String newColor) {
+        requireVerification();
+        var user = SecurityContext.current();
+        if (newColor == null || newColor.isBlank()) {
+            userPersistancePort.updateAccentColor(user.userId(), null);
+            return;
+        }
+        if (!newColor.matches("^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$")) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_COLOR.getCode());
+        }
+        userPersistancePort.updateAccentColor(user.userId(), newColor);
+    }
+
+    @Override
     public Page<UserProfile> getUsers(Integer pageSize, String continuation) {
         pageSize = pageSize == null ? 20 : pageSize;
         pageSize = pageSize > 50 ? 50 : pageSize;

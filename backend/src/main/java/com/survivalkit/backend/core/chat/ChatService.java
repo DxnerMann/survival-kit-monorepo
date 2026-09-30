@@ -6,6 +6,7 @@ import com.survivalkit.backend.adapter.postgres.chat.ChatMessage;
 import com.survivalkit.backend.adapter.postgres.chat.ChatPersistancePort;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.web.ErrorCode;
+import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.security.RateLimitService;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
@@ -53,6 +54,14 @@ public class ChatService implements ChatPort {
     public List<ChatMessage> getTodaysMessages() {
         var course = currentUserCourse();
         return chatPersistancePort.findMessagesByCourseSince(course, startOfTodayBerlin());
+    }
+
+    @Override
+    public ChatMessage postCurrentUserMessage(String text, List<String> attachmentIds, String clientId) {
+        requireVerification();
+        var user = SecurityContext.current();
+        var profile = currentProfile();
+        return postMessage(user.userId(), profile.username(), profile.course(), text, attachmentIds, clientId);
     }
 
     @Override
@@ -120,6 +129,11 @@ public class ChatService implements ChatPort {
     ) {
         rateLimitService.check("chat-message", userId, 30, Duration.ofMinutes(1));
 
+        var normalizedCourse = course == null ? "" : course.trim();
+        if (normalizedCourse.isEmpty()) {
+            throw new IllegalArgumentException(ErrorCode.CHAT_COURSE_REQUIRED.getCode());
+        }
+
         var body = text == null ? "" : text.strip();
         var ids = attachmentIds == null ? List.<String>of() : attachmentIds.stream().distinct().toList();
 
@@ -132,29 +146,35 @@ public class ChatService implements ChatPort {
         if (body.isEmpty() && ids.isEmpty()) {
             throw new IllegalArgumentException(ErrorCode.CHAT_MESSAGE_EMPTY.getCode());
         }
-        if (!chatPersistancePort.attachmentsBelongToUser(ids, userId, course)) {
+        if (!chatPersistancePort.attachmentsBelongToUser(ids, userId, normalizedCourse)) {
             throw new IllegalArgumentException(ErrorCode.CHAT_ATTACHMENT_NOT_FOUND.getCode());
         }
 
         var now = Instant.now();
+        var authorColor = userPersistancePort.getUserProfile(userId)
+                .map(profile -> profile.color())
+                .filter(color -> color != null && !color.isBlank())
+                .orElse("#ffffff");
         var message = new ChatMessage(
                 NanoId.generate(25),
-                course,
+                normalizedCourse,
                 userId,
                 username,
+                authorColor,
                 body.isEmpty() ? null : body,
                 now,
                 List.of(),
                 null
         );
         chatPersistancePort.saveMessage(message);
-        chatPersistancePort.linkAttachments(message.id(), userId, course, ids);
+        chatPersistancePort.linkAttachments(message.id(), userId, normalizedCourse, ids);
         var attachments = chatPersistancePort.findAttachmentsByMessageIds(List.of(message.id()));
         return new ChatMessage(
                 message.id(),
                 message.course(),
                 message.authorUserId(),
                 message.authorUsername(),
+                message.authorColor(),
                 message.text(),
                 message.createdAt(),
                 attachments,
@@ -168,6 +188,10 @@ public class ChatService implements ChatPort {
     }
 
     private String currentUserCourse() {
+        return currentProfile().course().trim();
+    }
+
+    private UserProfile currentProfile() {
         var user = SecurityContext.current();
         var profile = userPersistancePort.getUserProfile(user.userId())
                 .orElseThrow(() -> new UserNotFoundException(ErrorCode.USER_DOES_NOT_EXIST.getCode()));
@@ -175,7 +199,7 @@ public class ChatService implements ChatPort {
         if (profile.course() == null || profile.course().isBlank()) {
             throw new IllegalArgumentException(ErrorCode.CHAT_COURSE_REQUIRED.getCode());
         }
-        return profile.course();
+        return profile;
     }
 
     static Instant startOfTodayBerlin() {

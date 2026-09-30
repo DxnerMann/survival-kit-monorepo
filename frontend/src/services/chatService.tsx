@@ -15,6 +15,20 @@ const getMessages = async (): Promise<ChatMessage[]> => {
     return response.json();
 };
 
+const postMessage = async (payload: {
+    text: string | null;
+    attachmentIds: string[];
+    clientId: string;
+}): Promise<ChatMessage> => {
+    const response = await apiFetch(`${API_URL}/chat/messages`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload),
+    });
+    await checkResponse(response);
+    return response.json();
+};
+
 const uploadAttachment = async (file: File, durationMs?: number): Promise<ChatAttachment> => {
     const formData = new FormData();
     formData.append("file", file, file.name);
@@ -63,6 +77,7 @@ export const chatLimits = {
 
 export const chatService = {
     getMessages,
+    postMessage,
     uploadAttachment,
     fetchAttachmentBlob,
     getVideoDurationMs,

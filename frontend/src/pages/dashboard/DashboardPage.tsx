@@ -125,7 +125,7 @@ const DashboardPage = () => {
                 <GameSuggestionDialog
                     isOpen={showGameSuggestionDialog}
                     onCancel={() => setShowGameSuggestionDialog(false)}
-                    onSubmit={(data) => {onLinkSubmit(data)}}
+                    onSubmit={onLinkSubmit}
                 />
                 <PopularLinks />
                 <SectionHeading

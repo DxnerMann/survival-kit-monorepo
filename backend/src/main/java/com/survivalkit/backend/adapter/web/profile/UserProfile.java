@@ -10,6 +10,7 @@ public record UserProfile(
         String email,
         String username,
         String color,
+        String accentColor,
         String userId,
         Boolean isVerified
 ) {

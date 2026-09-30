@@ -75,13 +75,17 @@ public class ProfileController {
     @PutMapping()
     public ResponseEntity<Void> updateUsername(
             @RequestParam(required = false) String username,
-            @RequestParam(required = false) String color
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) String accentColor
     ) {
         if (username != null) {
             userPort.updateUsername(username);
         }
         if (color != null) {
             userPort.updateColor(color);
+        }
+        if (accentColor != null) {
+            userPort.updateAccentColor(accentColor);
         }
         return ResponseEntity.ok().build();
     }
