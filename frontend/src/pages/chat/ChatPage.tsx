@@ -570,20 +570,22 @@ const ChatPage = () => {
                     const pendingRow = message.id.startsWith("pending-");
                     const loneEmoji = isLoneEmoji(message.text) && !(message.attachments?.length);
                     const previous = index > 0 ? messages[index - 1] : null;
+                    const next = index < messages.length - 1 ? messages[index + 1] : null;
                     const continued = previous != null && previous.authorUserId === message.authorUserId;
+                    const lastInRun = next == null || next.authorUserId !== message.authorUserId;
                     const showTime = previous == null
                         || previous.authorUserId !== message.authorUserId
                         || !sameChatMinute(previous.createdAt, message.createdAt);
-                    const avatar = continued
-                        ? <span className="chat-avatar chat-avatar--spacer" aria-hidden />
-                        : (
+                    const avatar = lastInRun
+                        ? (
                             <img
                                 className="chat-avatar"
                                 style={{borderColor: message.authorColor || (mine ? profileColor : "#ffffff")}}
                                 src={`${API_URL}/profile/img/${message.authorUserId}`}
                                 alt=""
                             />
-                        );
+                        )
+                        : <span className="chat-avatar chat-avatar--spacer" aria-hidden />;
                     return (
                         <div
                             key={message.id}
