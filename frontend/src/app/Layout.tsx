@@ -1,3 +1,4 @@
+import {useEffect} from "react";
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import LoginPage from "@/pages/login/LoginPage"
 import GuestRouter from "@/router/GuestRouter.tsx"
@@ -21,6 +22,8 @@ import ReleaseNotesPage from "@/pages/release-notes/ReleaseNotesPage.tsx";
 import MaintananceInfoPage from "@/pages/maintenance/MaintananceInfoPage.tsx";
 import MemeWallPage from "@/pages/memewall/MemeWallPage.tsx";
 import CalendarPage from "@/pages/calendar/CalendarPage.tsx";
+import {hasSessionMeta} from "@/services/tokenService.tsx";
+import {touchGuest} from "@/services/guestService.tsx";
 
 const HIDDEN_HEADER_ROUTES = ['/login', '/calendar']
 const HIDDEN_FOOTER_ROUTES = ['/login', '/chat', '/presentation-game', '/calendar']
@@ -32,6 +35,27 @@ const Layout = () => {
     const showFooter = !HIDDEN_FOOTER_ROUTES.some(route =>
         pathname === route || pathname.startsWith(`${route}/`)
     );
+
+    useEffect(() => {
+        const ping = () => {
+            if (localStorage.getItem("guest") !== "true" || hasSessionMeta()) {
+                return;
+            }
+            void touchGuest();
+        };
+        ping();
+        const timer = window.setInterval(ping, 60_000);
+        const onVisible = () => {
+            if (document.visibilityState === "visible") {
+                ping();
+            }
+        };
+        document.addEventListener("visibilitychange", onVisible);
+        return () => {
+            window.clearInterval(timer);
+            document.removeEventListener("visibilitychange", onVisible);
+        };
+    }, [pathname]);
 
     if (MAINTENANCE_MODE === true) return <MaintananceInfoPage />
 

@@ -186,6 +186,24 @@ export const getGlobalCaffeineAverage = async (): Promise<number> => {
     return response.json();
 };
 
+export const getUserCaffeineSum = async (): Promise<number> => {
+    const response = await apiFetch(`${API_URL}/caffeine/sum/user`);
+    await checkResponse(response);
+    return response.json();
+};
+
+export const getCourseCaffeineSum = async (): Promise<number> => {
+    const response = await apiFetch(`${API_URL}/caffeine/sum/course`);
+    await checkResponse(response);
+    return response.json();
+};
+
+export const getGlobalCaffeineSum = async (): Promise<number> => {
+    const response = await apiFetch(`${API_URL}/caffeine/sum/global`);
+    await checkResponse(response);
+    return response.json();
+};
+
 export const remainingCaffeineMg = (amountMg: number, consumedAt: Date, at: Date): number => {
     const hours = (at.getTime() - consumedAt.getTime()) / (1000 * 60 * 60);
     if (hours < 0) return 0;

@@ -81,4 +81,22 @@ public class CaffeineController {
     public ResponseEntity<Double> getGlobalAverage() {
         return ResponseEntity.ok(caffeinePort.getAverageGlobal());
     }
+
+    @Role(RoleLevel.USER)
+    @GetMapping("/sum/user")
+    public ResponseEntity<Double> getUserSum() {
+        return ResponseEntity.ok(caffeinePort.getSumForUser());
+    }
+
+    @Role(RoleLevel.USER)
+    @GetMapping("/sum/course")
+    public ResponseEntity<Double> getCourseSum() {
+        return ResponseEntity.ok(caffeinePort.getSumForCourse());
+    }
+
+    @Role(RoleLevel.GUEST)
+    @GetMapping("/sum/global")
+    public ResponseEntity<Double> getGlobalSum() {
+        return ResponseEntity.ok(caffeinePort.getSumGlobal());
+    }
 }

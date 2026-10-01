@@ -17,6 +17,7 @@ public record UserWidgetModel(
         FAV_GAMES,
         DAILY_CAT,
         CURRENT_CAFFEINE,
+        FEGEFEUER,
         EMPTY,
         EMPTY_DASHBOARD
     }

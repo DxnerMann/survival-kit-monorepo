@@ -18,6 +18,8 @@ import static com.survivalkit.backend.shared.Utils.toTimestamp;
 @Repository
 public class QuickLinkRepository implements QuickLinkPersistancePort {
 
+    private static final String CURSOR_SEPARATOR = "\u001f";
+
     private final JdbcClient jdbcClient;
     private final SecurityLog securityLog;
 
@@ -38,11 +40,13 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
 
     @Override
     public Page<QuickLink> getQuickLinksFiltered(boolean approved, int pageSize, String continuation, boolean sortByPopularity) {
+        var cursor = cursor(continuation, sortByPopularity);
         var quicklinks = jdbcClient.sql(Statements.GET_FILTERED.sql)
                 .paramSource(new MapSqlParameterSource("approved", approved)
                         .addValue("pageSize", pageSize)
                         .addValue("sortByPopularity", sortByPopularity)
-                        .addValue("continuation", decode(continuation))
+                        .addValue("continuationClicks", cursor.clicks(), Types.INTEGER)
+                        .addValue("continuationId", cursor.id(), Types.VARCHAR)
                 ).query(QuickLink.class)
                 .list();
 
@@ -52,11 +56,37 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                     null
             );
         }
+        var last = quicklinks.getLast();
+        var token = sortByPopularity
+                ? last.clickedThisMonth() + CURSOR_SEPARATOR + last.id()
+                : last.id();
         return new Page<>(
                 quicklinks,
-                encode(quicklinks.getLast().id())
+                encode(token)
         );
     }
+
+    private static Cursor cursor(String continuation, boolean sortByPopularity) {
+        var decoded = decode(continuation);
+        if (decoded == null || decoded.isBlank()) {
+            return new Cursor(null, null);
+        }
+        if (!sortByPopularity) {
+            return new Cursor(null, decoded);
+        }
+        var separator = decoded.indexOf(CURSOR_SEPARATOR);
+        if (separator < 0) {
+            return new Cursor(null, decoded);
+        }
+        try {
+            var clicks = Integer.valueOf(decoded.substring(0, separator));
+            return new Cursor(clicks, decoded.substring(separator + 1));
+        } catch (NumberFormatException ex) {
+            return new Cursor(null, decoded);
+        }
+    }
+
+    private record Cursor(Integer clicks, String id) {}
 
     @Override
     public void approveQuickLink(String id, String title, String description) {
@@ -127,10 +157,27 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                         SELECT *
                     FROM quicklinks
                     WHERE (:approved::BOOLEAN IS NULL OR approvedByAdmin = :approved)
-                      AND (:continuation::TEXT IS NULL OR id > :continuation)
+                      AND (
+                        :continuationId::TEXT IS NULL
+                        OR (
+                          :sortByPopularity::BOOLEAN = TRUE
+                          AND :continuationClicks::INTEGER IS NOT NULL
+                          AND (
+                            COALESCE(clickedThisMonth, 0) < :continuationClicks
+                            OR (
+                              COALESCE(clickedThisMonth, 0) = :continuationClicks
+                              AND id > :continuationId
+                            )
+                          )
+                        )
+                        OR (
+                          (:sortByPopularity::BOOLEAN = FALSE OR :continuationClicks::INTEGER IS NULL)
+                          AND id > :continuationId
+                        )
+                      )
                     ORDER BY
-                      CASE\s
-                        WHEN :sortByPopularity::BOOLEAN = TRUE THEN clickedThisMonth
+                      CASE
+                        WHEN :sortByPopularity::BOOLEAN = TRUE THEN COALESCE(clickedThisMonth, 0)
                         ELSE NULL
                       END DESC,
                       id ASC

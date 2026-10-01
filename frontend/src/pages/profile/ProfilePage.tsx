@@ -233,7 +233,7 @@ const ProfilePage = () => {
                     >
                         <img
                             src={`${API_URL}/profile/img/${profileSettings.userId}?v=${avatarVersion}`}
-                            alt={"Profile Picture"}
+                            alt={"Profilbild"}
                             className="profile-settings-img"
                         />
                         <div className="profile-settings-img-overlay">
@@ -248,12 +248,12 @@ const ProfilePage = () => {
                         >{`@${profileSettings.username}`}</h3>
                         <h3 className="profile-settings-email">{profileSettings.email}</h3>
                         <h3 className="profile-settings-course">{selectedCourse}</h3>
-                        <h3 className="profile-settings-role">{getUserRole() === "USER" ? "Benutzer" : getUserRole() === "ADMIN" ? "Admininstrator" : "Gast"}</h3>
+                        <h3 className="profile-settings-role">{getUserRole() === "USER" ? "Benutzer" : getUserRole() === "ADMIN" ? "Administrator" : "Gast"}</h3>
                     </div>
                 </div>
-                <Info text={"Dein voller name, sowie deine Email-Adresse sind nur für dich einsehbar. Dein Benutzername, sowie dein Profilbild werden ggf. Öffentlich angezeit!"} type={"SUCCESS"} />
+                <Info text={"Dein voller Name sowie deine E-Mail-Adresse sind nur für dich einsehbar. Dein Benutzername sowie dein Profilbild werden ggf. öffentlich angezeigt."} type={"SUCCESS"} />
                 { !profileSettings.isVerified && <div className="not-varified-wrapper">
-                    { !isVerified && <Info text="Deine Email Adresse ist noch nicht Verifiziert. Du wirst einige Funktionen nicht vollumfänglich verwenden können" type="ERROR" />}
+                    { !isVerified && <Info text="Deine E-Mail-Adresse ist noch nicht verifiziert. Du wirst einige Funktionen nicht vollumfänglich verwenden können." type="ERROR" />}
                     { isVerified && <Info text="Eine Bestätigungsmail wurde an die angegebene Adresse gesendet." type="INFO" />}
                     <Button text={secondsLeft <= 0 && !isVerified ? "Verifizieren" : secondsLeft <= 0 && isVerified ? "Erneut senden" : "Erneut senden in " + secondsLeft} disabled={secondsLeft > 0} onClick={handleResend} />
                 </div> }
@@ -323,14 +323,14 @@ const ProfilePage = () => {
                 <input placeholder="neues Passwort" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
                 <input placeholder="Passwort wiederholen" type="password" value={newPasswordRepeat} onChange={(event) => setNewPasswordRepeat(event.target.value)} />
                 <Button text="Passwort ändern" onClick={() => handlePasswordChange()} />
-                <Info text={"Du kannst dich anschließend nurnoch mit deinem neuen Passwort anmelden"} type={"WARNING"} />
+                <Info text={"Du kannst dich anschließend nur noch mit deinem neuen Passwort anmelden."} type={"WARNING"} />
             </div>
             <br />
             <Separator width={"100%"} height={"2px"} variant="secondary" />
             <div className="profile-page-settings-section-security">
-                <h2 className="profile-page-subheading">Email-Adresse ändern</h2>
-                <Button text="Email-Adresse ändern" onClick={() => {setShowEmailDialog(true)}} />
-                <Info text={"Deine bissherige Login Email-Adresse wird dadurch ersetzt."} type={"WARNING"} />
+                <h2 className="profile-page-subheading">E-Mail-Adresse ändern</h2>
+                <Button text="E-Mail-Adresse ändern" onClick={() => {setShowEmailDialog(true)}} />
+                <Info text={"Deine bisherige Login-E-Mail-Adresse wird dadurch ersetzt."} type={"WARNING"} />
             </div>
             <br />
             <Separator width={"100%"} height={"2px"} variant="secondary" />
@@ -338,7 +338,7 @@ const ProfilePage = () => {
                 <h2 className="profile-page-subheading">Abmelden</h2>
                 <Button text="Abmelden" onClick={() => handleLogout()} />
             </div>
-            < ChangeEmailDialog isOpen={showEmailDialog} onCancel={() => setShowEmailDialog(false)} onSubmit={handleEmailChange} title={"Email Adresse ändern"} subtitle={"Du musst dich im Anschluss mit deiner neuen email Adresse neu Anmelden."} oldEmail={profileSettings.email} />
+            < ChangeEmailDialog isOpen={showEmailDialog} onCancel={() => setShowEmailDialog(false)} onSubmit={handleEmailChange} title={"E-Mail-Adresse ändern"} subtitle={"Du musst dich im Anschluss mit deiner neuen E-Mail-Adresse neu anmelden."} oldEmail={profileSettings.email} />
         </div>
     }
 
@@ -350,8 +350,8 @@ const ProfilePage = () => {
         return <div className="profile-page-content">
             <SectionHeading heading={"Danger Zone"} centered={false} />
             <div className="profile-page-settings-section-danger">
-                <h2 className="profile-page-subheading"><a className="important-text">Konto Löschen</a></h2>
-                <Button text="Konto Löschen" onClick={() => setShowDeleteDialog(true)} />
+                <h2 className="profile-page-subheading"><a className="important-text">Konto löschen</a></h2>
+                <Button text="Konto löschen" onClick={() => setShowDeleteDialog(true)} />
                 <Info text={"Die Löschung deines Kontos mit all deinen Daten ist unwiederuflich."} type={"ERROR"} />
             </div>
             <ConfirmDialog
@@ -361,7 +361,7 @@ const ProfilePage = () => {
                     setShowDeleteDialog(false);
                     return handleAccountDeletion();
                 }}
-                title={"Konto Löschen"}
+                title={"Konto löschen"}
                 subtitle={"Bist du sicher? Alle deine Daten werden unwiederuflich gelöscht."}
             />
         </div>

@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import {snackbarService} from "@/services/snackBarService.tsx";
 import type {SecurityLog} from "@/models/SecurityLog.tsx";
-import {fetchUsers, fetchAdminHealth, fetchStorageUsage, getLatestLogs, setUserRole} from "@/services/adminService.tsx";
+import {fetchUsers, fetchGuests, fetchAdminHealth, fetchStorageUsage, getLatestLogs, setUserRole} from "@/services/adminService.tsx";
+import type {Guest} from "@/models/Guest.tsx";
 import type {AdminHealth, StorageUsage} from "@/models/AdminMonitoring.tsx";
 import {formatTimestamp} from "@/services/utils.tsx";
 import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
@@ -43,6 +44,7 @@ const AdminPage = () => {
     const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
     const [logContinuation, setLogContinuation] = useState<string | null>(null);
     const [users, setUsers] = useState<ProfileSettings[]>([]);
+    const [guests, setGuests] = useState<Guest[]>([]);
     const [userContinuation, setUserContinuation] = useState<string | null>(null);
     const [adminMemes, setAdminMemes] = useState<Meme[]>([]);
     const [memeContinuation, setMemeContinuation] = useState<string | null>(null);
@@ -379,11 +381,25 @@ const AdminPage = () => {
             }
         };
 
+        const loadGuests = async () => {
+            try {
+                const next = await fetchGuests();
+                if (!cancelled) {
+                    setGuests(next);
+                }
+            } catch {
+                // Keep the last guest list if a refresh fails.
+            }
+        };
+
         void loadUsersInit();
+        void loadGuests();
+        const guestTimer = window.setInterval(() => void loadGuests(), 30_000);
         void loadMonitoring();
 
         return () => {
             cancelled = true;
+            window.clearInterval(guestTimer);
             suggestionsFetchId.current++;
         };
     }, []);
@@ -445,7 +461,7 @@ const AdminPage = () => {
 
     const QuickLinks = () => {
         return <div className="tab-page">
-            <SectionHeading heading={"Vorgeschlagene Spiele"} subheading={"Spiele die von anderen Benutzern Vorgeschlagen wurden"} centered={false} />
+            <SectionHeading heading={"Vorgeschlagene Spiele"} subheading={"Spiele, die von anderen Benutzern vorgeschlagen wurden"} centered={false} />
             <br />
             {suggestedGames.length !== 0 && (
                 <div className="suggested-games-table-header">
@@ -513,7 +529,7 @@ const AdminPage = () => {
                     </div>
                 </div>
             ))}
-            { continuation !== null && <Button text="Mehr Laden" onClick={() => loadMoreSuggestions()} variant="primary" disabled={continuation === null} /> }
+            { continuation !== null && <Button text="Mehr laden" onClick={() => loadMoreSuggestions()} variant="primary" disabled={continuation === null} /> }
             { suggestedGames.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine vorgeschlagenen Spiele</h4> }
         </div>
     }
@@ -560,7 +576,7 @@ const AdminPage = () => {
                 </div>
             ))}
 
-            {memeContinuation !== null && <Button text="Mehr Laden" onClick={() => loadMoreAdminMemes()} variant="primary" disabled={loadingMemes} />}
+            {memeContinuation !== null && <Button text="Mehr laden" onClick={() => loadMoreAdminMemes()} variant="primary" disabled={loadingMemes} />}
             {!loadingMemes && adminMemes.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Memes für diesen Filter</h4>}
         </div>
     }
@@ -604,7 +620,34 @@ const AdminPage = () => {
                 </table>
             </div>
             <br />
-            { userContinuation !== null && <Button text="Mehr Laden" onClick={() => loadMoreUsers()} variant="primary" /> }
+            { userContinuation !== null && <Button text="Mehr laden" onClick={() => loadMoreUsers()} variant="primary" /> }
+            <br />
+            <SectionHeading heading={"Gastbenutzer"} subheading={"Gäste ohne Konto, die in den letzten 7 Tagen aktiv waren"} centered={false} />
+            <br />
+            {guests.length === 0 ? (
+                <h4 className="no-items-info">Aktuell keine Gastbenutzer.</h4>
+            ) : (
+                <div className="users-table-wrapper">
+                    <table className="users-table">
+                        <thead>
+                        <tr>
+                            <th>Kennung</th>
+                            <th>Zuerst gesehen</th>
+                            <th>Zuletzt aktiv</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {guests.map((guest) => (
+                            <tr key={guest.id}>
+                                <td className="guest-id" title={guest.id}>{guest.id}</td>
+                                <td className="text-secondary">{formatTimestamp(guest.firstSeen)}</td>
+                                <td className="text-secondary">{formatTimestamp(guest.lastSeen)}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
             < Separator width={"0%"} height={"10px"} variant={"primary"} />
             < Separator width={"100%"} height={"2px"} variant={"primary"} />
             <br />

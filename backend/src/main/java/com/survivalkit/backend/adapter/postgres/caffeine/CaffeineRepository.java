@@ -84,6 +84,29 @@ public class CaffeineRepository implements CaffeinePersistancePort {
     }
 
     @Override
+    public Optional<Double> getSumForUser(String userId) {
+        return jdbcClient.sql(Statements.SUM_FOR_USER.sql)
+                .paramSource(new MapSqlParameterSource("userId", userId))
+                .query(Double.class)
+                .optional();
+    }
+
+    @Override
+    public Optional<Double> getSumForCourse(String course) {
+        return jdbcClient.sql(Statements.SUM_FOR_COURSE.sql)
+                .paramSource(new MapSqlParameterSource("course", course))
+                .query(Double.class)
+                .optional();
+    }
+
+    @Override
+    public Optional<Double> getSumGlobal() {
+        return jdbcClient.sql(Statements.SUM_GLOBAL.sql)
+                .query(Double.class)
+                .optional();
+    }
+
+    @Override
     public boolean deleteForUser(String id, String userId) {
         int updated = jdbcClient.sql(Statements.DELETE_FOR_USER.sql)
                 .paramSource(new MapSqlParameterSource("id", id)
@@ -138,14 +161,20 @@ public class CaffeineRepository implements CaffeinePersistancePort {
         """),
         // language=sql
         AVG_FOR_USER("""
-            SELECT AVG(amountMg)
+            SELECT CASE
+                WHEN COUNT(DISTINCT userId) = 0 THEN 0::float8
+                ELSE SUM(amountMg)::float8 / COUNT(DISTINCT userId)
+            END
             FROM caffeineEntries
             WHERE userId = :userId
               AND consumedAt > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
         """),
         // language=sql
         AVG_FOR_COURSE("""
-            SELECT AVG(c.amountMg)
+            SELECT CASE
+                WHEN COUNT(DISTINCT c.userId) = 0 THEN 0::float8
+                ELSE SUM(c.amountMg)::float8 / COUNT(DISTINCT c.userId)
+            END
             FROM caffeineEntries c
             LEFT JOIN users u ON u.id = c.userId
             WHERE u.course = :course
@@ -153,7 +182,31 @@ public class CaffeineRepository implements CaffeinePersistancePort {
         """),
         // language=sql
         AVG_GLOBAL("""
-            SELECT AVG(amountMg)
+            SELECT CASE
+                WHEN COUNT(DISTINCT userId) = 0 THEN 0::float8
+                ELSE SUM(amountMg)::float8 / COUNT(DISTINCT userId)
+            END
+            FROM caffeineEntries
+            WHERE consumedAt > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+        """),
+        // language=sql
+        SUM_FOR_USER("""
+            SELECT COALESCE(SUM(amountMg)::float8, 0)
+            FROM caffeineEntries
+            WHERE userId = :userId
+              AND consumedAt > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+        """),
+        // language=sql
+        SUM_FOR_COURSE("""
+            SELECT COALESCE(SUM(c.amountMg)::float8, 0)
+            FROM caffeineEntries c
+            LEFT JOIN users u ON u.id = c.userId
+            WHERE u.course = :course
+              AND c.consumedAt > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
+        """),
+        // language=sql
+        SUM_GLOBAL("""
+            SELECT COALESCE(SUM(amountMg)::float8, 0)
             FROM caffeineEntries
             WHERE consumedAt > (now() AT TIME ZONE 'UTC') - INTERVAL '7 days'
         """),

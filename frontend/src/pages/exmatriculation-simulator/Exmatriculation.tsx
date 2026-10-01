@@ -38,9 +38,9 @@ const Exmatriculation = () => {
     return (
         <div className="survival-kit-page">
             <div className="exmaticulation-simulator-page">
-                <SectionHeading heading={"Exmatrikulations-Simulator"} subheading={"Exmatrikuliere dich jetzt, <a class='important-text'>ohne</a> dich zu Exmatrikulieren!"} centered={true} />
+                <SectionHeading heading={"Exmatrikulations-Simulator"} subheading={"Exmatrikuliere dich jetzt, <a class='important-text'>ohne</a> dich zu exmatrikulieren!"} centered={true} />
                 <div className="exmat-simulator-wrapper">
-                    <Info type={"WARNING"} text={'Die eingegebenen Daten werden NICHT gespeichert. Es wird lediglich gespeichert, dass du dich "Exmatrikuliert" hast'} />
+                    <Info type={"WARNING"} text={'Die eingegebenen Daten werden nicht gespeichert. Es wird lediglich gespeichert, dass du dich exmatrikuliert hast.'} />
                     <br />
                     <form className="exmat-page">
                         <div className="page-section">

@@ -35,7 +35,7 @@ export default function ChangeEmailDialog({
         }
 
         if (!newEmail.match(EMAIL_REGEX)) {
-            snackbarService.showSnackbar({type: "error", text: "Die eingegebene Email ist ungültig", showIcon: true});
+            snackbarService.showSnackbar({type: "error", text: "Die eingegebene E-Mail-Adresse ist ungültig", showIcon: true});
             return;
         }
 
@@ -45,7 +45,7 @@ export default function ChangeEmailDialog({
             onCancel();
         } catch (error: unknown) {
             if (!(error instanceof Error)) {
-                snackbarService.showSnackbar({type: "error", text: "Email konnte nicht geändert werden", showIcon: true});
+                snackbarService.showSnackbar({type: "error", text: "E-Mail-Adresse konnte nicht geändert werden", showIcon: true});
             }
         } finally {
             setSubmitting(false);
@@ -67,7 +67,7 @@ export default function ChangeEmailDialog({
                 }}
             >
                 <div className="form-group">
-                    <label htmlFor="new-email">Neue Email Adresse</label>
+                    <label htmlFor="new-email">Neue E-Mail-Adresse</label>
                     <input
                         id="new-email"
                         type="text"

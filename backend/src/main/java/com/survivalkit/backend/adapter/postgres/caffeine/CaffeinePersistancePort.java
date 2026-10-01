@@ -12,6 +12,9 @@ public interface CaffeinePersistancePort {
     Optional<Double> getAverageForUser(String userId);
     Optional<Double> getAverageForCourse(String course);
     Optional<Double> getAverageGlobal();
+    Optional<Double> getSumForUser(String userId);
+    Optional<Double> getSumForCourse(String course);
+    Optional<Double> getSumGlobal();
     boolean deleteForUser(String id, String userId);
     void deleteOlderThan7Days();
 }

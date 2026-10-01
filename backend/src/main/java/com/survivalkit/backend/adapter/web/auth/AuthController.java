@@ -1,5 +1,6 @@
 package com.survivalkit.backend.adapter.web.auth;
 
+import com.survivalkit.backend.core.guest.GuestPort;
 import com.survivalkit.backend.core.security.SessionCookieService;
 import com.survivalkit.backend.core.user.AuthPort;
 import com.survivalkit.backend.shared.Role;
@@ -25,18 +26,23 @@ public class AuthController {
 
     private final AuthPort authPort;
     private final SessionCookieService sessionCookieService;
+    private final GuestPort guestPort;
 
-    public AuthController(AuthPort authPort, SessionCookieService sessionCookieService) {
+    public AuthController(AuthPort authPort, SessionCookieService sessionCookieService, GuestPort guestPort) {
         this.authPort = authPort;
         this.sessionCookieService = sessionCookieService;
+        this.guestPort = guestPort;
     }
 
     @Role(RoleLevel.GUEST)
     @PostMapping("register")
     public ResponseEntity<Void> register(
-        @RequestBody RegisterRequest registerRequest
+        @RequestBody RegisterRequest registerRequest,
+        HttpServletRequest request,
+        HttpServletResponse response
     ) {
         authPort.register(registerRequest);
+        guestPort.retire(request, response);
         return ResponseEntity.ok().build();
     }
 
@@ -54,6 +60,7 @@ public class AuthController {
             HttpServletResponse response
     ) {
         var loginResponse = authPort.login(loginRequest.email(), loginRequest.password());
+        guestPort.retire(request, response);
         sessionCookieService.setSessionCookie(request, response, loginResponse.token());
         return ResponseEntity.ok(loginResponse);
     }

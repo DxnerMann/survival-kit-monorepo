@@ -15,4 +15,7 @@ public interface CaffeinePort {
     double getAverageForUser();
     double getAverageForCourse();
     double getAverageGlobal();
+    double getSumForUser();
+    double getSumForCourse();
+    double getSumGlobal();
 }

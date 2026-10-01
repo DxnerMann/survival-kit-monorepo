@@ -74,7 +74,7 @@ export default function FeedbackDialog({
         <Dialog
             isOpen={isOpen}
             title="Beitrag verfassen"
-            subtitle="Dein Beitrag wird öffentlich mit angabe deines Benutzernamens gepostet."
+            subtitle="Dein Beitrag wird öffentlich mit Angabe deines Benutzernamens gepostet."
             onClose={handleCancel}
         >
             <form

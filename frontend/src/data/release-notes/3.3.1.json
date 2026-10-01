@@ -1,0 +1,33 @@
+{
+  "version": "3.3.1",
+  "date": "2026-10-01",
+  "sections": [
+    {
+      "title": "Fegefeuer",
+      "items": [
+        "Neues Dashboard-Widget „Fegefeuer“, ganz vorne in der Toolbox, Größe von 2×2 bis 5×5",
+        "In den Einstellungen wählst du das Datum deines Studienabschlusses",
+        "Countdown in Tagen, in der Schrift der Digitaluhr, mit dem Titel „Tage bis Abschluss des Studiums“"
+      ]
+    },
+    {
+      "title": "Verbesserungen",
+      "items": [
+        "Chat: Nachrichten anderer erscheinen ohne Neuladen, mit Emoji-Button im Eingabefeld",
+        "Ein einzelnes Emoji hat keine Sprechblase und ist größer",
+        "Mehrere Nachrichten hintereinander zeigen Name und Uhrzeit nur bei der ersten, die Uhrzeit erneut bei einer neuen Minute und das Profilbild an der letzten",
+        "Statistiken: Koffein-Summe und durchschnittliche Dosis pro Person, jeweils für dich, deinen Kurs und global",
+        "Etwa 20 weitere Browserspiele"
+      ]
+    },
+    {
+      "title": "Fehlerbehebungen",
+      "items": [
+        "Registrierung ohne Nachnamen ist nicht mehr möglich",
+        "Browserspiele erscheinen beim Nachladen nicht mehr doppelt",
+        "Die Statistik „Anzahl Lecture-Survival-Kit geöffnet“ entfällt",
+        "Rechtschreibung in der Oberfläche korrigiert"
+      ]
+    }
+  ]
+}

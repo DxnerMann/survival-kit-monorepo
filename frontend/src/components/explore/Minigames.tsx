@@ -66,7 +66,7 @@ const Minigames = () => {
                     href={"/presentation-game"}
                     heading={"Das Präsi-Spiel"}
                     description={
-                        "Während du im Kurs Presentierst, erscheinen Zufallswörter auf dem Bildschirm. – Baue sie unauffällig in deine Präsentation ein, ohne dass der/die Dozent*in es merkt um Punkte zu gewinnen.\n" + "\n" +
+                        "Während du im Kurs präsentierst, erscheinen Zufallswörter auf dem Bildschirm. Baue sie unauffällig in deine Präsentation ein, ohne dass der/die Dozent*in es merkt, um Punkte zu gewinnen.\n" + "\n" +
                         "Der Lobby-Host ist Presenter und kann Wörter nur überspringen. Mitspieler genehmigen eingebaute Wörter und sammeln Punkte." + "\n" +
                         "Es gibt mehrere Schwierigkeitsstufen"
                         }

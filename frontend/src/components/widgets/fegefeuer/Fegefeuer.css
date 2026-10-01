@@ -1,0 +1,81 @@
+.fegefeuer-widget {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+}
+
+.fegefeuer-widget .widget-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 0.5rem 1rem 0.5rem 0.5rem;
+    height: var(--widget-header-height);
+    gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+.fegefeuer-widget .widget-header-icon {
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+
+.fegefeuer-widget .widget-header-icon:hover {
+    color: var(--color-primary-accent);
+}
+
+.fegefeuer-face {
+    container-type: size;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em;
+    padding: 0.4rem 0.7rem 0.8rem;
+    box-sizing: border-box;
+    text-align: center;
+    overflow: hidden;
+}
+
+.fegefeuer-days {
+    font-family: "DigitalNumbers", serif;
+    font-weight: 400;
+    font-size: clamp(1.6rem, 28cqmin, 6.5rem);
+    line-height: 1;
+    color: var(--color-primary-accent);
+    max-width: 100%;
+}
+
+.fegefeuer-caption {
+    max-width: 16rem;
+    font-size: clamp(0.72rem, 7cqmin, 1.15rem);
+    line-height: 1.25;
+    color: var(--color-text-secondary);
+}
+
+.fegefeuer-date-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+}
+
+.fegefeuer-date {
+    width: 100%;
+}
+
+.fegefeuer-widget .settings-content {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    overflow: auto;
+}

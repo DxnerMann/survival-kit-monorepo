@@ -1,6 +1,6 @@
 import "@/pages/explore/ExplorePage.css";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import type {QuickLink} from "@/models/QuickLink.tsx";
 import {getQuickLinksFiltered, suggestLink} from "@/services/quickLinkService.tsx";
 import QuickLinkCard from "@/components/explore/QuickLinkCard.tsx";
@@ -15,6 +15,8 @@ const ExplorePage = () => {
     const [quickLinks, setQuickLinks] = useState<QuickLink[]>([]);
     const [continuation, setContinuation] = useState<string | null>(null);
     const [showGameSuggestionDialog, setShowGameSuggestionDialog] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const loadingMoreRef = useRef(false);
     const {canFavourite, isFavourite, toggleFavourite} = useQuickLinkFavourites();
     const PAGE_SIZE = 20;
 
@@ -33,22 +35,30 @@ const ExplorePage = () => {
     }, []);
 
     const loadMoreLinks = async () => {
+        if (loadingMoreRef.current || continuation == null || continuation === "") return;
 
-        const res = await getQuickLinksFiltered(
-            true,
-            true,
-            PAGE_SIZE,
-            continuation
-        );
+        loadingMoreRef.current = true;
+        setLoadingMore(true);
+        try {
+            const res = await getQuickLinksFiltered(
+                true,
+                true,
+                PAGE_SIZE,
+                continuation
+            );
 
-        setQuickLinks(prev =>
-            [...prev, ...res.data]
-        );
-        setContinuation(res.continuation);
+            setQuickLinks(prev => {
+                const seen = new Set(prev.map(link => link.id));
+                return [...prev, ...res.data.filter(link => !seen.has(link.id))];
+            });
 
-        // size < 20 => no more games left
-        if (res.data.length < PAGE_SIZE) {
-            setContinuation(null);
+            // size < 20 => no more games left
+            setContinuation(res.data.length < PAGE_SIZE ? null : res.continuation);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            loadingMoreRef.current = false;
+            setLoadingMore(false);
         }
     };
 
@@ -56,10 +66,10 @@ const ExplorePage = () => {
     return <div className="survival-kit-page">
         <div className="explore-page">
             <SectionHeading
-                heading="Alle Browser Spiele"
+                heading="Alle Browserspiele"
                 centered={false}
                 actions={[
-                    { icon: LayersPlus, text: "Spiel Vorschlagen", link: () => setShowGameSuggestionDialog(true) }
+                    { icon: LayersPlus, text: "Spiel vorschlagen", link: () => setShowGameSuggestionDialog(true) }
                 ]}
             />
             <GameSuggestionDialog
@@ -83,7 +93,7 @@ const ExplorePage = () => {
                 ))}
             </div>
             <div className="explore-page-games-load-more-button-wrapper">
-                { continuation !== null && continuation !== "" && <Button variant={"primary"} text="Mehr Spiele laden" onClick={() => loadMoreLinks()} />}
+                { continuation !== null && continuation !== "" && <Button variant={"primary"} text="Mehr Spiele laden" onClick={() => void loadMoreLinks()} disabled={loadingMore} />}
             </div>
             < Separator width={"100%"} height={"2px"} variant={"primary"} />
             <br />

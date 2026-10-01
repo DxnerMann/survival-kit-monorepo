@@ -117,7 +117,7 @@ const DashboardPage = () => {
                     heading={"Die <a class='important-text'>beliebtesten</a> Browserspiele"}
                     subheading={"Weil ganz ehrlich, in der Vorlesung aufpassen? Nö!"}
                     actions={[
-                        { icon: LayersPlus, text: "Spiel Vorschlagen", link: () => setShowGameSuggestionDialog(true) },
+                        { icon: LayersPlus, text: "Spiel vorschlagen", link: () => setShowGameSuggestionDialog(true) },
                         { icon: LayoutGrid, text: "Alle Spiele", link: "/explore" },
                     ]}
                     centered={false}
@@ -129,7 +129,7 @@ const DashboardPage = () => {
                 />
                 <PopularLinks />
                 <SectionHeading
-                    heading={"Weitere nützliche links"}
+                    heading={"Weitere nützliche Links"}
                     subheading={"Falls du tatsächlich mal etwas ''Produktives'' machen willst"}
                     centered={false}
                 />
@@ -141,7 +141,7 @@ const DashboardPage = () => {
                 />
                 <Minigames />
                 <SectionHeading
-                    heading={"Für alle Interesierten und Unterstützer"}
+                    heading={"Für alle Interessierten und Unterstützer"}
                     centered={false}
                 />
                 <div className="dashboard-last-resort-links">
@@ -149,7 +149,7 @@ const DashboardPage = () => {
                         href={"https://github.com/DxnerMann/survival-kit-monorepo"}
                         heading={"GitHub Repository"}
                         description={
-                            "Das Offizielle GitHub Repository des Survival-Kits für alle Interesierten. Bei eigenen Ideen könnt ihr auch gerne einen Fork erstellen."
+                            "Das offizielle GitHub Repository des Survival-Kits für alle Interessierten. Bei eigenen Ideen könnt ihr auch gerne einen Fork erstellen."
                         }
                         alingRight={false}
                         previewImagePath={"/images/github-icon.png"}

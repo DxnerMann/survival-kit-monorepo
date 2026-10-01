@@ -1,8 +1,10 @@
 package com.survivalkit.backend.adapter.web.admin;
 
+import com.survivalkit.backend.adapter.postgres.guest.Guest;
 import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.core.admin.AdminHealth;
+import com.survivalkit.backend.core.guest.GuestPort;
 import com.survivalkit.backend.core.admin.AdminMonitoringPort;
 import com.survivalkit.backend.core.admin.StorageUsage;
 import com.survivalkit.backend.core.security.SecurityLog;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @Tag(name = "Security")
 @RestController
 @RequestMapping("v1/admin")
@@ -26,11 +30,18 @@ public class AdminController {
     private final SecurityLog securityLog;
     private final UserPort userPort;
     private final AdminMonitoringPort adminMonitoringPort;
+    private final GuestPort guestPort;
 
-    public AdminController(SecurityLog securityLog, UserPort userPort, AdminMonitoringPort adminMonitoringPort) {
+    public AdminController(
+            SecurityLog securityLog,
+            UserPort userPort,
+            AdminMonitoringPort adminMonitoringPort,
+            GuestPort guestPort
+    ) {
         this.securityLog = securityLog;
         this.userPort = userPort;
         this.adminMonitoringPort = adminMonitoringPort;
+        this.guestPort = guestPort;
     }
 
     @Role(RoleLevel.ADMIN)
@@ -59,6 +70,12 @@ public class AdminController {
     ) {
         userPort.promote(userId, role);
         return ResponseEntity.ok().build();
+    }
+
+    @Role(RoleLevel.ADMIN)
+    @GetMapping("guests")
+    public ResponseEntity<List<Guest>> getGuests() {
+        return ResponseEntity.ok(guestPort.activeGuests());
     }
 
     @Role(RoleLevel.ADMIN)

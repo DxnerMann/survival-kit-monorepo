@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {authService, validatePassword} from "@/services/authService"
+import {touchGuest} from "@/services/guestService.tsx"
 
 import ThemeToggle from "@/components/layout/ThemeToggle"
 
@@ -45,8 +46,13 @@ const LoginPage = () => {
                 return
             }
 
+            if (lastName.trim().length === 0) {
+                snackbarService.showSnackbar({ type: "error", text: "Bitte gib einen Nachnamen ein", showIcon: true });
+                return
+            }
+
             if (firstName.length > 30 || lastName.length > 30 || username.length > 30) {
-                snackbarService.showSnackbar({ type: "error",   text: "Es sind Max 30 Zeichen lange Namen erlaubt", showIcon: true });
+                snackbarService.showSnackbar({ type: "error",   text: "Es sind maximal 30 Zeichen lange Namen erlaubt", showIcon: true });
                 return
             }
 
@@ -66,13 +72,13 @@ const LoginPage = () => {
             }
 
             if (!email.match(EMAIL_REGEX)) {
-                snackbarService.showSnackbar({type: "error", text:"Die eingegebene Email ist ungültig", showIcon: true });
+                snackbarService.showSnackbar({type: "error", text:"Die eingegebene E-Mail-Adresse ist ungültig", showIcon: true });
                 return
             }
 
             await authService.register({
                 firstName,
-                lastName,
+                lastName: lastName.trim(),
                 username,
                 email,
                 password,
@@ -84,9 +90,14 @@ const LoginPage = () => {
         }
     }
 
-    const continueAsGuest = () => {
+    const continueAsGuest = async () => {
         localStorage.setItem('guest', 'true');
         authService.removeToken();
+        try {
+            await touchGuest();
+        } catch {
+            // Guest mode still works if the presence call fails.
+        }
         navigate('/')
     }
 
@@ -106,12 +117,12 @@ const LoginPage = () => {
             <div className="login-card">
 
                 <h1>
-                    {mode === 'login' ? 'Login' : 'Register'}
+                    {mode === 'login' ? 'Login' : mode === 'register' ? 'Registrieren' : 'E-Mail bestätigen'}
                 </h1>
                 {mode === 'login' ? (
                     <>
                         <input
-                            placeholder="Email"
+                            placeholder="E-Mail"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
@@ -162,7 +173,7 @@ const LoginPage = () => {
                         />
 
                         <input
-                            placeholder="Email"
+                            placeholder="E-Mail"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
@@ -182,7 +193,7 @@ const LoginPage = () => {
                         />
 
                         <p className="switch-text">
-                            Mit der Registrierung akzeptieren Sie die <a className="important-text" target="_blank" href={"/privacypolicy"}>Datenschutzerklärung</a> und stimmen der Verarbeitung Ihrer Daten gemäß dieser zu.
+                            Mit der Registrierung akzeptierst du die <a className="important-text" target="_blank" href={"/privacypolicy"}>Datenschutzerklärung</a> und stimmst der Verarbeitung deiner Daten gemäß dieser zu.
                         </p>
 
                         <button
@@ -201,7 +212,7 @@ const LoginPage = () => {
                     </>
                 ) : (
                     <>
-                        <p className="centered-text">Bitte Verifizieren sie ihre Email Adresse</p>
+                        <p className="centered-text">Bitte verifiziere deine E-Mail-Adresse</p>
                         <p className="centered-text">Es wurde eine Bestätigungsmail an die angegebene Adresse gesendet.</p>
 
                         <button

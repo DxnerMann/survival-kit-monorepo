@@ -144,4 +144,28 @@ public class CaffeineService implements CaffeinePort {
     public double getAverageGlobal() {
         return caffeinePersistancePort.getAverageGlobal().orElse(0.0);
     }
+
+    @Override
+    public double getSumForUser() {
+        var user = SecurityContext.current();
+        return caffeinePersistancePort.getSumForUser(user.userId()).orElse(0.0);
+    }
+
+    @Override
+    public double getSumForCourse() {
+        var authUser = SecurityContext.current();
+        var user = userPersistancePort.getById(authUser.userId());
+        if (user.isEmpty()) {
+            throw new IllegalStateException(ErrorCode.USER_DOES_NOT_EXIST.getCode());
+        }
+        if (user.get().course() == null) {
+            return 0.0;
+        }
+        return caffeinePersistancePort.getSumForCourse(user.get().course()).orElse(0.0);
+    }
+
+    @Override
+    public double getSumGlobal() {
+        return caffeinePersistancePort.getSumGlobal().orElse(0.0);
+    }
 }

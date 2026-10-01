@@ -7,7 +7,7 @@ const UsefulLinks = () => {
         {
             id: "moodle",
             title: "DHBW Moodle",
-            description: "Offizielles DHBW Moodle - Die Wichtigste Plattform der DHBW",
+            description: "Offizielles DHBW Moodle – die wichtigste Plattform der DHBW",
             url: "https://moodle.dhbw.de/",
             addedAt: "",
             approvedByAdmin: true,
@@ -20,7 +20,7 @@ const UsefulLinks = () => {
         {
             id: "mensa",
             title: "DHBW Mensa",
-            description: "Offizieller Mensa Plan der Mensa in der Erzbergerstraße",
+            description: "Offizieller Mensaplan der Mensa in der Erzbergerstraße",
             url: "https://www.sw-ka.de/de/hochschulgastronomie/speiseplan/mensa_erzberger/",
             addedAt: "",
             approvedByAdmin: true,
@@ -33,7 +33,7 @@ const UsefulLinks = () => {
         {
             id: "dualis",
             title: "Dualis",
-            description: "Offizielles DHBW Tool zum einsehen von Prüfungsergebnissen",
+            description: "Offizielles DHBW-Tool zum Einsehen von Prüfungsergebnissen",
             url: "https://dualis.dhbw.de/",
             addedAt: "",
             approvedByAdmin: true,

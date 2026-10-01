@@ -1,3 +1,4 @@
+import {useId} from "react";
 import {
     AreaChart,
     Area,
@@ -14,9 +15,10 @@ type DailyMg = {
     date: string;
     label: string;
     mg: number;
+    users: Set<string>;
 };
 
-const groupCaffeineByDay = (entries: CaffeineEntry[], days: number = 7): DailyMg[] => {
+const groupCaffeineByDay = (entries: CaffeineEntry[], days: number, perPerson: boolean): DailyMg[] => {
     const now = new Date();
     const cutoff = new Date(now);
     cutoff.setDate(cutoff.getDate() - days);
@@ -31,7 +33,7 @@ const groupCaffeineByDay = (entries: CaffeineEntry[], days: number = 7): DailyMg
             day: "2-digit",
             month: "short",
         }).format(d);
-        buckets.set(isoDate, { date: isoDate, label, mg: 0 });
+        buckets.set(isoDate, { date: isoDate, label, mg: 0, users: new Set() });
     }
 
     entries.forEach((entry) => {
@@ -39,19 +41,26 @@ const groupCaffeineByDay = (entries: CaffeineEntry[], days: number = 7): DailyMg
         if (entryDate < cutoff || entryDate > now) return;
         const isoDate = entryDate.toISOString().split("T")[0];
         const bucket = buckets.get(isoDate);
-        if (bucket) bucket.mg += entry.amountMg;
+        if (!bucket) return;
+        bucket.mg += entry.amountMg;
+        bucket.users.add(entry.userId);
     });
 
-    return Array.from(buckets.values());
+    return Array.from(buckets.values()).map((bucket) => ({
+        ...bucket,
+        mg: perPerson && bucket.users.size > 0 ? bucket.mg / bucket.users.size : bucket.mg,
+    }));
 };
 
 type CaffeineDailyChartProps = {
     entries: CaffeineEntry[];
     title: string;
+    perPerson?: boolean;
 };
 
-const CaffeineDailyChart = ({ entries, title }: CaffeineDailyChartProps) => {
-    const data = groupCaffeineByDay(entries, 7);
+const CaffeineDailyChart = ({ entries, title, perPerson = false }: CaffeineDailyChartProps) => {
+    const gradientId = useId().replace(/:/g, "");
+    const data = groupCaffeineByDay(entries, 7, perPerson);
 
     return (
         <div className="action-chart">
@@ -59,7 +68,7 @@ const CaffeineDailyChart = ({ entries, title }: CaffeineDailyChartProps) => {
             <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                     <defs>
-                        <linearGradient id="caffeineDailyGradient" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="var(--color-primary-accent)" stopOpacity={0.5} />
                             <stop offset="95%" stopColor="var(--color-primary-accent)" stopOpacity={0.05} />
                         </linearGradient>
@@ -73,7 +82,7 @@ const CaffeineDailyChart = ({ entries, title }: CaffeineDailyChartProps) => {
                         tickLine={{ stroke: "var(--color-border)" }}
                     />
                     <YAxis
-                        allowDecimals={false}
+                        allowDecimals={perPerson}
                         width={40}
                         tick={{ fontSize: 12, fill: "var(--color-text-secondary)" }}
                         axisLine={{ stroke: "var(--color-border)" }}
@@ -94,7 +103,7 @@ const CaffeineDailyChart = ({ entries, title }: CaffeineDailyChartProps) => {
                         type="monotone"
                         dataKey="mg"
                         stroke="var(--color-primary-accent)"
-                        fill="url(#caffeineDailyGradient)"
+                        fill={`url(#${gradientId})`}
                         strokeWidth={2}
                     />
                 </AreaChart>

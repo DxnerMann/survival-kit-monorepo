@@ -95,7 +95,7 @@ const IdeasPage = () => {
             <SectionHeading
                 heading={"Ideen und Feedback"}
                 centered={false}
-                subheading={"Ideen und Feedback, dass von anderen Benutzern eingereicht wurde"}
+                subheading={"Ideen und Feedback, das von anderen Benutzern eingereicht wurde"}
                 actions={getUserRole() !== "GUEST" ? [
                     { icon: MessageSquareText, text: "Beitrag schreiben", link: () => setShowFeedbackDialog(true) }
                 ] : []}
@@ -108,7 +108,7 @@ const IdeasPage = () => {
             {
                 feedbacks.map(feedback => <FeedbackItem title={feedback.title} description={feedback.description} author={feedback.authorUsername} type={feedback.type} date={formatDate(feedback.addedAt)} likes={feedback.likes} dislikes={feedback.dislikes} answer={feedback.answer} id={feedback.id} key={feedback.id} onDelete={(id) => onFeedbackDelete(id)} />)
             }
-            { continuation !== null && <Button text="Mehr Laden" onClick={() => loadMore()} variant="primary" disabled={continuation === null} /> }
+            { continuation !== null && <Button text="Mehr laden" onClick={() => loadMore()} variant="primary" disabled={continuation === null} /> }
             { feedbacks.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Beiträge</h4> }
         </div>
     </div>

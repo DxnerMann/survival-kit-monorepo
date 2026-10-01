@@ -196,6 +196,12 @@
     border-radius: var(--border-radius);
 }
 
+.guest-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.82rem;
+    word-break: break-all;
+}
+
 .users-table-wrapper {
     width: 100%;
     overflow-x: auto;

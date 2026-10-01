@@ -153,7 +153,7 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                         }}
                     >
                         <PencilLine size={20}  />
-                        <h5>{ feedbackAnswer === "" || feedbackAnswer === null ? "Antworten" : "Antwort Bearbeiten"}</h5>
+                        <h5>{ feedbackAnswer === "" || feedbackAnswer === null ? "Antworten" : "Antwort bearbeiten"}</h5>
                     </div>
                 }
                 {
@@ -179,7 +179,7 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                     isOpen={showDeleteDialog}
                     onCancel={() => setShowDeleteDialog(false)}
                     onConfirm={onFeedbackDelete}
-                    title="Beitrag Löschen"
+                    title="Beitrag löschen"
                     subtitle="Dieser Beitrag wird unwiederuflich gelöscht. Bist du sicher?"
                 />
             </div>

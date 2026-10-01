@@ -12,7 +12,7 @@ const ThemeToggle = () => {
         <button
             className="theme-toggle"
             onClick={toggleTheme}
-            aria-label="Toggle theme"
+            aria-label="Farbschema wechseln"
         >
             {isDark ? (
                 <Sun size={20} />

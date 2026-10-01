@@ -7,6 +7,7 @@ import DigressionTimer from "@/components/widgets/digression-timer/DigressionTim
 import DailyCat from "@/components/widgets/cat/DailyCat.tsx";
 import CurrentCaffeine from "@/components/widgets/current-caffeine/CurrentCaffeine.tsx";
 import FavGames from "@/components/widgets/fav-games/FavGames.tsx";
+import Fegefeuer from "@/components/widgets/fegefeuer/Fegefeuer.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -72,6 +73,15 @@ const getDefaultLayout = (): UserWidget[] => {
 
 const getDefaultToolbox = (): UserWidget[] => {
     return [
+        {
+            id: "default-fegefeuer",
+            type: "FEGEFEUER",
+            height: 2,
+            width: 2,
+            x: 0,
+            y: 0,
+            data: ""
+        },
         {
             id: "default-clock",
             type: "CLOCK",
@@ -145,6 +155,8 @@ const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
             return <CurrentCaffeine {...shared} title={"Aktuelles Koffein"} />
         case "FAV_GAMES":
             return <FavGames {...shared} title={"Lieblingsspiele"} />
+        case "FEGEFEUER":
+            return <Fegefeuer {...shared} title={"Fegefeuer"} />
     }
 }
 

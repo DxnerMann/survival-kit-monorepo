@@ -62,6 +62,11 @@ public class AuthService implements AuthPort {
     @Override
     public void register(RegisterRequest request) {
 
+        var lastName = request.lastName() == null ? "" : request.lastName().trim();
+        if (lastName.isBlank()) {
+            throw new IllegalArgumentException(ErrorCode.LAST_NAME_REQUIRED.getCode());
+        }
+
         if (request.username() == null || request.username().isBlank()
                 || !isEmailValid(request.email())
                 || isPasswordInvalid(request.password())) {
@@ -97,7 +102,7 @@ public class AuthService implements AuthPort {
                     new UserModel(
                             account.id(),
                             request.firstName(),
-                            request.lastName(),
+                            lastName,
                             request.username(),
                             request.email(),
                             hashPassword(request.password()),
@@ -122,7 +127,7 @@ public class AuthService implements AuthPort {
                new UserModel(
                        userId,
                        request.firstName(),
-                       request.lastName(),
+                       lastName,
                        request.username(),
                        request.email(),
                        hashPassword(request.password()),

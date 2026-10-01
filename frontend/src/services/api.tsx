@@ -28,6 +28,7 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "01x0000000A": { text: "Du hast nicht die erforderliche Berechtigung.", type: "error" },
     "01x0000000B": { text: "Diese E-Mail oder dieser Benutzername wird bereits verwendet.", type: "error" },
     "01x0000000C": { text: "Zu viele Anfragen. Bitte warte einen Moment.", type: "warning" },
+    "01x0000000D": { text: "Bitte gib einen Nachnamen ein.", type: "warning" },
 
     "03x00000001": { text: "Dieses Bildformat wird nicht unterstützt.", type: "error" },
     "03x00000004": { text: "Ungültige Farbe.", type: "error" },

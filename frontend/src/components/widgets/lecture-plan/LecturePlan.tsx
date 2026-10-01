@@ -253,7 +253,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                             <ColorPicker startValue={decodedData.lectureColor} onChange={(hex) => onColorValueChange(hex, "LECTURE")} label="Vorlesung" key="LECTURE" />
                             <ColorPicker startValue={decodedData.examColor} onChange={(hex) => onColorValueChange(hex, "EXAM")} label="Prüfung" key="EXAM" />
                             <ColorPicker startValue={decodedData.otherColor} onChange={(hex) => onColorValueChange(hex, "OTHER")} label="Andere" key="OTHER" />
-                            <p className="widget-settings-heading">Vorlesungen Filtern</p>
+                            <p className="widget-settings-heading">Vorlesungen filtern</p>
                             < SelectionDropdown values={allLectures} selectedItems={selectedLectures} returnSelected={true} onChange={onFilterChanged} />
                         </div>
                         <div className="widget-settings-buttons">

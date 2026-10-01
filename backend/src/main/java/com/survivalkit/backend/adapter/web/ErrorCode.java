@@ -26,6 +26,7 @@ public enum ErrorCode {
     NOT_REQUIRED_ROLE("01x0000000A", "User does not have the required role", HttpStatus.FORBIDDEN, ErrorCategory.AUTHENTICATION),
     USER_ALREADY_EXISTS("01x0000000B", "There already exists a user with the provided email or username", HttpStatus.CONFLICT, ErrorCategory.AUTHENTICATION),
     RATE_LIMIT_EXCEEDED("01x0000000C", "Too many requests", HttpStatus.TOO_MANY_REQUESTS, ErrorCategory.AUTHENTICATION),
+    LAST_NAME_REQUIRED("01x0000000D", "Last name is required", HttpStatus.BAD_REQUEST, ErrorCategory.AUTHENTICATION),
 
     // EMAIL (02x)
     FAILED_TO_SEND_EMAIL("02x00000000", "Failed to send email", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.EMAIL),

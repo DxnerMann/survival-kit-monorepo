@@ -58,7 +58,10 @@ const PrivacyPolicy = () => {
                     Technologien, die für die Anmeldung und die ordnungsgemäße Funktion
                     der Website erforderlich sind.<br/><br/>
                     Ohne diese Cookies können wesentliche Funktionen der Website nicht
-                    bereitgestellt werden. Die Verarbeitung erfolgt auf Grundlage von
+                    bereitgestellt werden. Wenn Sie ohne Konto als Gast fortfahren, speichert
+                    ein Cookie eine zufällige Kennung. Sie wird nur verwendet, um aktive Gäste
+                    ohne Benutzerkonto anzuzeigen, und entfällt, sobald Sie sich anmelden oder
+                    7 Tage nicht mehr aktiv sind. Die Verarbeitung erfolgt auf Grundlage von
                     Art. 6 Abs. 1 lit. f DSGVO sowie § 25 Abs. 2 Nr. 2 TTDSG.
                 </p>
             </div>
