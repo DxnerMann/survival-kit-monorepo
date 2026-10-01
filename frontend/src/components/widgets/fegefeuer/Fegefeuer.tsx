@@ -77,7 +77,10 @@ const Fegefeuer = ({title, data, id, isPreview}: WidgetProps) => {
     if (isPreview) {
         return (
             <>
-                <FegefeuerFace days={days} />
+                <div className="fegefeuer-preview">
+                    <span className="fegefeuer-days">412</span>
+                    <span className="fegefeuer-caption">{TITLE}</span>
+                </div>
                 <h3 className="widget-title-preview">{title}</h3>
             </>
         );

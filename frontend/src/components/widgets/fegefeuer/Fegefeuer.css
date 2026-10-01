@@ -60,6 +60,31 @@
     color: var(--color-text-secondary);
 }
 
+.fegefeuer-preview {
+    background: var(--color-background-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    border-radius: var(--border-radius);
+    height: 100%;
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    box-sizing: border-box;
+    text-align: center;
+    overflow: hidden;
+}
+
+.fegefeuer-preview .fegefeuer-days {
+    font-size: 2.6rem;
+}
+
+.fegefeuer-preview .fegefeuer-caption {
+    max-width: 12rem;
+    font-size: 0.75rem;
+}
+
 .fegefeuer-date-label {
     display: flex;
     flex-direction: column;
@@ -71,6 +96,49 @@
 
 .fegefeuer-date {
     width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    background: var(--color-background-secondary);
+    border: 1.5px solid var(--color-border);
+    border-radius: 0.85rem;
+    color: var(--color-text-primary);
+    accent-color: var(--color-primary-accent);
+    font: inherit;
+}
+
+.light-theme .fegefeuer-date {
+    color-scheme: light;
+}
+
+.dark-theme .fegefeuer-date {
+    color-scheme: dark;
+}
+
+.fegefeuer-date:focus {
+    outline: none;
+    border-color: var(--color-primary-accent);
+}
+
+.fegefeuer-date::-webkit-datetime-edit,
+.fegefeuer-date::-webkit-datetime-edit-fields-wrapper,
+.fegefeuer-date::-webkit-datetime-edit-text,
+.fegefeuer-date::-webkit-datetime-edit-month-field,
+.fegefeuer-date::-webkit-datetime-edit-day-field,
+.fegefeuer-date::-webkit-datetime-edit-year-field {
+    color: var(--color-text-primary);
+    background: transparent;
+}
+
+.fegefeuer-date::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 0.35rem;
+    padding: 0.15rem;
+    opacity: 0.9;
+}
+
+.dark-theme .fegefeuer-date::-webkit-calendar-picker-indicator {
+    filter: invert(0.9);
 }
 
 .fegefeuer-widget .settings-content {
