@@ -27,6 +27,7 @@ public enum ErrorCode {
     USER_ALREADY_EXISTS("01x0000000B", "There already exists a user with the provided email or username", HttpStatus.CONFLICT, ErrorCategory.AUTHENTICATION),
     RATE_LIMIT_EXCEEDED("01x0000000C", "Too many requests", HttpStatus.TOO_MANY_REQUESTS, ErrorCategory.AUTHENTICATION),
     LAST_NAME_REQUIRED("01x0000000D", "Last name is required", HttpStatus.BAD_REQUEST, ErrorCategory.AUTHENTICATION),
+    EMAIL_PROVIDER_NOT_TRUSTED("01x0000000E", "Email provider is not a trusted mailbox", HttpStatus.BAD_REQUEST, ErrorCategory.AUTHENTICATION),
 
     // EMAIL (02x)
     FAILED_TO_SEND_EMAIL("02x00000000", "Failed to send email", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.EMAIL),
@@ -38,6 +39,7 @@ public enum ErrorCode {
     FAILED_TO_LOAD_DEFAULT_PICTURE("03x00000003", "Failed to load default profile picture", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.USER),
     INVALID_COLOR("03x00000004", "Failed to set profile color: invalid hex color", HttpStatus.BAD_REQUEST, ErrorCategory.USER),
     USERNAME_CHANGE_TO_EARLY("03x00000005", "Username can only be changed once every 30 days", HttpStatus.CONFLICT, ErrorCategory.USER),
+    PROFILE_PICTURE_TOO_LARGE("03x00000006", "Profile picture is too large", HttpStatus.PAYLOAD_TOO_LARGE, ErrorCategory.USER),
 
     // EXTERNAL SERVICE (04x)
     COURSE_EXTRACTION_FAILED("04x00000000", "Failed to extract course from provided Rapla URL", HttpStatus.BAD_GATEWAY, ErrorCategory.EXTERNAL),

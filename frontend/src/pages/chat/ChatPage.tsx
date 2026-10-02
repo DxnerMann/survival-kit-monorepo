@@ -58,33 +58,56 @@ const isLoneEmoji = (text: string | null | undefined): boolean => {
     return /\p{Extended_Pictographic}|\p{Emoji}/u.test(grapheme);
 };
 
+const attachmentKey = (message: ChatMessage) =>
+    (message.attachments ?? []).map(item => item.id).join("\0");
+
+const isSameOutgoing = (pending: ChatMessage, message: ChatMessage) => {
+    if (!pending.id.startsWith("pending-")) {
+        return false;
+    }
+    if (message.clientId != null) {
+        return pending.clientId === message.clientId || pending.id === `pending-${message.clientId}`;
+    }
+    return pending.authorUserId === message.authorUserId
+        && (pending.text ?? "") === (message.text ?? "")
+        && attachmentKey(pending) === attachmentKey(message);
+};
+
+const sortedMessages = (messages: ChatMessage[]) =>
+    [...messages].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+
+const confirmMessage = (current: ChatMessage[], message: ChatMessage): ChatMessage[] => {
+    let removedPending = false;
+    const kept = current.filter(item => {
+        if (item.id === message.id) {
+            return false;
+        }
+        if (!removedPending && isSameOutgoing(item, message)) {
+            removedPending = true;
+            return false;
+        }
+        return true;
+    });
+    const alreadyShown = !removedPending && current.some(item => item.id === message.id) && kept.length + 1 === current.length;
+    return alreadyShown ? current : sortedMessages([...kept, message]);
+};
+
 const absorbHistory = (history: ChatMessage[], current: ChatMessage[]): ChatMessage[] => {
-    const byId = new Map(current.map(message => [message.id, message]));
+    let next = current;
     let changed = false;
 
     for (const message of history) {
-        const pending = current.find(item =>
-            item.id.startsWith("pending-")
-            && message.clientId != null
-            && (item.clientId === message.clientId || item.id === `pending-${message.clientId}`)
-        );
-        if (pending) {
-            byId.delete(pending.id);
-            byId.set(message.id, message);
-            changed = true;
+        if (next.some(item => item.id === message.id)) {
             continue;
         }
-        if (!byId.has(message.id)) {
-            byId.set(message.id, message);
-            changed = true;
-        }
+        const pendingIndex = next.findIndex(item => isSameOutgoing(item, message));
+        next = pendingIndex >= 0
+            ? [...next.filter((_, index) => index !== pendingIndex), message]
+            : [...next, message];
+        changed = true;
     }
 
-    if (!changed) {
-        return current;
-    }
-
-    return [...byId.values()].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+    return changed ? sortedMessages(next) : current;
 };
 
 const formatChatTime = (iso: string) =>
@@ -206,6 +229,7 @@ const ChatPage = () => {
     const emojiWrapRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const pendingClientIdRef = useRef<string | null>(null);
+    const sendingRef = useRef(false);
 
     const channel = useMemo(() => course ? websocketChannels.courseChat(course) : null, [course]);
 
@@ -340,18 +364,7 @@ const ChatPage = () => {
                 if (!incoming?.id) {
                     return;
                 }
-                setMessages(prev => {
-                    const idx = prev.findIndex(item =>
-                        item.id === incoming.id
-                        || (incoming.clientId != null && (item.clientId === incoming.clientId || item.id === `pending-${incoming.clientId}`))
-                    );
-                    if (idx >= 0) {
-                        const next = [...prev];
-                        next[idx] = incoming;
-                        return next;
-                    }
-                    return [...prev, incoming];
-                });
+                setMessages(prev => confirmMessage(prev, incoming));
                 if (incoming.clientId && pendingClientIdRef.current === incoming.clientId) {
                     pendingClientIdRef.current = null;
                 }
@@ -477,7 +490,7 @@ const ChatPage = () => {
     };
 
     const send = async () => {
-        if (!channel || !course || sending) {
+        if (!channel || !course || sendingRef.current) {
             return;
         }
         if (pending.some(item => item.uploading)) {
@@ -503,6 +516,7 @@ const ChatPage = () => {
             authorColor: profileColor,
         };
 
+        sendingRef.current = true;
         setSending(true);
         pendingClientIdRef.current = clientId;
         setMessages(prev => [...prev, optimistic]);
@@ -520,17 +534,7 @@ const ChatPage = () => {
                 clientId,
             });
             pendingClientIdRef.current = null;
-            setMessages(prev => {
-                const idx = prev.findIndex(item =>
-                    item.clientId === clientId || item.id === `pending-${clientId}` || item.id === saved.id
-                );
-                if (idx < 0) {
-                    return [...prev, saved];
-                }
-                const next = [...prev];
-                next[idx] = saved;
-                return next;
-            });
+            setMessages(prev => confirmMessage(prev, saved));
         } catch (err: unknown) {
             setMessages(prev => prev.filter(item => item.clientId !== clientId && item.id !== `pending-${clientId}`));
             pendingClientIdRef.current = null;
@@ -538,6 +542,7 @@ const ChatPage = () => {
                 snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
             }
         } finally {
+            sendingRef.current = false;
             setSending(false);
         }
     };
@@ -719,6 +724,9 @@ const ChatPage = () => {
                                     return;
                                 }
                                 if (event.key === "Enter" && !event.shiftKey) {
+                                    if (event.repeat || event.nativeEvent.isComposing) {
+                                        return;
+                                    }
                                     event.preventDefault();
                                     void send();
                                 }

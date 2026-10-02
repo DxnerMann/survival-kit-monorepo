@@ -29,10 +29,12 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "01x0000000B": { text: "Diese E-Mail oder dieser Benutzername wird bereits verwendet.", type: "error" },
     "01x0000000C": { text: "Zu viele Anfragen. Bitte warte einen Moment.", type: "warning" },
     "01x0000000D": { text: "Bitte gib einen Nachnamen ein.", type: "warning" },
+    "01x0000000E": { text: "Wegwerf-Adressen sind nicht erlaubt. Bitte nutze einen gängigen Anbieter wie Gmail, GMX, Web.de, T-Online, iCloud oder deine DHBW-Adresse.", type: "error" },
 
     "03x00000001": { text: "Dieses Bildformat wird nicht unterstützt.", type: "error" },
     "03x00000004": { text: "Ungültige Farbe.", type: "error" },
     "03x00000005": { text: "Der Benutzername kann nur alle 30 Tage geändert werden.", type: "warning" },
+    "03x00000006": { text: "Das Profilbild ist zu groß. Maximal erlaubt sind 8 MB.", type: "warning" },
 
     "04x00000000": { text: "Der Kurs konnte nicht aus der Rapla-URL geladen werden.", type: "error" },
     "04x00000001": { text: "Diese Rapla-URL ist nicht erlaubt.", type: "error" },

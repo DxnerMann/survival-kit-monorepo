@@ -8,10 +8,14 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public final class RaplaUrlSupport {
+
+    private static final Pattern COURSE_CODE = Pattern.compile("[A-Za-z]{2,}\\d+[A-Za-z]\\d+");
 
     private static final Set<String> ALLOWED_RAPLA_HOSTS = Set.of(
             "rapla.dhbw.de"
@@ -80,7 +84,7 @@ public final class RaplaUrlSupport {
     public static String rebuildUri(String raplaUrl, String query) {
         try {
             var uri = new URI(raplaUrl);
-            var base = uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath();
+            var base = uri.getScheme() + "://" + uri.getAuthority() + canonicalPath(uri.getRawPath());
             if (query == null || query.isBlank()) {
                 return base;
             }
@@ -90,24 +94,59 @@ public final class RaplaUrlSupport {
         }
     }
 
+    static String canonicalPath(String rawPath) {
+        if (rawPath == null || rawPath.isBlank()) {
+            return "";
+        }
+        var path = rawPath.replaceAll("(?i)/internal_calendar", "/calendar");
+        if (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        if (!path.toLowerCase().contains("/calendar")) {
+            if (path.isBlank() || "/".equals(path) || path.toLowerCase().endsWith("/rapla")) {
+                path = path.toLowerCase().endsWith("/rapla") ? path + "/calendar" : "/rapla/calendar";
+            }
+        }
+        return path;
+    }
+
     public static String encodeQueryParam(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     public static String courseNameFromDocument(org.jsoup.nodes.Document document) {
+        String heading = null;
         var h2 = document.selectFirst("h2.title");
         if (h2 != null) {
             var text = h2.text().trim();
             if (!text.isBlank()) {
-                return text;
+                heading = text;
             }
         }
 
         var title = document.title().trim();
-        if (!title.isBlank()) {
-            return title;
+        var fromHeading = courseCode(heading);
+        if (fromHeading != null) {
+            return fromHeading;
         }
+        var fromTitle = courseCode(title);
+        if (fromTitle != null) {
+            return fromTitle;
+        }
+        if (heading != null) {
+            return heading;
+        }
+        return title.isBlank() ? null : title;
+    }
 
-        return null;
+    public static String courseCode(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        var matcher = COURSE_CODE.matcher(name);
+        if (!matcher.find()) {
+            return null;
+        }
+        return matcher.group().toUpperCase(Locale.ROOT);
     }
 }

@@ -7,8 +7,56 @@ import DialogActions from "@/components/dialog/DialogActions";
 import { getCroppedImageBlob } from "@/services/cropImageUtil.tsx";
 import {snackbarService} from "@/services/snackBarService.tsx";
 
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_SIZE_MB = 8;
+
+type ImageKind = "png" | "jpeg" | "gif";
+
+const kindFromType = (type: string): ImageKind | null => {
+    switch (type.toLowerCase().split(";")[0].trim()) {
+        case "image/png":
+        case "image/x-png":
+            return "png";
+        case "image/jpeg":
+        case "image/jpg":
+        case "image/pjpeg":
+            return "jpeg";
+        case "image/gif":
+        case "image/x-gif":
+            return "gif";
+        default:
+            return null;
+    }
+};
+
+const kindFromName = (name: string): ImageKind | null => {
+    const lower = name.toLowerCase();
+    if (lower.endsWith(".gif")) return "gif";
+    if (lower.endsWith(".png")) return "png";
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "jpeg";
+    return null;
+};
+
+const sniffKind = async (file: File): Promise<ImageKind | null> => {
+    const header = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+    if (header.length >= 6
+        && header[0] === 0x47 && header[1] === 0x49 && header[2] === 0x46
+        && header[3] === 0x38 && (header[4] === 0x37 || header[4] === 0x39)
+        && header[5] === 0x61) {
+        return "gif";
+    }
+    if (header.length >= 8
+        && header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47) {
+        return "png";
+    }
+    if (header.length >= 3 && header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff) {
+        return "jpeg";
+    }
+    return null;
+};
+
+const resolveKind = async (file: File): Promise<ImageKind | null> => {
+    return await sniffKind(file) ?? kindFromType(file.type) ?? kindFromName(file.name);
+};
 
 interface ProfilePictureDialogProps {
     isOpen: boolean;
@@ -59,19 +107,24 @@ export default function ProfilePictureDialog({
     const applySelectedFile = useCallback((selected: File | undefined | null) => {
         if (!selected) return;
 
-        if (!ALLOWED_TYPES.includes(selected.type)) {
-            snackbarService.showSnackbar({ type: "error", text: "Bitte wähle ein PNG-, JPG/JPEG- oder GIF-Bild aus", showIcon: true });
-            return;
-        }
+        void (async () => {
+            const kind = await resolveKind(selected);
+            if (!kind) {
+                snackbarService.showSnackbar({ type: "error", text: "Bitte wähle ein PNG-, JPG/JPEG- oder GIF-Bild aus", showIcon: true });
+                return;
+            }
 
-        if (selected.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-            snackbarService.showSnackbar({ type: "error", text: `Die Datei darf maximal ${MAX_FILE_SIZE_MB} MB groß sein.`, showIcon: true });
-            return;
-        }
+            if (selected.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                snackbarService.showSnackbar({ type: "error", text: `Die Datei darf maximal ${MAX_FILE_SIZE_MB} MB groß sein.`, showIcon: true });
+                return;
+            }
 
-        setFile(selected);
-        setIsGif(selected.type === "image/gif");
-        setImageSrc(URL.createObjectURL(selected));
+            const type = kind === "gif" ? "image/gif" : kind === "png" ? "image/png" : "image/jpeg";
+            const typed = selected.type === type ? selected : new File([selected], selected.name, {type});
+            setFile(typed);
+            setIsGif(kind === "gif");
+            setImageSrc(URL.createObjectURL(typed));
+        })();
     }, []);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,7 +198,7 @@ export default function ProfilePictureDialog({
                     >
                         <input
                             type="file"
-                            accept="image/png,image/jpeg,image/gif"
+                            accept="image/png,image/jpeg,image/jpg,image/gif,.png,.jpg,.jpeg,.gif"
                             onChange={handleFileChange}
                             hidden
                         />

@@ -4,6 +4,7 @@ import com.survivalkit.backend.adapter.postgres.course.CourseRaplaConfig;
 import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapter;
 import com.survivalkit.backend.adapter.rapla.adapter.RaplaAdapterV2;
 import com.survivalkit.backend.adapter.rapla.support.RaplaIcalLecturers;
+import com.survivalkit.backend.adapter.rapla.support.RaplaUrlSupport;
 import com.survivalkit.backend.adapter.rapla.support.WeekTableLectureParser;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.shared.Lecture;
@@ -37,6 +38,18 @@ class RaplaAdapterRegistryTest {
                 "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=24B6"
         );
         assertEquals(RaplaAdapter.V2, adapter.id());
+    }
+
+    @Test
+    void resolvesInternalCalendarUrl() {
+        var adapter = registry.resolveForUrl(
+                "https://rapla.dhbw.de/rapla/internal_calendar?user=li@dhbw-karlsruhe.aa&file=25B6&day=2&month=10&year=2026"
+        );
+        assertEquals(RaplaAdapter.V2, adapter.id());
+        assertEquals(
+                "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=25B6",
+                adapter.formatToBaseUrl("https://rapla.dhbw.de/rapla/internal_calendar?user=li@dhbw-karlsruhe.aa&file=25B6&day=2&month=10&year=2026")
+        );
     }
 
     @Test
@@ -108,6 +121,18 @@ class RaplaAdapterFormattingTest {
     }
 
     @Test
+    void v2FormatToBaseUrlRewritesInternalCalendarAndDropsExtraParams() {
+        var formatted = v2Adapter.formatToBaseUrl(
+                "https://rapla.dhbw.de/rapla/internal_calendar?user=li@dhbw-karlsruhe.aa&file=25B6&day=2&month=10&year=2026&pages=5"
+        );
+
+        assertEquals(
+                "https://rapla.dhbw.de/rapla/calendar?user=li%40dhbw-karlsruhe.aa&file=25B6",
+                formatted
+        );
+    }
+
+    @Test
     void v2FormatToBaseUrlKeepsSaltAndKey() {
         var formatted = v2Adapter.formatToBaseUrl(
                 "https://rapla.dhbw.de/rapla/calendar?salt=abc&key=def&day=3&month=8&year=2026"
@@ -169,6 +194,23 @@ class WeekTableLectureParserTest {
         );
 
         assertEquals("TINF24B6", course);
+    }
+
+    @Test
+    void courseCodeKeepsOnlyTheCoursePattern() {
+        assertEquals("TINF26B4", RaplaUrlSupport.courseCode("KA-TINF26B4"));
+        assertEquals("TINF26B1", RaplaUrlSupport.courseCode("Vorlesungen TINF26B1"));
+        assertEquals("WINF23X7", RaplaUrlSupport.courseCode("winf23x7"));
+        assertEquals("TINF25B6", RaplaUrlSupport.courseCode("TINF25B6"));
+    }
+
+    @Test
+    void courseNameFallsBackToOriginalWhenNoCodeIsPresent() throws IOException {
+        var html = """
+                <html><head><title>Projektwoche</title></head>
+                <body><h2 class="title">Projektwoche</h2></body></html>
+                """;
+        assertEquals("Projektwoche", new RaplaAdapterV2().extractCourse(Jsoup.parse(html), "https://rapla.dhbw.de/rapla/calendar"));
     }
 
     @Test

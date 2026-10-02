@@ -23,8 +23,9 @@ public class SecurityLogRepository implements SecurityLogPersistancePort {
     @Override
     public void saveLog(Log log) {
         jdbcClient.sql(Statements.SAVE.sql)
-                .paramSource(new MapSqlParameterSource("type", log.type().toString())
-                        .addValue("subType", log.subType().toString())
+                .paramSource(new MapSqlParameterSource("id", log.id())
+                        .addValue("type", log.type().toString())
+                        .addValue("subType", log.subType())
                         .addValue("timestamp", toTimestamp(log.timestamp()))
                         .addValue("message", log.message())
                 ).update();
@@ -62,9 +63,8 @@ public class SecurityLogRepository implements SecurityLogPersistancePort {
 
         // language=sql
         SAVE("""
-            INSERT INTO securityLogs (type, subType, timestamp, message)
-            VALUES (:type, :subType, :timestamp, :message)
-            ON CONFLICT (timestamp) DO NOTHING;
+            INSERT INTO securityLogs (id, type, subType, timestamp, message)
+            VALUES (:id, :type, :subType, :timestamp, :message)
         """
         ),
         // language=sql

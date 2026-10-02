@@ -47,12 +47,18 @@ export async function setUserCourse(course: string): Promise<void> {
 }
 
 export async function uploadProfileImage(file: File | Blob, isGif: boolean): Promise<void> {
+    const type = isGif
+        ? "image/gif"
+        : file.type === "image/jpeg" || file.type === "image/jpg"
+            ? "image/jpeg"
+            : "image/png";
+    const filename = isGif ? "avatar.gif" : type === "image/jpeg" ? "avatar.jpg" : "avatar.png";
+    const upload = file.type === type ? file : new File([file], filename, {type});
     const formData = new FormData();
-    const filename = isGif ? "avatar.gif" : "avatar.png";
-    formData.append("file", file, filename);
+    formData.append("file", upload, filename);
 
     const response = await apiFetch(`${API_URL}/profile/img`, {
-        method: "PUT",
+        method: "POST",
         body: formData,
     });
 

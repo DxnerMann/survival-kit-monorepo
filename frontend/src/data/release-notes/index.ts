@@ -5,6 +5,7 @@ import v310 from "./3.1.0.json";
 import v320 from "./3.2.0.json";
 import v330 from "./3.3.0.json";
 import v331 from "./3.3.1.json";
+import v332 from "./3.3.2.json";
 
 export type ReleaseNoteSection = {
     title: string;
@@ -29,7 +30,7 @@ const compareVersions = (a: string, b: string): number => {
     return 0;
 };
 
-const allNotes: ReleaseNote[] = [v300, v301, v302, v310, v320, v330, v331];
+const allNotes: ReleaseNote[] = [v300, v301, v302, v310, v320, v330, v331, v332];
 
 export const releaseNotes: ReleaseNote[] = [...allNotes].sort((a, b) =>
     compareVersions(a.version, b.version),

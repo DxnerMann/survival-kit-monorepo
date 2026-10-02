@@ -55,6 +55,7 @@ public class ProfileController {
     }
 
     @Role(RoleLevel.USER)
+    @PostMapping("/img")
     @PutMapping("/img")
     public ResponseEntity<Void> uploadProfileImage(
             @RequestParam MultipartFile file

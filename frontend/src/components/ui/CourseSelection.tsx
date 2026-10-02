@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { lectureService } from "@/services/lectureService.tsx";
+import { normalizeRaplaUrl } from "@/utils/raplaUrl.ts";
 import "@/components/ui/CourseSelection.css";
 
 interface CourseSelectionProps {
@@ -63,7 +64,7 @@ const CourseSelection = ({ selectedCourse, onCourseChanged, onLinkChanged }: Cou
     };
 
     const handleUrlSubmit = () => {
-        const trimmed = raplaUrl.trim();
+        const trimmed = normalizeRaplaUrl(raplaUrl);
         if (!trimmed) { setUrlError("Bitte eine gültige Rapla-URL eingeben."); return; }
         try { new URL(trimmed); } catch { setUrlError("Die eingegebene URL ist ungültig."); return; }
         setUrlError("");

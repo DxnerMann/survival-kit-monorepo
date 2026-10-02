@@ -1,0 +1,21 @@
+{
+  "version": "3.3.2",
+  "date": "2026-10-02",
+  "sections": [
+    {
+      "title": "Verbesserungen",
+      "items": [
+        "Farbwähler öffnet ein Fenster über dem Balken, mit Farbvorschau und Feld für Sättigung und Helligkeit",
+        "Fegefeuer hat eine Vorschau in der Toolbox, das Datumsfeld passt zum Rest der Oberfläche",
+        "Rapla-Links mit internal_calendar oder zusätzlichen Parametern werden auf den Kalender-Link mit Nutzer und Kursdatei gekürzt"
+      ]
+    },
+    {
+      "title": "Fehlerbehebungen",
+      "items": [
+        "Eine eigene Chat-Nachricht erscheint beim Senden mit Enter nicht mehr doppelt",
+        "GIF-Profilbilder werden auch erkannt, wenn der Browser den Dateityp nicht als GIF meldet"
+      ]
+    }
+  ]
+}

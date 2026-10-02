@@ -26,15 +26,16 @@ public class RaplaAdapterV2 implements RaplaAdapter {
             var path = uri.getPath() != null ? uri.getPath().toLowerCase() : "";
             var query = uri.getQuery() != null ? uri.getQuery().toLowerCase() : "";
 
-            if (host.endsWith(".dhbw-karlsruhe.de")) {
+            if (host.endsWith(".dhbw-karlsruhe.de") || !isCentralRaplaHost(host)) {
                 return false;
             }
 
-            if (path.contains("/calendar") && isCentralRaplaHost(host)) {
+            if (path.contains("/internal_calendar") || path.contains("/calendar")) {
                 return true;
             }
 
-            return query.contains("salt=") && query.contains("key=") && isCentralRaplaHost(host);
+            return (query.contains("user=") && query.contains("file="))
+                    || (query.contains("salt=") && query.contains("key="));
         } catch (Exception e) {
             return false;
         }

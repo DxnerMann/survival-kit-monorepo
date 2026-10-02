@@ -116,7 +116,7 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                 ).update();
 
         if (quickLink.approvedByAdmin()) {
-            securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("Quicklink %s updated"));
+            securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("Quicklink %s updated", quickLink.id()));
         } else {
             securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("New Quicklink suggestion created with id %s", quickLink.id()));
         }

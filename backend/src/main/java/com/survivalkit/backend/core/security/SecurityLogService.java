@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class SecurityLogService implements SecurityLog {
@@ -22,6 +23,7 @@ public class SecurityLogService implements SecurityLog {
     @Override
     public void logInfo(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
+                UUID.randomUUID().toString(),
                 Log.SecurityLogType.INFO,
                 subType.name(),
                 Instant.now(),
@@ -32,6 +34,7 @@ public class SecurityLogService implements SecurityLog {
     @Override
     public void logWarning(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
+                UUID.randomUUID().toString(),
                 Log.SecurityLogType.WARNING,
                 subType.name(),
                 Instant.now(),
@@ -42,6 +45,7 @@ public class SecurityLogService implements SecurityLog {
     @Override
     public void logError(ErrorCode.ErrorCategory subType, String message) {
         securityLogPersistancePort.saveLog(new Log(
+                UUID.randomUUID().toString(),
                 Log.SecurityLogType.ERROR,
                 subType.name(),
                 Instant.now(),

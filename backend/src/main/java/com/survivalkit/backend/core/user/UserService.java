@@ -7,6 +7,7 @@ import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.ProfileImageResponse;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.context.SecurityContext;
+import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.core.user.exception.CannotDeleteLastAdminException;
 import com.survivalkit.backend.core.user.exception.UsernameChangeToSoonException;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
@@ -27,10 +28,14 @@ import static com.survivalkit.backend.context.SecurityContext.requireVerificatio
 @Service
 public class UserService implements UserPort {
 
-    private final UserPersistancePort userPersistancePort;
+    private static final int MAX_PROFILE_PICTURE_BYTES = 8 * 1024 * 1024;
 
-    public UserService(UserPersistancePort userPersistancePort) {
+    private final UserPersistancePort userPersistancePort;
+    private final SecurityLog securityLog;
+
+    public UserService(UserPersistancePort userPersistancePort, SecurityLog securityLog) {
         this.userPersistancePort = userPersistancePort;
+        this.securityLog = securityLog;
     }
 
     @Override
@@ -51,27 +56,97 @@ public class UserService implements UserPort {
     public void updateProfilePicture(MultipartFile file) {
         requireVerification();
         var user = SecurityContext.current();
-        var contentType = file.getContentType();
-
-        if (contentType == null) {
-            throw new IllegalArgumentException(ErrorCode.MISSING_CONTENT_TYPE_PROFILE_PICTURE.getCode());
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException(ErrorCode.FAILED_TO_READ_IMAGE_BYTES.getCode());
         }
-        var normalized = contentType.toLowerCase().split(";")[0].trim();
+        if (file.getSize() > MAX_PROFILE_PICTURE_BYTES) {
+            throw new IllegalArgumentException(ErrorCode.PROFILE_PICTURE_TOO_LARGE.getCode());
+        }
+
+        final byte[] bytes;
         try {
-            var type = switch (normalized) {
-                case "image/png" -> ImgWrapper.ProfileImgType.PNG;
-                case "image/jpeg" -> ImgWrapper.ProfileImgType.JPG;
-                case "image/gif" -> ImgWrapper.ProfileImgType.GIF;
-                default -> throw new IllegalArgumentException(ErrorCode.UNSUPPORTED_CONTENT_TYPE_PROFILE_PICTURE.getCode());
-            };
-            var wrapper = new ImgWrapper(
-                    file.getBytes(),
-                    type
-            );
-            userPersistancePort.updateProfilePicture(wrapper, user.userId());
+            bytes = file.getBytes();
         } catch (IOException e) {
             throw new RuntimeException(ErrorCode.FAILED_TO_READ_IMAGE_BYTES.getCode());
         }
+
+        var type = detectProfileImageType(file.getContentType(), file.getOriginalFilename(), bytes);
+        if (type == null) {
+            throw new IllegalArgumentException(ErrorCode.UNSUPPORTED_CONTENT_TYPE_PROFILE_PICTURE.getCode());
+        }
+
+        userPersistancePort.updateProfilePicture(new ImgWrapper(bytes, type), user.userId());
+        securityLog.logInfo(
+                ErrorCode.ErrorCategory.USER,
+                "Profile picture updated for " + user.username() + " (" + type + ", " + bytes.length + " bytes)"
+        );
+    }
+
+    private static ImgWrapper.ProfileImgType detectProfileImageType(String contentType, String filename, byte[] bytes) {
+        var sniffed = sniffProfileImage(bytes);
+        if (sniffed != null) {
+            return sniffed;
+        }
+        var declared = declaredProfileImageType(contentType);
+        if (declared != null) {
+            return declared;
+        }
+        return declaredProfileImageType(mimeFromFilename(filename));
+    }
+
+    private static ImgWrapper.ProfileImgType sniffProfileImage(byte[] bytes) {
+        if (bytes.length >= 6
+                && bytes[0] == 'G'
+                && bytes[1] == 'I'
+                && bytes[2] == 'F'
+                && bytes[3] == '8'
+                && (bytes[4] == '7' || bytes[4] == '9')
+                && bytes[5] == 'a') {
+            return ImgWrapper.ProfileImgType.GIF;
+        }
+        if (bytes.length >= 8
+                && (bytes[0] & 0xFF) == 0x89
+                && bytes[1] == 'P'
+                && bytes[2] == 'N'
+                && bytes[3] == 'G') {
+            return ImgWrapper.ProfileImgType.PNG;
+        }
+        if (bytes.length >= 3
+                && (bytes[0] & 0xFF) == 0xFF
+                && (bytes[1] & 0xFF) == 0xD8
+                && (bytes[2] & 0xFF) == 0xFF) {
+            return ImgWrapper.ProfileImgType.JPG;
+        }
+        return null;
+    }
+
+    private static ImgWrapper.ProfileImgType declaredProfileImageType(String contentType) {
+        if (contentType == null || contentType.isBlank()) {
+            return null;
+        }
+        return switch (contentType.toLowerCase().split(";")[0].trim()) {
+            case "image/png", "image/x-png" -> ImgWrapper.ProfileImgType.PNG;
+            case "image/jpeg", "image/jpg", "image/pjpeg" -> ImgWrapper.ProfileImgType.JPG;
+            case "image/gif", "image/x-gif" -> ImgWrapper.ProfileImgType.GIF;
+            default -> null;
+        };
+    }
+
+    private static String mimeFromFilename(String filename) {
+        if (filename == null) {
+            return null;
+        }
+        var lower = filename.toLowerCase();
+        if (lower.endsWith(".gif")) {
+            return "image/gif";
+        }
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        return null;
     }
 
     @Override

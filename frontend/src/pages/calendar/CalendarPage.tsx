@@ -9,6 +9,7 @@ import { api } from "@/services/api.tsx";
 import type { DayOfWeek, Lecture } from "@/models/Lecture.tsx";
 import type { LecturePlanResponse } from "@/models/LecturePlanResponse.tsx";
 import { lectureConversionUtil } from "@/services/lectureConversionUtil.tsx";
+import { normalizeRaplaUrl } from "@/utils/raplaUrl.ts";
 import "@/pages/calendar/CalendarPage.css";
 
 const COLORS: Record<Lecture["type"], string> = {
@@ -104,7 +105,7 @@ const readPlanSource = (params: URLSearchParams): string => {
         }
     }
 
-    return url.toString();
+    return normalizeRaplaUrl(url.toString());
 };
 
 type ViewMode = "week" | "day";
@@ -737,7 +738,7 @@ const CalendarPage = () => {
         if (!trimmed) {
             return;
         }
-        navigate(`/calendar?source=${encodeURIComponent(trimmed)}`);
+        navigate(`/calendar?source=${encodeURIComponent(normalizeRaplaUrl(trimmed))}`);
     };
 
     const install = async () => {

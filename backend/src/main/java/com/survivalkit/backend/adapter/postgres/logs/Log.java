@@ -3,6 +3,7 @@ package com.survivalkit.backend.adapter.postgres.logs;
 import java.time.Instant;
 
 public record Log(
+    String id,
     SecurityLogType type,
     String subType,
     Instant timestamp,

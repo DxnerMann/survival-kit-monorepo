@@ -731,7 +731,7 @@ const AdminPage = () => {
 
                 <div className="security-logs-body">
                     {securityLogs.map((log) => (
-                        <div className="security-log-row" key={log.timestamp}>
+                        <div className="security-log-row" key={log.id ?? `${log.timestamp}-${log.message}`}>
                             <div className="security-log-time">{formatTimestamp(log.timestamp)}</div>
                             <div className="security-log-type">
                                 {getLogTypeBadge(log.type)}

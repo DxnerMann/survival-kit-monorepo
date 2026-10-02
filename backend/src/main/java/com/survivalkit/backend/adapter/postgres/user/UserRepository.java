@@ -50,7 +50,7 @@ public class UserRepository implements UserPersistancePort {
                         .addValue("img", user.img().img())
                         .addValue("imgType", user.img().imgType().toString())
                 ).update();
-        securityLog.logInfo(ErrorCode.ErrorCategory.USER, String.format("User created with id %s", user.id()));
+        securityLog.logInfo(ErrorCode.ErrorCategory.USER, String.format("Saved user %s (%s)", user.username(), user.id()));
     }
 
     @Override

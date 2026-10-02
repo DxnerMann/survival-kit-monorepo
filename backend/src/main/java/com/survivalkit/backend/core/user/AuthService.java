@@ -16,6 +16,7 @@ import com.survivalkit.backend.core.user.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.user.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
 import com.survivalkit.backend.core.email.EmailPort;
+import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.core.security.TokenService;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.RoleLevel;
@@ -44,8 +45,9 @@ public class AuthService implements AuthPort {
     private final QuickLinkPersistancePort quickLinkPersistancePort;
     private final FeedbackPersistancePort feedbackPersistancePort;
     private final FavouritePersistancePort favouritePersistancePort;
+    private final SecurityLog securityLog;
 
-    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort, FavouritePersistancePort favouritePersistancePort) {
+    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort, FavouritePersistancePort favouritePersistancePort, SecurityLog securityLog) {
         this.userPersistancePort = userPersistancePort;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
@@ -57,6 +59,7 @@ public class AuthService implements AuthPort {
         this.quickLinkPersistancePort = quickLinkPersistancePort;
         this.feedbackPersistancePort = feedbackPersistancePort;
         this.favouritePersistancePort = favouritePersistancePort;
+        this.securityLog = securityLog;
     }
 
     @Override
@@ -71,6 +74,9 @@ public class AuthService implements AuthPort {
                 || !isEmailValid(request.email())
                 || isPasswordInvalid(request.password())) {
             throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode());
+        }
+        if (!TrustedEmailDomains.isTrusted(request.email())) {
+            throw new InvalidCredentialsException(ErrorCode.EMAIL_PROVIDER_NOT_TRUSTED.getCode());
         }
 
         var emailMatches = userPersistancePort.findByEmail(request.email());
@@ -170,9 +176,13 @@ public class AuthService implements AuthPort {
 
     @Override
     public LoginResponse login(String email, String password) {
-        var existingUser = findLoginUser(email, password)
-                .orElseThrow(() -> new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode()));
+        var existingUser = findLoginUser(email, password).orElse(null);
+        if (existingUser == null) {
+            securityLog.logWarning(ErrorCode.ErrorCategory.AUTHENTICATION, "Failed login for " + email);
+            throw new InvalidCredentialsException(ErrorCode.INVALID_PASSWORD_OR_EMAIL.getCode());
+        }
 
+        securityLog.logInfo(ErrorCode.ErrorCategory.AUTHENTICATION, "Login succeeded for " + existingUser.username());
         return new LoginResponse(
                 tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
                 existingUser.username(),
@@ -236,6 +246,7 @@ public class AuthService implements AuthPort {
     public void logout() {
         var authUser = SecurityContext.current();
         tokenService.revoke(authUser.token());
+        securityLog.logInfo(ErrorCode.ErrorCategory.AUTHENTICATION, "Logout for " + authUser.username());
     }
 
     @Override
@@ -254,6 +265,7 @@ public class AuthService implements AuthPort {
         feedbackPersistancePort.deleteUser(userId);
         tokenService.revoke(authUser.token());
         userPersistancePort.deleteUser(userId);
+        securityLog.logInfo(ErrorCode.ErrorCategory.AUTHENTICATION, "Deleted account " + authUser.username());
     }
 
     @Override
@@ -263,6 +275,9 @@ public class AuthService implements AuthPort {
 
         if (!isEmailValid(email)) {
             throw new InvalidCredentialsException(ErrorCode.EMAIL_NOT_VALID.getCode());
+        }
+        if (!TrustedEmailDomains.isTrusted(email)) {
+            throw new InvalidCredentialsException(ErrorCode.EMAIL_PROVIDER_NOT_TRUSTED.getCode());
         }
 
         var emailTaken = userPersistancePort.findByEmail(email).stream()

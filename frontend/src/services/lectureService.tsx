@@ -3,6 +3,7 @@ import type {LecturePlanResponse} from "@/models/LecturePlanResponse.tsx";
 import {api, apiFetch, checkResponse, getErrorText, resolveError} from "@/services/api.tsx";
 import type {DayOfWeek, Lecture} from "@/models/Lecture.tsx";
 import {useCallback, useEffect, useRef, useState} from "react";
+import {normalizeRaplaUrl} from "@/utils/raplaUrl.ts";
 
 const API_URL = api.baseUrl;
 
@@ -53,7 +54,7 @@ const getAvailableCourses = async (): Promise<string[]> => {
 }
 
 const extractCourse = async (raplaUrl: string): Promise<string> => {
-    const response = await apiFetch(`${API_URL}/lecture/course?raplaUrl=${encodeURIComponent(raplaUrl)}`,
+    const response = await apiFetch(`${API_URL}/lecture/course?raplaUrl=${encodeURIComponent(normalizeRaplaUrl(raplaUrl))}`,
         {
             method: 'GET',
             headers: {
