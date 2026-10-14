@@ -176,7 +176,7 @@ Roles: `GUEST` (public), `USER`, `ADMIN`. Interactive OpenAPI UI: `/swagger-ui/i
 | `GET` | `/rooms/{room}/free?date=&time=&endTime=` | GUEST | Whether that room is free, plus conflicting slots |
 | `GET` | `/rooms/{room}/busy?date=` | GUEST | Occupied slots for one room on that day |
 
-`date` is `YYYY-MM-DD`, times are `HH:mm`. Paginated free rooms return `{ data, continuation, fromUnix, toUnix }`. The day schedule calls `https://roomfinder.dominikstahl.dev` and reads `busy_during` for 00:00–24:00.
+`date` is `YYYY-MM-DD`, times are `HH:mm`. Paginated free rooms return `{ data, continuation, fromUnix, toUnix }`. The day schedule queries the roomfinder API and reads `busy_during` (including `summary` and `courses`) for 00:00–24:00.
 
 ### Quick Links — `/v1/link`
 

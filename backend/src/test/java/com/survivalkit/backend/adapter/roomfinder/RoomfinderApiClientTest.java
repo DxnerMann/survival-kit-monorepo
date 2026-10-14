@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,8 +34,7 @@ class RoomfinderApiClientTest {
         client = new RoomfinderApiClient(
                 builder.build(),
                 new ObjectMapper(),
-                "http://roomfinder:8000/",
-                "https://roomfinder.dominikstahl.dev"
+                "http://roomfinder:8000/"
         );
     }
 
@@ -71,7 +71,7 @@ class RoomfinderApiClientTest {
                 .andExpect(queryParam("end_date", "2026-10-09"))
                 .andExpect(queryParam("end_time", "01:00"))
                 .andRespond(withSuccess("""
-                        {"room":"A171","is_free":false,"from_unix":3,"to_unix":4,"busy_during":[{"start":3,"end":4}]}
+                        {"room":"A171","is_free":false,"from_unix":3,"to_unix":4,"busy_during":[{"start":3,"end":4,"summary":"BWL 1","courses":["KA-TINF24B1"]}]}
                         """, MediaType.APPLICATION_JSON));
 
         var result = client.checkRoom(
@@ -82,18 +82,20 @@ class RoomfinderApiClientTest {
 
         assertFalse(result.free());
         assertEquals(3, result.busyDuring().getFirst().start());
+        assertEquals("BWL 1", result.busyDuring().getFirst().summary());
+        assertEquals(List.of("KA-TINF24B1"), result.busyDuring().getFirst().courses());
         server.verify();
     }
 
     @Test
-    void busySlotsReadsTheHostedDayCheck() {
-        server.expect(requestTo(containsString("https://roomfinder.dominikstahl.dev/api/v1/rooms/B240/check")))
+    void busySlotsReadsTheDayCheckFromBaseUrl() {
+        server.expect(requestTo(containsString("/api/v1/rooms/B240/check")))
                 .andExpect(queryParam("date", "2026-10-08"))
                 .andExpect(queryParam("time", "00:00"))
                 .andExpect(queryParam("end_date", "2026-10-09"))
                 .andExpect(queryParam("end_time", "00:00"))
                 .andRespond(withSuccess("""
-                        {"room":"B240","is_free":false,"from_unix":5,"to_unix":6,"busy_during":[{"start":5,"end":6}]}
+                        {"room":"B240","is_free":false,"from_unix":5,"to_unix":6,"busy_during":[{"start":5,"end":6,"summary":"Programmieren","courses":["KA-TINF24B1"]}]}
                         """, MediaType.APPLICATION_JSON));
 
         var result = client.busySlots("B240", LocalDate.of(2026, 10, 8));
@@ -101,6 +103,8 @@ class RoomfinderApiClientTest {
         assertEquals("B240", result.room());
         assertEquals("2026-10-08", result.date());
         assertEquals(6, result.busyDuring().getFirst().end());
+        assertEquals("Programmieren", result.busyDuring().getFirst().summary());
+        assertEquals(List.of("KA-TINF24B1"), result.busyDuring().getFirst().courses());
         server.verify();
     }
 
@@ -121,7 +125,7 @@ class RoomfinderApiClientTest {
 
     @Test
     void mapsAFailedDayCheckToAnUpstreamFailure() {
-        server.expect(requestTo(containsString("https://roomfinder.dominikstahl.dev/api/v1/rooms/A171/check")))
+        server.expect(requestTo(containsString("/api/v1/rooms/A171/check")))
                 .andRespond(withResourceNotFound());
 
         var error = assertThrows(RuntimeException.class, () ->

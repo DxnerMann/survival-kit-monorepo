@@ -37,23 +37,52 @@ function clock(totalMinutes: number): string {
 }
 
 function OccupiedEvent({eventInfo}: { eventInfo: EventContentArg }) {
+    const {summary, courses, timeLabel} = (eventInfo.event.extendedProps ?? {}) as {
+        summary?: string;
+        courses?: string[];
+        timeLabel?: string;
+    };
+    const title = summary && summary.trim() ? summary.trim() : "Belegt";
+    const tooltip = [
+        title,
+        courses && courses.length > 0 ? `(${courses.join(", ")})` : "",
+        timeLabel,
+    ].filter(Boolean).join(" · ");
+
     return (
-        <div className="lc-event">
+        <div className="lc-event" title={tooltip}>
             <div className="lc-event__top">
-                <span className="lc-event__title">{eventInfo.event.title}</span>
+                <span className="lc-event__title">{title}</span>
+                {timeLabel && <span className="lc-event__time">{timeLabel}</span>}
             </div>
+            {courses && courses.length > 0 && (
+                <div className="lc-event__courses">
+                    {courses.map((course) => (
+                        <span key={course} className="lc-event__course-tag">{course}</span>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
 
 const RoomDayPlan = ({room, date, slots, windowStart, windowEnd}: RoomDayPlanProps) => {
     const events = useMemo<EventInput[]>(() => {
-        const occupied: EventInput[] = slots.map((slot) => ({
-            title: `Belegt ${formatBerlinClock(slot.start)}–${formatBerlinClock(slot.end)}`,
-            start: berlinCalendarDateTime(slot.start),
-            end: berlinCalendarDateTime(slot.end),
-            classNames: ["roomfinder-day-plan__occupied"],
-        }));
+        const occupied: EventInput[] = slots.map((slot) => {
+            const timeLabel = `${formatBerlinClock(slot.start)}–${formatBerlinClock(slot.end)}`;
+            const title = slot.summary && slot.summary.trim() ? slot.summary.trim() : `Belegt ${timeLabel}`;
+            return {
+                title,
+                start: berlinCalendarDateTime(slot.start),
+                end: berlinCalendarDateTime(slot.end),
+                classNames: ["roomfinder-day-plan__occupied"],
+                extendedProps: {
+                    summary: slot.summary,
+                    courses: slot.courses,
+                    timeLabel,
+                },
+            };
+        });
         if (windowStart == null || windowEnd == null) return occupied;
         return [
             ...occupied,

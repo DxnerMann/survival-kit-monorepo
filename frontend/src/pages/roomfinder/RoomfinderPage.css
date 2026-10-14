@@ -222,9 +222,78 @@
     color: var(--color-error);
 }
 
-.roomfinder-status ul {
-    margin: 0.2rem 0 0;
-    padding-left: 1.1rem;
+.roomfinder-status__window {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.roomfinder-conflicts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.roomfinder-conflicts__title {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.roomfinder-conflicts__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.roomfinder-conflict {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: calc(var(--border-radius) / 2);
+    background: var(--color-background-secondary);
+    border-left: 3px solid var(--color-error);
+}
+
+.roomfinder-conflict__header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.roomfinder-conflict__time {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+}
+
+.roomfinder-conflict__summary {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.roomfinder-conflict__courses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.roomfinder-conflict__course-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-primary-accent) 15%, var(--color-background-primary));
+    color: var(--color-primary-accent);
+    border: 1px solid color-mix(in srgb, var(--color-primary-accent) 30%, transparent);
 }
 
 .roomfinder-plan-card {

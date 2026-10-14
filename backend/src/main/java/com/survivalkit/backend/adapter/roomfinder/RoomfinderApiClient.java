@@ -29,18 +29,15 @@ public class RoomfinderApiClient implements RoomfinderClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
-    private final String scheduleBaseUrl;
 
     public RoomfinderApiClient(
             RestClient restClient,
             ObjectMapper objectMapper,
-            @Value("${app.roomfinder.base-url}") String baseUrl,
-            @Value("${app.roomfinder.schedule-base-url}") String scheduleBaseUrl
+            @Value("${app.roomfinder.base-url}") String baseUrl
     ) {
         this.restClient = restClient;
         this.objectMapper = objectMapper;
         this.baseUrl = stripTrailingSlash(baseUrl);
-        this.scheduleBaseUrl = stripTrailingSlash(scheduleBaseUrl);
     }
 
     @Override
@@ -73,7 +70,7 @@ public class RoomfinderApiClient implements RoomfinderClient {
     public RoomDaySchedule busySlots(String room, LocalDate date) {
         var from = date.atStartOfDay();
         var to = date.plusDays(1).atStartOfDay();
-        var uri = window(scheduleBaseUrl, from, to)
+        var uri = window(baseUrl, from, to)
                 .path("/api/v1/rooms/{room}/check")
                 .buildAndExpand(room)
                 .encode()

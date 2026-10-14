@@ -13,6 +13,8 @@ export type FreeRoomsPage = {
 export type BusySlot = {
     start: number;
     end: number;
+    summary?: string;
+    courses?: string[];
 };
 
 export type RoomAvailability = {

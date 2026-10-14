@@ -304,15 +304,34 @@ const RoomfinderPage = () => {
                     {applied?.mode === "check" && availability && (
                         <div className={`roomfinder-status${availability.isFree ? " is-free" : " is-busy"}`}>
                             <h2>{availability.room} ist {availability.isFree ? "frei" : "belegt"}</h2>
-                            {windowLabel && <p>{windowLabel}</p>}
+                            {windowLabel && <p className="roomfinder-status__window">{windowLabel}</p>}
                             {!availability.isFree && availability.busyDuring?.length > 0 && (
-                                <ul>
-                                    {availability.busyDuring.map((slot) => (
-                                        <li key={`${slot.start}-${slot.end}`}>
-                                            Belegt {formatBerlinClock(slot.start)}–{formatBerlinClock(slot.end)}
-                                        </li>
-                                    ))}
-                                </ul>
+                                <div className="roomfinder-conflicts">
+                                    <p className="roomfinder-conflicts__title">Belegungen im Zeitraum:</p>
+                                    <ul className="roomfinder-conflicts__list">
+                                        {availability.busyDuring.map((slot) => (
+                                            <li key={`${slot.start}-${slot.end}`} className="roomfinder-conflict">
+                                                <div className="roomfinder-conflict__header">
+                                                    <span className="roomfinder-conflict__time">
+                                                        {formatBerlinClock(slot.start)}–{formatBerlinClock(slot.end)}
+                                                    </span>
+                                                    {slot.summary && (
+                                                        <span className="roomfinder-conflict__summary">{slot.summary}</span>
+                                                    )}
+                                                </div>
+                                                {slot.courses && slot.courses.length > 0 && (
+                                                    <div className="roomfinder-conflict__courses">
+                                                        {slot.courses.map((course) => (
+                                                            <span key={course} className="roomfinder-conflict__course-tag">
+                                                                {course}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
                             )}
                         </div>
                     )}
