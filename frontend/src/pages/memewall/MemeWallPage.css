@@ -107,6 +107,23 @@
     box-shadow: 0 16px 34px color-mix(in srgb, var(--color-shadow) 95%, transparent);
 }
 
+.memewall-meme__badge {
+    position: absolute;
+    top: 24px;
+    right: -44px;
+    width: 160px;
+    text-align: center;
+    background: #e63946;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 3px 0;
+    transform: rotate(45deg);
+    pointer-events: none;
+    z-index: 2;
+}
+
 .memewall-meme__open {
     display: block;
     width: 100%;
@@ -131,6 +148,7 @@
 .memewall-meme__overlay {
     position: absolute;
     inset: 0;
+    z-index: 3;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -219,7 +237,7 @@
 .meme-lightbox {
     position: fixed;
     inset: 0;
-    z-index: 3000;
+    z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: center;

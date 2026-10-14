@@ -212,6 +212,8 @@ public class ChatRepository implements ChatPersistancePort {
 
         Map<String, List<ChatAttachmentMeta>> byMessage = attachments.stream()
                 .collect(Collectors.groupingBy(ChatAttachmentMeta::messageId));
+        Map<String, List<ChatReaction>> reactionsByMessage = findReactionsByMessageIds(ids).stream()
+                .collect(Collectors.groupingBy(ReactionRow::messageId, Collectors.mapping(ReactionRow::reaction, Collectors.toList())));
 
         var result = new ArrayList<ChatMessage>(rows.size());
         for (var row : rows) {
@@ -225,10 +227,59 @@ public class ChatRepository implements ChatPersistancePort {
                     row.createdAt(),
                     byMessage.getOrDefault(row.id(), List.of()),
                     row.reply(),
-                    row.clientId()
+                    row.clientId(),
+                    reactionsByMessage.getOrDefault(row.id(), List.of())
             ));
         }
         return result;
+    }
+
+    @Override
+    public void addReaction(String id, String messageId, String userId, String username, String emoji, Instant createdAt) {
+        jdbcClient.sql(Statements.INSERT_REACTION.sql)
+                .paramSource(new MapSqlParameterSource("id", id)
+                        .addValue("messageId", messageId)
+                        .addValue("userId", userId)
+                        .addValue("username", username)
+                        .addValue("emoji", emoji)
+                        .addValue("createdAt", toTimestamp(createdAt)))
+                .update();
+    }
+
+    @Override
+    public void removeReaction(String messageId, String userId, String emoji) {
+        jdbcClient.sql(Statements.DELETE_REACTION.sql)
+                .paramSource(new MapSqlParameterSource("messageId", messageId)
+                        .addValue("userId", userId)
+                        .addValue("emoji", emoji))
+                .update();
+    }
+
+    @Override
+    public List<ChatReaction> findReactions(String messageId) {
+        return findReactionsByMessageIds(List.of(messageId)).stream()
+                .map(ReactionRow::reaction)
+                .toList();
+    }
+
+    private List<ReactionRow> findReactionsByMessageIds(List<String> messageIds) {
+        if (messageIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbcClient.sql(Statements.GET_REACTIONS.sql)
+                .paramSource(new MapSqlParameterSource("ids", messageIds))
+                .query((rs, rowNum) -> new ReactionRow(
+                        rs.getString("messageId"),
+                        new ChatReaction(
+                                rs.getString("emoji"),
+                                rs.getString("userId"),
+                                rs.getString("username")
+                        )
+                ))
+                .list();
+    }
+
+    private record ReactionRow(String messageId, ChatReaction reaction) {
     }
 
     private static Instant toInstant(Timestamp timestamp) {
@@ -246,7 +297,8 @@ public class ChatRepository implements ChatPersistancePort {
                 toInstant(rs.getTimestamp("createdAt")),
                 attachments,
                 readReply(rs),
-                null
+                null,
+                List.of()
         );
     }
 
@@ -357,7 +409,22 @@ public class ChatRepository implements ChatPersistancePort {
               AND messageId IS NULL
             """),
         DELETE_ATTACHMENTS("DELETE FROM chatAttachments"),
-        DELETE_MESSAGES("DELETE FROM chatMessages");
+        DELETE_MESSAGES("DELETE FROM chatMessages"),
+        INSERT_REACTION("""
+            INSERT INTO chatReactions (id, messageId, userId, username, emoji, createdAt)
+            VALUES (:id, :messageId, :userId, :username, :emoji, :createdAt)
+            ON CONFLICT (messageId, userId, emoji) DO NOTHING
+            """),
+        DELETE_REACTION("""
+            DELETE FROM chatReactions
+            WHERE messageId = :messageId AND userId = :userId AND emoji = :emoji
+            """),
+        GET_REACTIONS("""
+            SELECT messageId, emoji, userId, username
+            FROM chatReactions
+            WHERE messageId IN (:ids)
+            ORDER BY createdAt ASC, id ASC
+            """);
 
         private final String sql;
 

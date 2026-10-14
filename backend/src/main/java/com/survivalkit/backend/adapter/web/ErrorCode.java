@@ -68,6 +68,7 @@ public enum ErrorCode {
     CAFFEINE_SOURCE_INVALID("08x00000001", "Caffeine source is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
     CAFFEINE_TIMESTAMP_INVALID("08x00000002", "Caffeine timestamp is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
     CAFFEINE_ENTRY_NOT_FOUND("08x00000003", "Caffeine entry not found", HttpStatus.NOT_FOUND, ErrorCategory.CAFFEINE),
+    CAFFEINE_PRESET_NAME_INVALID("08x00000004", "Caffeine preset name must be 1 to 60 characters", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),
 
     // PRESENTATION GAME (09x)
     PRESENTATION_ROOM_NAME_EMPTY("09x00000000", "Room name cannot be empty", HttpStatus.BAD_REQUEST, ErrorCategory.PRESENTATION_GAME),
@@ -104,7 +105,9 @@ public enum ErrorCode {
     CHAT_FILE_TOO_LARGE("0Bx00000006", "Chat file is too large", HttpStatus.PAYLOAD_TOO_LARGE, ErrorCategory.CHAT),
     CHAT_VIDEO_TOO_LONG("0Bx00000007", "Chat videos cannot be longer than 2 minutes", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
     CHAT_TOO_MANY_ATTACHMENTS("0Bx00000008", "Too many attachments on a single message", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
-    CHAT_REPLY_NOT_FOUND("0Bx00000009", "The message you are replying to is no longer available", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT);
+    CHAT_REPLY_NOT_FOUND("0Bx00000009", "The message you are replying to is no longer available", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT),
+    CHAT_MESSAGE_NOT_FOUND("0Bx0000000A", "Chat message not found", HttpStatus.NOT_FOUND, ErrorCategory.CHAT),
+    CHAT_REACTION_INVALID("0Bx0000000B", "Chat reaction must be a single emoji", HttpStatus.BAD_REQUEST, ErrorCategory.CHAT);
 
     private final String code;
     private final String message;

@@ -16,6 +16,7 @@ public record ChatMessage(
         Instant createdAt,
         List<ChatAttachmentMeta> attachments,
         ChatReply reply,
-        String clientId
+        String clientId,
+        List<ChatReaction> reactions
 ) {
 }

@@ -82,6 +82,17 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public List<String> findUsernamesByCourse(String course) {
+        if (course == null || course.isBlank()) {
+            return List.of();
+        }
+        return jdbcClient.sql(Statements.USERNAMES_BY_COURSE.sql)
+                .paramSource(new MapSqlParameterSource("course", course.trim()))
+                .query(String.class)
+                .list();
+    }
+
+    @Override
     public Optional<UserModel> findByVerificationToken(String verificationToken) {
         return jdbcClient.sql(Statements.GET_BY_VERIFICATION_TOKEN.sql)
                 .paramSource(new MapSqlParameterSource("verificationToken", verificationToken))
@@ -287,6 +298,18 @@ public class UserRepository implements UserPersistancePort {
         GET_BY_USERNAME(
         """
                 SELECT * FROM users WHERE username = :username
+            """
+        ),
+        // language=sql
+        USERNAMES_BY_COURSE(
+        """
+                SELECT username
+                FROM users
+                WHERE isverified IS TRUE
+                  AND username IS NOT NULL
+                  AND btrim(username) <> ''
+                  AND btrim(course) = :course
+                ORDER BY lower(username)
             """
         ),
         // language=sql

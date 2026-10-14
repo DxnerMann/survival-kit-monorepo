@@ -55,6 +55,7 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "08x00000001": { text: "Ungültige Koffein-Quelle.", type: "warning" },
     "08x00000002": { text: "Ungültiger Zeitpunkt (max. 7 Tage zurück).", type: "warning" },
     "08x00000003": { text: "Koffein-Eintrag wurde nicht gefunden.", type: "error" },
+    "08x00000004": { text: "Der Preset-Name muss zwischen 1 und 60 Zeichen lang sein.", type: "warning" },
 
     "09x00000000": { text: "Der Raumname darf nicht leer sein.", type: "warning" },
     "09x00000001": { text: "Raum nicht gefunden.", type: "error" },
@@ -89,6 +90,8 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "0Bx00000007": { text: "Videos dürfen höchstens 2 Minuten lang sein.", type: "warning" },
     "0Bx00000008": { text: "Zu viele Anhänge an einer Nachricht.", type: "warning" },
     "0Bx00000009": { text: "Die Nachricht, auf die du antworten wolltest, gibt es nicht mehr.", type: "warning" },
+    "0Bx0000000A": { text: "Diese Nachricht gibt es nicht mehr.", type: "error" },
+    "0Bx0000000B": { text: "Diese Reaktion ist kein einzelnes Emoji.", type: "warning" },
 };
 
 export function getErrorText(error: ApiError | unknown): string {

@@ -19,6 +19,20 @@ const authorLabel = (meme: Meme) => {
     return `erstellt von ${name || "Unbekannt"}`;
 };
 
+const newestMemeId = (memes: Meme[]): string | null => {
+    return memes.reduce<Meme | null>((latest, meme) => {
+        if (!latest) {
+            return meme;
+        }
+        const latestTime = Date.parse(latest.addedAt);
+        const memeTime = Date.parse(meme.addedAt);
+        if (memeTime !== latestTime) {
+            return memeTime > latestTime ? meme : latest;
+        }
+        return meme.id > latest.id ? meme : latest;
+    }, null)?.id ?? null;
+};
+
 const MemeLightbox = ({meme, onClose}: {meme: Meme; onClose: () => void}) => {
     const stageRef = useRef<HTMLDivElement>(null);
     const imageRef = useRef<HTMLImageElement>(null);
@@ -176,6 +190,7 @@ const MemeWallPage = () => {
     };
 
     const closeLightbox = useCallback(() => setSelectedMeme(null), []);
+    const newestId = newestMemeId(memes);
 
     const handleDelete = async (id: string) => {
         await deleteMeme(id);
@@ -241,6 +256,9 @@ const MemeWallPage = () => {
                             className="memewall-meme"
                             style={memePlacementStyle(meme.id, index)}
                         >
+                            {meme.id === newestId && (
+                                <span className="memewall-meme__badge">Neuste</span>
+                            )}
                             <button
                                 type="button"
                                 className="memewall-meme__open"

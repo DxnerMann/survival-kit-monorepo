@@ -4,6 +4,7 @@ import com.survivalkit.backend.adapter.postgres.chat.ChatAttachmentFile;
 import com.survivalkit.backend.adapter.postgres.chat.ChatAttachmentMeta;
 import com.survivalkit.backend.adapter.postgres.chat.ChatMessage;
 import com.survivalkit.backend.adapter.postgres.chat.ChatPersistancePort;
+import com.survivalkit.backend.adapter.postgres.chat.ChatReactionUpdate;
 import com.survivalkit.backend.adapter.postgres.chat.ChatReply;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.web.ErrorCode;
@@ -177,7 +178,8 @@ public class ChatService implements ChatPort {
                 now,
                 List.of(),
                 reply,
-                null
+                null,
+                List.of()
         );
         chatPersistancePort.saveMessage(message);
         chatPersistancePort.linkAttachments(message.id(), userId, normalizedCourse, ids);
@@ -192,8 +194,63 @@ public class ChatService implements ChatPort {
                 message.createdAt(),
                 attachments,
                 reply,
-                sanitizedClientId(clientId)
+                sanitizedClientId(clientId),
+                List.of()
         );
+    }
+
+    @Override
+    public ChatReactionUpdate addReaction(String messageId, String emoji) {
+        return saveReaction(messageId, emoji, true);
+    }
+
+    @Override
+    public ChatReactionUpdate removeReaction(String messageId, String emoji) {
+        return saveReaction(messageId, emoji, false);
+    }
+
+    private ChatReactionUpdate saveReaction(String messageId, String emoji, boolean add) {
+        requireVerification();
+        var user = SecurityContext.current();
+        var profile = currentProfile();
+        var course = profile.course().trim();
+        if (messageId == null || messageId.isBlank()) {
+            throw new IllegalArgumentException(ErrorCode.CHAT_MESSAGE_NOT_FOUND.getCode());
+        }
+        var message = chatPersistancePort.findMessageById(messageId, course, startOfTodayBerlin())
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.CHAT_MESSAGE_NOT_FOUND.getCode()));
+        var normalized = normalizeEmoji(emoji);
+        if (add) {
+            rateLimitService.check("chat-reaction", user.userId(), 40, Duration.ofMinutes(1));
+            chatPersistancePort.addReaction(
+                    NanoId.generate(25),
+                    message.id(),
+                    user.userId(),
+                    profile.username(),
+                    normalized,
+                    Instant.now()
+            );
+        } else {
+            chatPersistancePort.removeReaction(message.id(), user.userId(), normalized);
+        }
+        return new ChatReactionUpdate(course, message.id(), chatPersistancePort.findReactions(message.id()));
+    }
+
+    @Override
+    public List<String> listCourseUsernames() {
+        requireVerification();
+        return userPersistancePort.findUsernamesByCourse(currentUserCourse());
+    }
+
+    private static String normalizeEmoji(String emoji) {
+        if (emoji == null) {
+            throw new IllegalArgumentException(ErrorCode.CHAT_REACTION_INVALID.getCode());
+        }
+        var trimmed = emoji.strip();
+        if (trimmed.isEmpty() || trimmed.length() > 32 || trimmed.codePoints().anyMatch(Character::isWhitespace)) {
+            throw new IllegalArgumentException(ErrorCode.CHAT_REACTION_INVALID.getCode());
+        }
+        return trimmed;
     }
 
     private ChatReply snapshotReply(String replyToId, String course) {

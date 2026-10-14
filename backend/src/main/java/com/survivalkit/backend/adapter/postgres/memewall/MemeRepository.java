@@ -148,8 +148,13 @@ public class MemeRepository implements MemePersistancePort {
             FROM memes m
             LEFT JOIN users u ON u.id = m.authorUserId
             WHERE m.course = :course
-              AND (:continuation::TEXT IS NULL OR m.id > :continuation)
-            ORDER BY m.id
+              AND (
+                :continuation::TEXT IS NULL
+                OR (m.addedAt, m.id) < (
+                    SELECT addedAt, id FROM memes WHERE id = :continuation
+                )
+              )
+            ORDER BY m.addedAt DESC, m.id DESC
             LIMIT :pageSize
         """),
 

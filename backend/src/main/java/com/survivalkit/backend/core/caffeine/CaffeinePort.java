@@ -20,6 +20,7 @@ public interface CaffeinePort {
     double getSumForCourse();
     double getSumGlobal();
     List<CaffeinePreset> getPresets();
-    CaffeinePreset savePreset(int amountMg);
+    CaffeinePreset savePreset(String name, int amountMg);
+    CaffeinePreset updatePreset(String id, String name, int amountMg);
     void deletePreset(String id);
 }

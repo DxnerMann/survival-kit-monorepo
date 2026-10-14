@@ -17,6 +17,18 @@ export type ChatReply = {
     text: string | null;
 };
 
+export type ChatReaction = {
+    emoji: string;
+    userId: string;
+    username: string;
+};
+
+export type ChatReactionUpdate = {
+    course: string;
+    messageId: string;
+    reactions: ChatReaction[];
+};
+
 export type ChatMessage = {
     id: string;
     course: string;
@@ -28,4 +40,5 @@ export type ChatMessage = {
     attachments: ChatAttachment[];
     reply?: ChatReply | null;
     clientId?: string | null;
+    reactions?: ChatReaction[];
 };

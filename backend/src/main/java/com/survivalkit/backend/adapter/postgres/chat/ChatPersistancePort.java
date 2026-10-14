@@ -32,5 +32,11 @@ public interface ChatPersistancePort {
 
     List<ChatAttachmentMeta> findAttachmentsByMessageIds(List<String> messageIds);
 
+    void addReaction(String id, String messageId, String userId, String username, String emoji, Instant createdAt);
+
+    void removeReaction(String messageId, String userId, String emoji);
+
+    List<ChatReaction> findReactions(String messageId);
+
     void deleteAll();
 }

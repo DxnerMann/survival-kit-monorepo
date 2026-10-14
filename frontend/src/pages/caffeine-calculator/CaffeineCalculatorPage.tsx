@@ -1,9 +1,10 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {ChevronDown, Trash2} from "lucide-react";
+import {ChevronDown, Pen, Trash2} from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import Info from "@/components/ui/Info.tsx";
 import Button from "@/components/ui/Button.tsx";
 import CaffeineChart from "@/components/caffeine/CaffeineChart.tsx";
+import EditCaffeinePresetDialog from "@/components/dialog/EditCaffeinePresetDialog.tsx";
 import {
     addTodayCaffeineEntry,
     buildHalfLifeSeries,
@@ -15,10 +16,12 @@ import {
     isGuestCaffeineMode,
     loadCaffeinePresets,
     loadTodayCaffeineEntries,
+    PRESET_NAME_MAX_LENGTH,
     removeTodayCaffeineEntry,
     saveCaffeinePreset,
     sourceLabel,
     toDateTimeLocalValue,
+    updateCaffeinePreset,
 } from "@/services/caffeineService.tsx";
 import type {CaffeinePreset} from "@/services/caffeineService.tsx";
 import type {CaffeineEntry, CaffeineSource} from "@/models/CaffeineEntry.tsx";
@@ -28,11 +31,13 @@ import "@/pages/caffeine-calculator/CaffeineCalculatorPage.css";
 
 const CaffeineCalculatorPage = () => {
     const [source, setSource] = useState<CaffeineSource>("MONSTER");
+    const [customName, setCustomName] = useState<string>("");
     const [customMg, setCustomMg] = useState<string>("");
     const [consumedAt, setConsumedAt] = useState<string>(() => toDateTimeLocalValue(new Date()));
     const [entries, setEntries] = useState<CaffeineEntry[]>([]);
     const [presets, setPresets] = useState<CaffeinePreset[]>([]);
     const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+    const [editingPreset, setEditingPreset] = useState<CaffeinePreset | null>(null);
     const [pickerOpen, setPickerOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -96,6 +101,7 @@ const CaffeineCalculatorPage = () => {
             if (source === "OTHER") {
                 const selectedPreset = presets.find((preset) => preset.id === selectedPresetId);
                 const parsed = selectedPreset?.amountMg ?? Number(customMg);
+                const name = customName.trim();
                 if (!Number.isInteger(parsed) || parsed < 1 || parsed > 1000) {
                     snackbarService.showSnackbar({
                         type: "error",
@@ -104,13 +110,22 @@ const CaffeineCalculatorPage = () => {
                     });
                     return;
                 }
+                if (!selectedPreset && (name.length < 1 || name.length > PRESET_NAME_MAX_LENGTH)) {
+                    snackbarService.showSnackbar({
+                        type: "error",
+                        text: `Bitte einen Namen mit 1 bis ${PRESET_NAME_MAX_LENGTH} Zeichen eingeben.`,
+                        showIcon: true,
+                    });
+                    return;
+                }
                 await addTodayCaffeineEntry(source, parsed, timestamp.toISOString());
                 if (!selectedPreset) {
-                    const saved = await saveCaffeinePreset(parsed);
+                    const saved = await saveCaffeinePreset(name, parsed);
                     setPresets((current) => current.some((preset) => preset.id === saved.id)
                         ? current
                         : [...current, saved]);
                     setSelectedPresetId(saved.id);
+                    setCustomName("");
                 }
             } else {
                 await addTodayCaffeineEntry(source, undefined, timestamp.toISOString());
@@ -143,9 +158,27 @@ const CaffeineCalculatorPage = () => {
         }
     };
 
-    const selectedLabel = selectedPresetId
-        ? customPresetLabel(presets.find((preset) => preset.id === selectedPresetId)?.amountMg ?? Number(customMg))
-        : sourceLabel(source);
+    const selectedPreset = presets.find((preset) => preset.id === selectedPresetId);
+    const selectedLabel = selectedPreset ? customPresetLabel(selectedPreset) : sourceLabel(source);
+
+    const handleUpdatePreset = async (name: string, amountMg: number) => {
+        if (!editingPreset) {
+            return;
+        }
+        try {
+            const saved = await updateCaffeinePreset(editingPreset.id, name, amountMg);
+            setPresets((current) => current.map((preset) => preset.id === saved.id ? saved : preset));
+            if (selectedPresetId === saved.id) {
+                setCustomMg(String(saved.amountMg));
+            }
+            setEditingPreset(null);
+            snackbarService.showSnackbar({
+                type: "success",
+                text: "Preset gespeichert.",
+                showIcon: true,
+            });
+        } catch { /* empty */ }
+    };
 
     const handleDelete = async (id: string) => {
         try {
@@ -223,16 +256,29 @@ const CaffeineCalculatorPage = () => {
                                                     setPickerOpen(false);
                                                 }}
                                             >
-                                                {customPresetLabel(preset.amountMg)}
+                                                {customPresetLabel(preset)}
                                             </button>
-                                            <button
-                                                type="button"
-                                                className="caffeine-calc-entry-delete"
-                                                aria-label={`${customPresetLabel(preset.amountMg)} löschen`}
-                                                onClick={() => handleDeletePreset(preset.id)}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            <div className="caffeine-calc-picker-actions">
+                                                <button
+                                                    type="button"
+                                                    className="caffeine-calc-entry-delete"
+                                                    aria-label={`${customPresetLabel(preset)} bearbeiten`}
+                                                    onClick={() => {
+                                                        setPickerOpen(false);
+                                                        setEditingPreset(preset);
+                                                    }}
+                                                >
+                                                    <Pen size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="caffeine-calc-entry-delete"
+                                                    aria-label={`${customPresetLabel(preset)} löschen`}
+                                                    onClick={() => handleDeletePreset(preset.id)}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
@@ -241,6 +287,18 @@ const CaffeineCalculatorPage = () => {
 
                         {source === "OTHER" && selectedPresetId == null && (
                             <div className="caffeine-calc-custom">
+                                <label className="caffeine-calc-label" htmlFor="caffeine-custom-name">
+                                    Name
+                                </label>
+                                <input
+                                    id="caffeine-custom-name"
+                                    className="caffeine-calc-input"
+                                    type="text"
+                                    maxLength={PRESET_NAME_MAX_LENGTH}
+                                    value={customName}
+                                    onChange={(e) => setCustomName(e.target.value)}
+                                    placeholder="z.B. Mate"
+                                />
                                 <label className="caffeine-calc-label" htmlFor="caffeine-custom-mg">
                                     Menge in mg (1–1000)
                                 </label>
@@ -337,6 +395,15 @@ const CaffeineCalculatorPage = () => {
                     </div>
                 </div>
             </div>
+            {editingPreset && (
+                <EditCaffeinePresetDialog
+                    isOpen={true}
+                    name={editingPreset.name}
+                    amountMg={editingPreset.amountMg}
+                    onCancel={() => setEditingPreset(null)}
+                    onSubmit={handleUpdatePreset}
+                />
+            )}
         </div>
     );
 };

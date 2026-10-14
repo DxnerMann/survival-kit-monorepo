@@ -1,5 +1,5 @@
 import {api, apiFetch, checkResponse} from "@/services/api.tsx";
-import type {ChatAttachment, ChatMessage} from "@/models/ChatMessage.tsx";
+import type {ChatAttachment, ChatMessage, ChatReactionUpdate} from "@/models/ChatMessage.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -17,6 +17,12 @@ export type ChatMessageQuery = {
     after?: string;
     afterId?: string;
     limit?: number;
+};
+
+const getUsernames = async (): Promise<string[]> => {
+    const response = await apiFetch(`${API_URL}/chat/usernames`);
+    await checkResponse(response);
+    return response.json();
 };
 
 const getMessages = async (query: ChatMessageQuery = {}): Promise<ChatMessage[]> => {
@@ -78,6 +84,25 @@ const postMessage = async (payload: {
     return response.json();
 };
 
+const addReaction = async (messageId: string, emoji: string): Promise<ChatReactionUpdate> => {
+    const response = await apiFetch(`${API_URL}/chat/messages/${encodeURIComponent(messageId)}/reactions`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({emoji}),
+    });
+    await checkResponse(response);
+    return response.json();
+};
+
+const removeReaction = async (messageId: string, emoji: string): Promise<ChatReactionUpdate> => {
+    const params = new URLSearchParams({emoji});
+    const response = await apiFetch(`${API_URL}/chat/messages/${encodeURIComponent(messageId)}/reactions?${params}`, {
+        method: "DELETE",
+    });
+    await checkResponse(response);
+    return response.json();
+};
+
 const uploadAttachment = async (file: File, durationMs?: number): Promise<ChatAttachment> => {
     const formData = new FormData();
     formData.append("file", file, file.name);
@@ -125,8 +150,11 @@ export const chatLimits = {
 };
 
 export const chatService = {
+    getUsernames,
     getMessages,
     postMessage,
+    addReaction,
+    removeReaction,
     uploadAttachment,
     fetchAttachmentBlob,
     getVideoDurationMs,

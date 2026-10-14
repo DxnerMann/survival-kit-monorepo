@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,7 +51,13 @@ public class CaffeineController {
     @Role(RoleLevel.USER)
     @PostMapping("/presets")
     public ResponseEntity<CaffeinePreset> savePreset(@RequestBody CaffeinePresetRequest request) {
-        return ResponseEntity.ok(caffeinePort.savePreset(request.amountMg() == null ? 0 : request.amountMg()));
+        return ResponseEntity.ok(caffeinePort.savePreset(request.name(), request.amountMg() == null ? 0 : request.amountMg()));
+    }
+
+    @Role(RoleLevel.USER)
+    @PutMapping("/presets/{id}")
+    public ResponseEntity<CaffeinePreset> updatePreset(@PathVariable String id, @RequestBody CaffeinePresetRequest request) {
+        return ResponseEntity.ok(caffeinePort.updatePreset(id, request.name(), request.amountMg() == null ? 0 : request.amountMg()));
     }
 
     @Role(RoleLevel.USER)

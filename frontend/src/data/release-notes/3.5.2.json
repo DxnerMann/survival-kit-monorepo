@@ -1,0 +1,33 @@
+{
+  "version": "3.5.2",
+  "date": "2026-10-14",
+  "sections": [
+    {
+      "title": "Koffeinrechner",
+      "items": [
+        "Beim ersten eigenen Eintrag gibst du einen Namen an",
+        "Neben dem Papierkorb ändert der Stift Name und Menge",
+        "Zwei Einträge dürfen dieselbe Milligrammzahl haben. Angezeigt wird zum Beispiel „Mate (160mg)“"
+      ]
+    },
+    {
+      "title": "Memewand",
+      "items": [
+        "Das neueste Meme steht oben und trägt das Band „Neuste“",
+        "Das Band gibt es nur in der Übersicht, nicht in der Vollansicht",
+        "In der Vollansicht liegt das Bild über Kopf- und Fußzeile"
+      ]
+    },
+    {
+      "title": "Daily Chat",
+      "items": [
+        "An jeder Nachricht sitzt ein Smiley. Bei eigenen Nachrichten links, bei anderen rechts",
+        "Ein Klick zeigt die letzten Emojis, das Plus öffnet alle weiteren",
+        "Du kannst mehrere verschiedene Emojis setzen. Dasselbe Emoji nur einmal",
+        "Ab der zweiten Person steht die Zahl daneben. Mehr als drei Arten klappen zusammen, das Plus zeigt den Rest",
+        "Darüber siehst du, wer reagiert hat. Ein Klick auf deine eigene Reaktion nimmt sie wieder weg",
+        "Tippe @ und wähle einen Namen aus der Liste, oder drücke Tab für den ersten Treffer. Der Name erscheint in der Akzentfarbe"
+      ]
+    }
+  ]
+}

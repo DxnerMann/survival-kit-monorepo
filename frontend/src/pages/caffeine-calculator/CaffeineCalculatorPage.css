@@ -94,6 +94,12 @@
     cursor: pointer;
 }
 
+.caffeine-calc-picker-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 .caffeine-calc-picker-option:hover,
 .caffeine-calc-picker-option--selected {
     background: var(--color-background-secondary, transparent);

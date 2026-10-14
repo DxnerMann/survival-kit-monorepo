@@ -3,6 +3,7 @@ package com.survivalkit.backend.adapter.web.chat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.survivalkit.backend.adapter.postgres.chat.ChatAttachmentMeta;
 import com.survivalkit.backend.adapter.postgres.chat.ChatMessage;
+import com.survivalkit.backend.adapter.postgres.chat.ChatReactionUpdate;
 import com.survivalkit.backend.core.chat.ChatPort;
 import com.survivalkit.backend.core.websocket.WebSocketPort;
 import com.survivalkit.backend.shared.Role;
@@ -16,6 +17,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,6 +60,12 @@ public class ChatController {
     }
 
     @Role(RoleLevel.USER)
+    @GetMapping("usernames")
+    public ResponseEntity<List<String>> usernames() {
+        return ResponseEntity.ok(chatPort.listCourseUsernames());
+    }
+
+    @Role(RoleLevel.USER)
     @PostMapping("messages")
     public ResponseEntity<ChatMessage> postMessage(@RequestBody ChatSendRequest request) {
         var message = chatPort.postCurrentUserMessage(
@@ -72,6 +80,36 @@ public class ChatController {
                 WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, objectMapper.valueToTree(message))
         );
         return ResponseEntity.ok(message);
+    }
+
+    @Role(RoleLevel.USER)
+    @PostMapping("messages/{id}/reactions")
+    public ResponseEntity<ChatReactionUpdate> addReaction(
+            @PathVariable String id,
+            @RequestBody ChatReactionRequest request
+    ) {
+        var update = chatPort.addReaction(id, request.emoji());
+        broadcastReaction(update);
+        return ResponseEntity.ok(update);
+    }
+
+    @Role(RoleLevel.USER)
+    @DeleteMapping("messages/{id}/reactions")
+    public ResponseEntity<ChatReactionUpdate> removeReaction(
+            @PathVariable String id,
+            @RequestParam String emoji
+    ) {
+        var update = chatPort.removeReaction(id, emoji);
+        broadcastReaction(update);
+        return ResponseEntity.ok(update);
+    }
+
+    private void broadcastReaction(ChatReactionUpdate update) {
+        var channel = WebSocketChannels.courseChat(update.course());
+        webSocketPort.broadcastChatMessage(
+                update.course(),
+                WebSocketEnvelope.of(WebSocketMessageType.REACTION, channel, objectMapper.valueToTree(update))
+        );
     }
 
     @Role(RoleLevel.USER)

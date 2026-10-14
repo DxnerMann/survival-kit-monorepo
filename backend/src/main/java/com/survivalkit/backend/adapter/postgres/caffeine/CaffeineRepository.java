@@ -124,21 +124,23 @@ public class CaffeineRepository implements CaffeinePersistancePort {
     }
 
     @Override
-    public Optional<CaffeinePreset> findPreset(String userId, int amountMg) {
-        return jdbcClient.sql(Statements.FIND_PRESET.sql)
-                .param("userId", userId)
-                .param("amountMg", amountMg)
-                .query(CaffeinePreset.class)
-                .optional();
-    }
-
-    @Override
     public void insertPreset(CaffeinePreset preset, String userId) {
         jdbcClient.sql(Statements.INSERT_PRESET.sql)
                 .param("id", preset.id())
                 .param("userId", userId)
+                .param("name", preset.name())
                 .param("amountMg", preset.amountMg())
                 .update();
+    }
+
+    @Override
+    public boolean updatePresetForUser(CaffeinePreset preset, String userId) {
+        return jdbcClient.sql(Statements.UPDATE_PRESET.sql)
+                .param("id", preset.id())
+                .param("userId", userId)
+                .param("name", preset.name())
+                .param("amountMg", preset.amountMg())
+                .update() > 0;
     }
 
     @Override
@@ -259,20 +261,20 @@ public class CaffeineRepository implements CaffeinePersistancePort {
         """),
         // language=sql
         GET_PRESETS("""
-            SELECT id, amountMg FROM caffeinePresets
+            SELECT id, name, amountMg FROM caffeinePresets
             WHERE userId = :userId
             ORDER BY createdAt ASC
         """),
         // language=sql
-        FIND_PRESET("""
-            SELECT id, amountMg FROM caffeinePresets
-            WHERE userId = :userId AND amountMg = :amountMg
+        INSERT_PRESET("""
+            INSERT INTO caffeinePresets (id, userId, name, amountMg, createdAt)
+            VALUES (:id, :userId, :name, :amountMg, (now() AT TIME ZONE 'UTC'))
         """),
         // language=sql
-        INSERT_PRESET("""
-            INSERT INTO caffeinePresets (id, userId, amountMg, createdAt)
-            VALUES (:id, :userId, :amountMg, (now() AT TIME ZONE 'UTC'))
-            ON CONFLICT (userId, amountMg) DO NOTHING
+        UPDATE_PRESET("""
+            UPDATE caffeinePresets
+            SET name = :name, amountMg = :amountMg
+            WHERE id = :id AND userId = :userId
         """),
         // language=sql
         DELETE_PRESET("""

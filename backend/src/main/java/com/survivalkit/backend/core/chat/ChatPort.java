@@ -3,6 +3,7 @@ package com.survivalkit.backend.core.chat;
 import com.survivalkit.backend.adapter.postgres.chat.ChatAttachmentFile;
 import com.survivalkit.backend.adapter.postgres.chat.ChatAttachmentMeta;
 import com.survivalkit.backend.adapter.postgres.chat.ChatMessage;
+import com.survivalkit.backend.adapter.postgres.chat.ChatReactionUpdate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
@@ -27,6 +28,12 @@ public interface ChatPort {
     );
 
     ChatMessage postCurrentUserMessage(String text, List<String> attachmentIds, String clientId, String replyToId);
+
+    ChatReactionUpdate addReaction(String messageId, String emoji);
+
+    ChatReactionUpdate removeReaction(String messageId, String emoji);
+
+    List<String> listCourseUsernames();
 
     void deleteAll();
 }

@@ -178,21 +178,42 @@ public class CaffeineService implements CaffeinePort {
     }
 
     @Override
-    public CaffeinePreset savePreset(int amountMg) {
+    public CaffeinePreset savePreset(String name, int amountMg) {
         requireVerification();
+        var preset = new CaffeinePreset(NanoId.generate(25), normalizePresetName(name), validateAmount(amountMg));
+        caffeinePersistancePort.insertPreset(preset, SecurityContext.current().userId());
+        return preset;
+    }
+
+    @Override
+    public CaffeinePreset updatePreset(String id, String name, int amountMg) {
+        requireVerification();
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException(ErrorCode.CAFFEINE_ENTRY_NOT_FOUND.getCode());
+        }
+        var preset = new CaffeinePreset(id, normalizePresetName(name), validateAmount(amountMg));
+        if (!caffeinePersistancePort.updatePresetForUser(preset, SecurityContext.current().userId())) {
+            throw new IllegalArgumentException(ErrorCode.CAFFEINE_ENTRY_NOT_FOUND.getCode());
+        }
+        return preset;
+    }
+
+    private String normalizePresetName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException(ErrorCode.CAFFEINE_PRESET_NAME_INVALID.getCode());
+        }
+        var trimmed = name.trim();
+        if (trimmed.isEmpty() || trimmed.length() > 60) {
+            throw new IllegalArgumentException(ErrorCode.CAFFEINE_PRESET_NAME_INVALID.getCode());
+        }
+        return trimmed;
+    }
+
+    private int validateAmount(int amountMg) {
         if (amountMg < 1 || amountMg > 1000) {
             throw new IllegalArgumentException(ErrorCode.CAFFEINE_AMOUNT_INVALID.getCode());
         }
-
-        var user = SecurityContext.current();
-        var existing = caffeinePersistancePort.findPreset(user.userId(), amountMg);
-        if (existing.isPresent()) {
-            return existing.get();
-        }
-
-        var preset = new CaffeinePreset(NanoId.generate(25), amountMg);
-        caffeinePersistancePort.insertPreset(preset, user.userId());
-        return caffeinePersistancePort.findPreset(user.userId(), amountMg).orElse(preset);
+        return amountMg;
     }
 
     @Override

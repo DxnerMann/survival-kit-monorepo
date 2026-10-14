@@ -2,7 +2,7 @@ import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from
 import {flushSync} from "react-dom";
 import {Bold, Download, FileText, Italic, Paperclip, Reply, Send, Smile, Strikethrough, Underline, X} from "lucide-react";
 import {useNavigate} from "react-router-dom";
-import type {ChatAttachment, ChatMessage, ChatReply} from "@/models/ChatMessage.tsx";
+import type {ChatAttachment, ChatMessage, ChatReaction, ChatReply} from "@/models/ChatMessage.tsx";
 import {CHAT_PAGE_SIZE, chatCache, chatLimits, chatService} from "@/services/chatService.tsx";
 import {fetchProfileSettings} from "@/services/userService.tsx";
 import {api, getErrorText} from "@/services/api.tsx";
@@ -11,8 +11,10 @@ import {websocketChannels} from "@/services/websocketChannels.ts";
 import {chatUnread} from "@/services/chatUnread.ts";
 import {websocketService} from "@/services/websocketService.tsx";
 import {WebSocketMessageType} from "@/models/WebSocketEnvelope.tsx";
-import ChatFormattedText, {formatMarkers, wrapSelection} from "@/pages/chat/ChatFormattedText.tsx";
-import {applyEmojiShortcuts, emojiMartData, expandEmojiNotation} from "@/pages/chat/chatEmoji.ts";
+import ChatFormattedText, {ChatMentionText, formatMarkers, wrapSelection} from "@/pages/chat/ChatFormattedText.tsx";
+import {filterMentionUsernames, mentionQueryAt, type MentionQuery} from "@/pages/chat/chatMentions.ts";
+import {applyEmojiShortcuts, expandEmojiNotation} from "@/pages/chat/chatEmoji.ts";
+import {ChatReactButton, ChatReactionBar, EmojiPicker} from "@/pages/chat/ChatReactions.tsx";
 import {useTheme} from "@/context/ThemeContext.tsx";
 import "@/pages/chat/ChatPage.css";
 
@@ -229,46 +231,6 @@ const ChatMedia = ({
     );
 };
 
-function EmojiPicker({theme, onSelect}: {theme: "light" | "dark"; onSelect: (emoji: string) => void}) {
-    const hostRef = useRef<HTMLDivElement | null>(null);
-    const onSelectRef = useRef(onSelect);
-    onSelectRef.current = onSelect;
-
-    useEffect(() => {
-        const host = hostRef.current;
-        if (!host) {
-            return;
-        }
-        let active = true;
-        void import("emoji-mart").then(({Picker}) => {
-            if (!active) {
-                return;
-            }
-            const picker = new Picker({
-                data: emojiMartData,
-                theme,
-                set: "native",
-                previewPosition: "none",
-                skinTonePosition: "search",
-                maxFrequentRows: 1,
-                perLine: 8,
-                onEmojiSelect: (emoji: {native?: string}) => {
-                    if (emoji.native) {
-                        onSelectRef.current(emoji.native);
-                    }
-                },
-            });
-            host.replaceChildren(picker as unknown as Node);
-        });
-        return () => {
-            active = false;
-            host.replaceChildren();
-        };
-    }, [theme]);
-
-    return <div ref={hostRef} className="chat-emoji-panel" />;
-}
-
 const ChatPage = () => {
     const navigate = useNavigate();
     const {theme} = useTheme();
@@ -285,6 +247,8 @@ const ChatPage = () => {
     const [sending, setSending] = useState(false);
     const [lightbox, setLightbox] = useState<Lightbox | null>(null);
     const [emojiOpen, setEmojiOpen] = useState(false);
+    const [courseUsernames, setCourseUsernames] = useState<string[]>([]);
+    const [mention, setMention] = useState<MentionQuery | null>(null);
     const listRef = useRef<HTMLDivElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const emojiWrapRef = useRef<HTMLDivElement | null>(null);
@@ -300,6 +264,10 @@ const ChatPage = () => {
     hasOlderRef.current = hasOlder;
 
     const channel = useMemo(() => course ? websocketChannels.courseChat(course) : null, [course]);
+    const mentionHits = useMemo(
+        () => (mention ? filterMentionUsernames(courseUsernames, mention.query).slice(0, 8) : []),
+        [mention, courseUsernames],
+    );
 
     const resizeTextarea = () => {
         const el = textareaRef.current;
@@ -382,6 +350,13 @@ const ChatPage = () => {
                     setLoading(false);
                     return;
                 }
+                void chatService.getUsernames()
+                    .then(names => {
+                        if (!cancelled) {
+                            setCourseUsernames(names.filter(name => name.trim().length > 0));
+                        }
+                    })
+                    .catch(() => {});
                 const cached = chatCache.read(nextCourse);
                 if (cached && cached.messages.length > 0) {
                     setMessages(cached.messages);
@@ -444,6 +419,16 @@ const ChatPage = () => {
                 chatCache.clear();
                 setHasOlder(false);
                 setMessages([]);
+                return;
+            }
+            if (envelope.type === WebSocketMessageType.REACTION) {
+                const update = envelope.payload as {messageId?: string; reactions?: ChatReaction[]};
+                if (!update?.messageId) {
+                    return;
+                }
+                setMessages(prev => prev.map(message => message.id === update.messageId
+                    ? {...message, reactions: update.reactions ?? []}
+                    : message));
                 return;
             }
             if (envelope.type === WebSocketMessageType.MESSAGE) {
@@ -743,6 +728,38 @@ const ChatPage = () => {
         }
     };
 
+    const setMessageReactions = useCallback((messageId: string, reactions: ChatReaction[]) => {
+        setMessages(prev => prev.map(message => message.id === messageId ? {...message, reactions} : message));
+    }, []);
+
+    const syncMention = (value: string, cursor: number) => {
+        setMention(mentionQueryAt(value, cursor));
+    };
+
+    const completeMention = (name: string) => {
+        const field = textareaRef.current;
+        const value = field?.value ?? draft;
+        const cursor = field?.selectionStart ?? value.length;
+        const active = mentionQueryAt(value, cursor);
+        if (!active) {
+            return;
+        }
+        const insert = `@${name} `;
+        const nextValue = value.slice(0, active.start) + insert + value.slice(cursor);
+        const nextCursor = active.start + insert.length;
+        setDraft(nextValue);
+        setMention(null);
+        requestAnimationFrame(() => {
+            const input = textareaRef.current;
+            if (!input) {
+                return;
+            }
+            input.focus();
+            input.setSelectionRange(nextCursor, nextCursor);
+            resizeTextarea();
+        });
+    };
+
     if (loading) {
         return <div className="chat-page"><div className="chat-status">Chat wird geladen…</div></div>;
     }
@@ -803,7 +820,9 @@ const ChatPage = () => {
                             <span className="chat-quote__name" style={{color: quoteColor}}>
                                 {quotingSelf ? "Du" : message.reply.authorUsername}
                             </span>
-                            <span className="chat-quote__text">{quoteLine(message.reply.text)}</span>
+                            <span className="chat-quote__text">
+                                <ChatMentionText text={quoteLine(message.reply.text)} usernames={courseUsernames} />
+                            </span>
                         </button>
                     ) : null;
                     const avatar = (
@@ -818,6 +837,16 @@ const ChatPage = () => {
                             )}
                         </span>
                     );
+                    const reactButton = !pendingRow ? (
+                        <ChatReactButton
+                            theme={theme}
+                            messageId={message.id}
+                            reactions={message.reactions}
+                            userId={userId}
+                            username={username}
+                            onChange={reactions => setMessageReactions(message.id, reactions)}
+                        />
+                    ) : null;
                     return (
                         <div
                             key={message.id}
@@ -825,6 +854,9 @@ const ChatPage = () => {
                             className={`chat-row${mine ? " chat-row--mine" : ""}${pendingRow ? " chat-row--pending" : ""}${continued ? " chat-row--continued" : ""}`}
                         >
                             {!mine && avatar}
+                            <div className={`chat-message${mine ? " chat-message--mine" : ""}`}>
+                            <div className="chat-message__line">
+                            {mine && reactButton}
                             {loneEmoji ? (
                                 <div className={`chat-emoji${mine ? " chat-emoji--mine" : ""}`}>
                                     {!mine && !continued && (
@@ -835,7 +867,7 @@ const ChatPage = () => {
                                     )}
                                     {!mine && continued && replyButton}
                                     {quote}
-                                    <ChatFormattedText text={message.text ?? ""} />
+                                    <ChatFormattedText text={message.text ?? ""} usernames={courseUsernames} />
                                     <span className="chat-emoji-time">{formatChatTime(message.createdAt)}</span>
                                 </div>
                             ) : (
@@ -857,7 +889,7 @@ const ChatPage = () => {
                                     )}
                                     {message.text && (
                                         <div className={`chat-bubble__flow${message.attachments?.length ? " chat-bubble__flow--caption" : ""}`}>
-                                            <ChatFormattedText text={message.text} />
+                                            <ChatFormattedText text={message.text} usernames={courseUsernames} />
                                             <span className="chat-bubble__time">{formatChatTime(message.createdAt)}</span>
                                         </div>
                                     )}
@@ -866,6 +898,19 @@ const ChatPage = () => {
                                     )}
                                 </div>
                             )}
+                            {!mine && reactButton}
+                            </div>
+                            {!pendingRow && (
+                                <ChatReactionBar
+                                    messageId={message.id}
+                                    reactions={message.reactions}
+                                    userId={userId}
+                                    username={username}
+                                    align={mine ? "end" : "start"}
+                                    onChange={reactions => setMessageReactions(message.id, reactions)}
+                                />
+                            )}
+                            </div>
                             {mine && avatar}
                         </div>
                     );
@@ -892,7 +937,9 @@ const ChatPage = () => {
                             >
                                 {reply.authorUserId === userId ? "Du" : reply.authorUsername}
                             </span>
-                            <span className="chat-reply-draft__text">{quoteLine(reply.text)}</span>
+                            <span className="chat-reply-draft__text">
+                                <ChatMentionText text={quoteLine(reply.text)} usernames={courseUsernames} />
+                            </span>
                         </div>
                         <button
                             type="button"
@@ -960,6 +1007,24 @@ const ChatPage = () => {
                         {emojiOpen && (
                             <EmojiPicker theme={theme} onSelect={insertEmoji} />
                         )}
+                        {mentionHits.length > 0 && (
+                            <ul className="chat-mention-list" role="listbox" aria-label="Benutzer">
+                                {mentionHits.map((name, index) => (
+                                    <li key={name}>
+                                        <button
+                                            type="button"
+                                            role="option"
+                                            aria-selected={index === 0}
+                                            className={`chat-mention-list__item${index === 0 ? " chat-mention-list__item--active" : ""}`}
+                                            onMouseDown={event => event.preventDefault()}
+                                            onClick={() => completeMention(name)}
+                                        >
+                                            @{name}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                         <textarea
                             ref={textareaRef}
                             className="chat-input"
@@ -968,14 +1033,16 @@ const ChatPage = () => {
                             value={draft}
                             onChange={event => {
                                 const nativeEvent = event.nativeEvent;
+                                const cursor = event.target.selectionStart ?? event.target.value.length;
                                 if ("isComposing" in nativeEvent && nativeEvent.isComposing) {
                                     setDraft(event.target.value);
+                                    syncMention(event.target.value, cursor);
                                     resizeTextarea();
                                     return;
                                 }
-                                const cursor = event.target.selectionStart ?? event.target.value.length;
                                 const next = applyEmojiShortcuts(event.target.value, cursor);
                                 setDraft(next.value);
+                                syncMention(next.value, next.cursor);
                                 requestAnimationFrame(() => {
                                     const input = textareaRef.current;
                                     if (!input) {
@@ -985,7 +1052,26 @@ const ChatPage = () => {
                                     resizeTextarea();
                                 });
                             }}
+                            onBlur={() => setMention(null)}
+                            onSelect={event => {
+                                syncMention(event.currentTarget.value, event.currentTarget.selectionStart ?? event.currentTarget.value.length);
+                            }}
+                            onKeyUp={event => {
+                                if (event.key === "Tab") {
+                                    return;
+                                }
+                                syncMention(event.currentTarget.value, event.currentTarget.selectionStart ?? event.currentTarget.value.length);
+                            }}
                             onKeyDown={event => {
+                                if (event.key === "Tab" && mentionHits.length > 0) {
+                                    event.preventDefault();
+                                    completeMention(mentionHits[0]);
+                                    return;
+                                }
+                                if (event.key === "Escape" && mention) {
+                                    setMention(null);
+                                    return;
+                                }
                                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b") {
                                     event.preventDefault();
                                     applyFormat(formatMarkers.bold);

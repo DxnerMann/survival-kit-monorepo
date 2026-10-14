@@ -8,8 +8,11 @@ const GUEST_CAFFEINE_PRESETS_KEY = "guest-caffeine-presets";
 
 export type CaffeinePreset = {
     id: string;
+    name: string;
     amountMg: number;
 };
+
+export const PRESET_NAME_MAX_LENGTH = 60;
 
 type GuestCaffeineStore = {
     date: string;
@@ -141,7 +144,16 @@ export const removeTodayCaffeineEntry = async (id: string): Promise<void> => {
     await deleteCaffeine(id);
 };
 
-export const customPresetLabel = (amountMg: number): string => `Andere (${amountMg}mg)`;
+export const customPresetLabel = (preset: Pick<CaffeinePreset, "name" | "amountMg">): string => {
+    const name = preset.name?.trim() || "Andere";
+    return `${name} (${preset.amountMg}mg)`;
+};
+
+const normalizePreset = (preset: Partial<CaffeinePreset> & { id: string; amountMg: number }): CaffeinePreset => ({
+    id: preset.id,
+    amountMg: preset.amountMg,
+    name: preset.name?.trim() || "Andere",
+});
 
 const readGuestPresets = (): CaffeinePreset[] => {
     try {
@@ -149,8 +161,14 @@ const readGuestPresets = (): CaffeinePreset[] => {
         if (!raw) {
             return [];
         }
-        const parsed = JSON.parse(raw) as CaffeinePreset[];
-        return Array.isArray(parsed) ? parsed : [];
+        const parsed = JSON.parse(raw) as Array<Partial<CaffeinePreset> & { id?: string; amountMg?: number }>;
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+        return parsed
+            .filter((preset): preset is Partial<CaffeinePreset> & { id: string; amountMg: number } =>
+                typeof preset?.id === "string" && typeof preset.amountMg === "number")
+            .map(normalizePreset);
     } catch {
         return [];
     }
@@ -166,25 +184,43 @@ export const loadCaffeinePresets = async (): Promise<CaffeinePreset[]> => {
     }
     const response = await apiFetch(`${API_URL}/caffeine/presets`);
     await checkResponse(response);
-    return response.json();
+    const presets = await response.json() as Array<Partial<CaffeinePreset> & { id: string; amountMg: number }>;
+    return presets.map(normalizePreset);
 };
 
-export const saveCaffeinePreset = async (amountMg: number): Promise<CaffeinePreset> => {
+export const saveCaffeinePreset = async (name: string, amountMg: number): Promise<CaffeinePreset> => {
+    const presetName = name.trim();
     if (isGuestCaffeineMode()) {
-        const presets = readGuestPresets();
-        const existing = presets.find((preset) => preset.amountMg === amountMg);
-        if (existing) {
-            return existing;
-        }
-        const created = { id: crypto.randomUUID(), amountMg };
-        writeGuestPresets([...presets, created]);
+        const created = { id: crypto.randomUUID(), name: presetName, amountMg };
+        writeGuestPresets([...readGuestPresets(), created]);
         return created;
     }
 
     const response = await apiFetch(`${API_URL}/caffeine/presets`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountMg }),
+        body: JSON.stringify({ name: presetName, amountMg }),
+    });
+    await checkResponse(response);
+    return response.json();
+};
+
+export const updateCaffeinePreset = async (id: string, name: string, amountMg: number): Promise<CaffeinePreset> => {
+    const presetName = name.trim();
+    if (isGuestCaffeineMode()) {
+        const presets = readGuestPresets();
+        const updated = { id, name: presetName, amountMg };
+        if (!presets.some((preset) => preset.id === id)) {
+            throw new Error("Preset nicht gefunden.");
+        }
+        writeGuestPresets(presets.map((preset) => preset.id === id ? updated : preset));
+        return updated;
+    }
+
+    const response = await apiFetch(`${API_URL}/caffeine/presets/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: presetName, amountMg }),
     });
     await checkResponse(response);
     return response.json();
