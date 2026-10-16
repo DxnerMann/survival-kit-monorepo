@@ -1,0 +1,29 @@
+{
+  "version": "3.5.3",
+  "date": "2026-10-16",
+  "sections": [
+    {
+      "title": "Zähler",
+      "items": [
+        "Neues Widget in der Toolbox. Ziehe es ins Dashboard und speichere das Layout einmal",
+        "Bis zu 10 Zähler, jeder mit Namen und Schrittweite",
+        "Zwei Knöpfe zählen hoch und runter. Bei Schrittweite 5 also +5 und −5",
+        "Der Stand bleibt gespeichert, auch nach einem Neuladen oder wenn du später wiederkommst",
+        "Einen Zähler entfernst du in den Einstellungen"
+      ]
+    },
+    {
+      "title": "Vorlesungstimer",
+      "items": [
+        "Der Timer übernimmt den Kurs aus dem Plan auch nach einem Seitenwechsel oder Neuladen",
+        "Du musst den Kurs nicht mehr neu setzen, damit der Timer wieder läuft"
+      ]
+    },
+    {
+      "title": "Koffeinrechner",
+      "items": [
+        "Monster Energy zählt 150 mg, wie auf der Dose"
+      ]
+    }
+  ]
+}

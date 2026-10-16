@@ -5,7 +5,7 @@ import {useEffect, useState} from "react";
 import {Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "@/services/tokenService.tsx";
-import {lectureService, setTimerCourse} from "@/services/lectureService.tsx";
+import {LECTURE_PLAN_STORAGE_KEY, lectureService, publishTimerPlan, setTimerCourse} from "@/services/lectureService.tsx";
 import {getErrorText} from "@/services/api.tsx";
 import CourseSelection from "@/components/ui/CourseSelection.tsx";
 import Button from "@/components/ui/Button.tsx";
@@ -33,7 +33,7 @@ const defaultData : LecturePlanData = {
 
 const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
 
-    const LOCAL_STORAGE_KEY = "lecture-plan-settings"
+    const LOCAL_STORAGE_KEY = LECTURE_PLAN_STORAGE_KEY
 
     const [inFullscreen, setInFullscreen] = useState(false);
     const [inSettings, setInSettings] = useState(false);
@@ -133,8 +133,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
         if (isPreview) {
             return;
         }
-        setTimerCourse(decodedData.course);
-        lectureService.setHiddenLectures(decodedData.hiddenLectures);
+        publishTimerPlan(decodedData.course, decodedData.hiddenLectures ?? []);
     }, [decodedData.course, decodedData.hiddenLectures, isPreview]);
 
     const updateData = (partial: Partial<LecturePlanData>) => {

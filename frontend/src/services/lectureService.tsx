@@ -2,7 +2,7 @@ import type {ApiError} from "@/models/ApiError.tsx"
 import type {LecturePlanResponse} from "@/models/LecturePlanResponse.tsx";
 import {api, apiFetch, checkResponse, getErrorText, resolveError} from "@/services/api.tsx";
 import type {DayOfWeek, Lecture} from "@/models/Lecture.tsx";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState, useSyncExternalStore} from "react";
 import {normalizeRaplaUrl} from "@/utils/raplaUrl.ts";
 import {clockMinutes, selectCurrentTimerLectures} from "@/services/lectureTimerSelection.ts";
 
@@ -10,6 +10,8 @@ const API_URL = api.baseUrl;
 
 const lectureCache = new Map<string, Promise<LecturePlanResponse>>();
 const lectureNamesCache = new Map<string, Promise<string[]>>();
+
+export const LECTURE_PLAN_STORAGE_KEY = "lecture-plan-settings";
 
 const DEBUG_TIME: string | null = null; //"2026-10-01T09:30"
 
@@ -91,6 +93,11 @@ const getLecturesForWeek = async (weekOffset: number, course: string): Promise<L
                 return res.json() as Promise<LecturePlanResponse>;
             });
 
+        void promise.catch(() => {
+            if (lectureCache.get(cacheKey) === promise) {
+                lectureCache.delete(cacheKey);
+            }
+        });
         lectureCache.set(cacheKey, promise);
     }
 
@@ -116,7 +123,7 @@ const getCurrentAndNextLecture = async (course: string): Promise<CurrentLectureI
     const todayIndex = now.getDay() === 0 ? 6 : now.getDay() - 1;
     const today = DAYS_OF_WEEK[todayIndex];
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    const hidden = _hiddenLectures ?? [];
+    const hidden = selection.hiddenLectures;
 
     const cacheKey = `0-${course}`;
     let lectures: Lecture[];
@@ -232,7 +239,8 @@ const useCurrentAndNextLecture = (course: string | null) => {
 
     const refresh = useCallback(() => refreshRef.current?.() ?? Promise.resolve(), []);
 
-    return { current, next, loading, error, refresh };
+    const pending = Boolean(course) && next === null && error === null;
+    return { current, next, loading: loading || pending, error, refresh };
 };
 
 const getLectureNamesForSemester = (course: string): Promise<string[]> => {
@@ -272,31 +280,95 @@ const isTomorrow = (day: string) =>
     return DAYS_OF_WEEK[(now.getDay() + 1) === 0 ? 6 : now.getDay()] === day;
 }
 
-let timerCourse: string | null = null;
-const courseListeners = new Set<(course: string | null) => void>();
-
-export const setTimerCourse = (course: string | null) => {
-    timerCourse = course;
-    courseListeners.forEach(l => l(course));
+type TimerPlanSelection = {
+    course: string | null;
+    hiddenLectures: string[];
 };
 
-export const useTimerCourse = (): string | null => {
-    const [course, setCourse] = useState<string | null>(timerCourse);
+const emptySelection = (): TimerPlanSelection => ({ course: null, hiddenLectures: [] });
 
-    useEffect(() => {
-        courseListeners.add(setCourse);
-        return () => { courseListeners.delete(setCourse); };
-    }, []);
-
-    return course;
-};
-
-let _hiddenLectures: string[] | null = null;
+let selection: TimerPlanSelection = emptySelection();
+let publishedCourse: string | null = null;
+let publishedHidden: string[] = [];
+const courseListeners = new Set<() => void>();
 const hiddenLecturesListeners = new Set<(hiddenLectures: string[] | null) => void>();
 
+const normalizeCourse = (course: string | null | undefined): string | null => {
+    const trimmed = course?.trim() ?? "";
+    return trimmed === "" ? null : trimmed;
+};
+
+const sameHidden = (left: string[], right: string[]) =>
+    left.length === right.length && left.every((value, index) => value === right[index]);
+
+const normalizeSelection = (
+    course: string | null | undefined,
+    hiddenLectures: string[] | null | undefined
+): TimerPlanSelection => ({
+    course: normalizeCourse(course),
+    hiddenLectures: Array.isArray(hiddenLectures) ? [...hiddenLectures] : [],
+});
+
+const stageTimerPlan = (course: string | null | undefined, hiddenLectures?: string[] | null) => {
+    selection = normalizeSelection(course, hiddenLectures ?? selection.hiddenLectures);
+};
+
+/** Publishes the plan and notifies the timer if the course or hidden lectures changed. */
+export const publishTimerPlan = (course: string | null | undefined, hiddenLectures?: string[] | null) => {
+    stageTimerPlan(course, hiddenLectures);
+    const courseChanged = selection.course !== publishedCourse;
+    const hiddenChanged = !sameHidden(selection.hiddenLectures, publishedHidden);
+    if (!courseChanged && !hiddenChanged) {
+        return;
+    }
+    publishedCourse = selection.course;
+    publishedHidden = selection.hiddenLectures;
+    if (courseChanged) {
+        courseListeners.forEach(listener => listener());
+    }
+    if (hiddenChanged) {
+        hiddenLecturesListeners.forEach(listener => listener(selection.hiddenLectures));
+    }
+};
+
+export const applyStoredLecturePlan = (data: string) => {
+    if (!data) {
+        return;
+    }
+    try {
+        const parsed = JSON.parse(data) as { course?: string | null; hiddenLectures?: string[] };
+        publishTimerPlan(parsed.course ?? null, parsed.hiddenLectures ?? []);
+    } catch {
+        // Ignore broken widget data; the plan widget falls back to its defaults.
+    }
+};
+
+export const restoreGuestTimerPlan = () => {
+    try {
+        applyStoredLecturePlan(localStorage.getItem(LECTURE_PLAN_STORAGE_KEY) ?? "");
+    } catch {
+        // localStorage can be unavailable in private mode.
+    }
+};
+
+const subscribeTimerCourse = (listener: () => void) => {
+    courseListeners.add(listener);
+    return () => {
+        courseListeners.delete(listener);
+    };
+};
+
+const getTimerCourse = () => selection.course;
+
+export const setTimerCourse = (course: string | null) => {
+    publishTimerPlan(course, selection.hiddenLectures);
+};
+
+export const useTimerCourse = (): string | null =>
+    useSyncExternalStore(subscribeTimerCourse, getTimerCourse, getTimerCourse);
+
 export const setHiddenLectures = (lectures: string[] | null) => {
-    _hiddenLectures = lectures;
-    hiddenLecturesListeners.forEach(l => l(lectures));
+    publishTimerPlan(selection.course, lectures);
 };
 
 export const lectureService = {

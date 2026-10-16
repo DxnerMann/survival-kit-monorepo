@@ -19,6 +19,7 @@ public record UserWidgetModel(
         DAILY_MEME,
         CURRENT_CAFFEINE,
         FEGEFEUER,
+        COUNTER,
         EMPTY,
         EMPTY_DASHBOARD
     }

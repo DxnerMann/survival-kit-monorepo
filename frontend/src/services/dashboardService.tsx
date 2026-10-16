@@ -9,6 +9,7 @@ import DailyMeme from "@/components/widgets/daily-meme/DailyMeme.tsx";
 import CurrentCaffeine from "@/components/widgets/current-caffeine/CurrentCaffeine.tsx";
 import FavGames from "@/components/widgets/fav-games/FavGames.tsx";
 import Fegefeuer from "@/components/widgets/fegefeuer/Fegefeuer.tsx";
+import Counter from "@/components/widgets/counter/Counter.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -107,6 +108,15 @@ const getDefaultToolbox = (): UserWidget[] => {
             data: ""
         },
         {
+            id: "default-counter",
+            type: "COUNTER",
+            height: 3,
+            width: 4,
+            x: 0,
+            y: 0,
+            data: ""
+        },
+        {
             id: "default-clock",
             type: "CLOCK",
             height: 2,
@@ -192,6 +202,8 @@ const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
             return <FavGames {...shared} title={"Lieblingsspiele"} />
         case "FEGEFEUER":
             return <Fegefeuer {...shared} title={"Fegefeuer"} />
+        case "COUNTER":
+            return <Counter {...shared} title={"Zähler"} />
     }
 }
 

@@ -26,7 +26,7 @@ public class CaffeineService implements CaffeinePort {
     );
 
     private static final Map<String, Integer> PRESET_AMOUNTS = Map.of(
-            "MONSTER", 180,
+            "MONSTER", 150,
             "REDBULL", 105,
             "COFFEE", 90,
             "TABLET", 200

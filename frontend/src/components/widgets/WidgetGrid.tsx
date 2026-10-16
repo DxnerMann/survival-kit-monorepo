@@ -12,6 +12,7 @@ import "@/components/widgets/WidgetGrid.css";
 import type {UserWidget} from "@/models/UserWidget.tsx";
 import {getUserRole} from "@/services/tokenService.tsx";
 import {dashboardService} from "@/services/dashboardService.tsx";
+import {applyStoredLecturePlan, restoreGuestTimerPlan} from "@/services/lectureService.tsx";
 
 const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: number; maxH?: number; defaultW: number; defaultH: number }> = {
     LECTURE_PLAN: { minW: 3, minH: 4, defaultW: 5, defaultH: 4 },
@@ -23,6 +24,7 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
     CURRENT_CAFFEINE: { minW: 2, minH: 1, maxW: 4, maxH: 2, defaultW: 2, defaultH: 1 },
     FAV_GAMES: { minW: 2, minH: 2, maxW: 10, defaultW: 2, defaultH: 2 },
     FEGEFEUER: { minW: 2, minH: 1, maxW: 5, maxH: 5, defaultW: 4, defaultH: 2 },
+    COUNTER: { minW: 2, minH: 2, maxW: 6, maxH: 5, defaultW: 4, defaultH: 3 },
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
@@ -108,6 +110,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             const defaultToolbox = dashboardService.getDefaultToolbox();
 
             if (isGuest) {
+                restoreGuestTimerPlan();
                 setLayoutWidgets(defaultLayout);
                 setToolboxPool(defaultToolbox);
                 setLayout(toGridLayout(defaultLayout));
@@ -121,6 +124,9 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             } catch {
                 storedData = defaultLayout;
             }
+            storedData
+                .filter(widget => widget.type === "LECTURE_PLAN")
+                .forEach(widget => applyStoredLecturePlan(widget.data));
             const storedTypes = new Set(storedData.map(w => w.type));
 
             const seen = new Set<string>();
