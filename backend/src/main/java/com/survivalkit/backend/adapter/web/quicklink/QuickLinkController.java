@@ -42,13 +42,14 @@ public class QuickLinkController {
             @RequestParam(required = false) Integer pageSize,
             @RequestParam(required = false) String continuation,
             @RequestParam(required = true) boolean sortByPopularity,
+            @RequestParam(required = false) String sort,
             @RequestParam(required = false) String query
     ) {
         var isAdmin = SecurityContext.currentOptional()
                 .map(user -> user.role().hasAtLeast(RoleLevel.ADMIN))
                 .orElse(false);
         var effectiveApproved = isAdmin ? approved : true;
-        return ResponseEntity.ok(quickLinkPort.getQuickLinksFiltered(effectiveApproved, pageSize, continuation, sortByPopularity, query));
+        return ResponseEntity.ok(quickLinkPort.getQuickLinksFiltered(effectiveApproved, pageSize, continuation, sortByPopularity, sort, query));
     }
 
     @Role(RoleLevel.USER)

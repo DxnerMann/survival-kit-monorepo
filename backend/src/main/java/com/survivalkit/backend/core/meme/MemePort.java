@@ -19,4 +19,8 @@ public interface MemePort {
     Meme getMeme(String id);
 
     void deleteMeme(String id);
+
+    void rateMeme(String id, boolean upVote);
+
+    boolean hasVoted(String id);
 }

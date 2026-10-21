@@ -28,12 +28,15 @@ export const getPreviewImage = async (url: string): Promise<string> => {
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 };
 
+export type QuickLinkSort = "POPULAR" | "LEAST_POPULAR" | "NEWEST" | "OLDEST";
+
 export const getQuickLinksFiltered = async (
     sortByPopularity: boolean,
     approved?: boolean,
     pageSize?: number,
     continuation?: string | null,
-    query?: string | null
+    query?: string | null,
+    sort?: QuickLinkSort | null
 ): Promise<{ data: QuickLink[]; continuation: string | null }> => {
     const params = new URLSearchParams();
 
@@ -43,6 +46,7 @@ export const getQuickLinksFiltered = async (
     if (pageSize !== undefined) params.set("pageSize", String(pageSize));
     if (continuation) params.set("continuation", continuation);
     if (query && query.trim()) params.set("query", query.trim());
+    if (sort) params.set("sort", sort);
 
     const response = await apiFetch(`${API_URL}/link/filter?${params.toString()}`);
 

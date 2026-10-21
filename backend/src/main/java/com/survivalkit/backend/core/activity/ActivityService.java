@@ -13,6 +13,7 @@ import java.util.List;
 public class ActivityService implements ActivityPort {
 
     static final String MEME_DELETED = "MEME_DELETED";
+    static final String MEME_LIKED = "MEME_LIKED";
 
     private final UserActivityPersistancePort userActivityPersistancePort;
 
@@ -27,6 +28,21 @@ public class ActivityService implements ActivityPort {
                 NanoId.generate(25),
                 userId,
                 MEME_DELETED,
+                title == null ? "" : title.strip(),
+                actor.isEmpty() ? null : actor,
+                Instant.now()
+        );
+        userActivityPersistancePort.save(activity);
+        return activity;
+    }
+
+    @Override
+    public UserActivity recordMemeLiked(String userId, String title, String actorUsername) {
+        var actor = actorUsername == null ? "" : actorUsername.strip();
+        var activity = new UserActivity(
+                NanoId.generate(25),
+                userId,
+                MEME_LIKED,
                 title == null ? "" : title.strip(),
                 actor.isEmpty() ? null : actor,
                 Instant.now()

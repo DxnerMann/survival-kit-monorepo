@@ -39,7 +39,7 @@ const SectionHeading = ({ heading, subheading, centered, actions }: SectionHeadi
                     {actions.map((action, index) => {
                         const Icon = action.icon;
                         return typeof action.link === "function" ? (
-                            <button key={index} onClick={action.link} className="section-heading-action">
+                            <button key={index} type="button" onClick={action.link} className="section-heading-action" title={action.title}>
                                 <Icon size={18} />
                                 <span>{action.text}</span>
                             </button>

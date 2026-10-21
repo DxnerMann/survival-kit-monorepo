@@ -257,12 +257,15 @@
 }
 
 .chat-avatar-slot {
+    position: relative;
     width: 3.2rem;
     height: 0;
     flex: 0 0 3.2rem;
+    min-height: 0;
+    align-self: flex-end;
 }
 
-.chat-avatar-slot:has(.chat-avatar) {
+.chat-row:not(.chat-row--continued) .chat-avatar-slot:has(.chat-avatar) {
     height: 3.2rem;
 }
 
@@ -275,6 +278,13 @@
     background: var(--color-background-secondary);
     box-sizing: border-box;
     border: 3px solid #ffffff;
+}
+
+.chat-row--continued .chat-avatar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
 }
 
 .chat-bubble {
@@ -547,8 +557,17 @@
     font-weight: 700;
 }
 
+.chat-link {
+    color: var(--color-primary-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+    cursor: pointer;
+}
+
 .chat-bubble--mine .chat-mention,
-.chat-emoji--mine .chat-mention {
+.chat-emoji--mine .chat-mention,
+.chat-bubble--mine .chat-link,
+.chat-emoji--mine .chat-link {
     color: #fff;
     text-decoration: underline;
     text-underline-offset: 0.12em;

@@ -12,6 +12,8 @@ public record Meme(
         String authorUserId,
         Instant addedAt,
         Instant lastUpdated,
+        int likes,
+        int dislikes,
         String authorUsername
 ) {
 }

@@ -73,6 +73,24 @@ export async function uploadMeme(data: {
     await checkResponse(response);
 }
 
+export async function rateMeme(id: string, upVote: boolean): Promise<void> {
+    const params = new URLSearchParams({id, upVote: String(upVote)});
+    const response = await apiFetch(`${API_URL}/memes/rate?${params.toString()}`, {
+        method: "PATCH",
+    });
+
+    await checkResponse(response);
+}
+
+export async function hasAlreadyVotedMeme(id: string): Promise<boolean> {
+    const params = new URLSearchParams({id});
+    const response = await apiFetch(`${API_URL}/memes/alreadyVoted?${params.toString()}`);
+
+    await checkResponse(response);
+
+    return response.json();
+}
+
 export async function deleteMeme(id: string): Promise<void> {
     const response = await apiFetch(`${API_URL}/memes/${encodeURIComponent(id)}`, {
         method: "DELETE",

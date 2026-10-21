@@ -1,0 +1,31 @@
+{
+  "version": "3.5.4",
+  "date": "2026-10-21",
+  "sections": [
+    {
+      "title": "Memewand",
+      "items": [
+        "Unter jedem Meme kannst du hoch- und runterbewerten, mit denselben Daumen wie beim Feedback",
+        "Die Bewertung sitzt unter dem Bild. In der Vollansicht gibt es sie nicht",
+        "Gefällt dir ein Meme, sieht die Person das in den Aktivitäten: „Name gefällt dein Meme Titel“"
+      ]
+    },
+    {
+      "title": "Daily Chat",
+      "items": [
+        "Links wie link.de oder https://link.de sind anklickbar, in der Farbe eines Tags und unterstrichen",
+        "Eigene Nachrichten direkt nacheinander haben denselben kleinen Abstand wie die von anderen",
+        "Ein Klick auf eine Reaktion von jemand anderem setzt dasselbe Emoji für dich dazu",
+        "Dasselbe Emoji nur einmal. Verschiedene Emojis bleiben möglich. Darüber siehst du weiter, wer reagiert hat"
+      ]
+    },
+    {
+      "title": "Browserspiele",
+      "items": [
+        "Neben „Spiel vorschlagen“ schaltest du die Sortierung um",
+        "Die Liste startet mit Beliebteste und wechselt dann zu Am wenigsten beliebt, Neueste und Älteste",
+        "Jede Seite kommt schon in dieser Reihenfolge an"
+      ]
+    }
+  ]
+}

@@ -8,5 +8,7 @@ public interface ActivityPort {
 
     UserActivity recordMemeDeleted(String userId, String title, String actorUsername);
 
+    UserActivity recordMemeLiked(String userId, String title, String actorUsername);
+
     List<UserActivity> listMine();
 }

@@ -6,6 +6,7 @@ import com.survivalkit.backend.shared.Page;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -36,6 +37,8 @@ public class MemeRepository implements MemePersistancePort {
                         .addValue("contentType", meme.contentType())
                         .addValue("course", meme.course())
                         .addValue("authorUserId", meme.authorUserId())
+                        .addValue("likes", meme.likes())
+                        .addValue("dislikes", meme.dislikes())
                         .addValue("currentTime", toTimestamp(Instant.now())))
                 .update();
 
@@ -111,13 +114,18 @@ public class MemeRepository implements MemePersistancePort {
                 .query((rs, rowNum) -> new MemeOwner(
                         rs.getString("id"),
                         rs.getString("title"),
-                        rs.getString("authorUserId")
+                        rs.getString("authorUserId"),
+                        rs.getString("course")
                 ))
                 .optional();
     }
 
     @Override
+    @Transactional
     public void deleteMeme(String id) {
+        jdbcClient.sql(Statements.DELETE_VOTES.sql)
+                .paramSource(new MapSqlParameterSource("id", id))
+                .update();
         jdbcClient.sql(Statements.DELETE.sql)
                 .paramSource(new MapSqlParameterSource("id", id))
                 .update();
@@ -125,11 +133,41 @@ public class MemeRepository implements MemePersistancePort {
         securityLog.logInfo(ErrorCode.ErrorCategory.MEME, String.format("Meme with id %s deleted", id));
     }
 
+    @Override
+    @Transactional
+    public boolean rateMeme(String id, boolean upVote, String userId) {
+        var inserted = jdbcClient.sql(Statements.INSERT_VOTE.sql)
+                .paramSource(new MapSqlParameterSource("memeId", id)
+                        .addValue("userId", userId))
+                .update();
+
+        if (inserted == 0) {
+            return false;
+        }
+
+        jdbcClient.sql(Statements.UPDATE_RATING.sql)
+                .paramSource(new MapSqlParameterSource("id", id)
+                        .addValue("upVote", upVote)
+                        .addValue("currentTime", toTimestamp(Instant.now())))
+                .update();
+        return true;
+    }
+
+    @Override
+    public boolean canVote(String memeId, String userId) {
+        return jdbcClient.sql(Statements.HAS_VOTE.sql)
+                .paramSource(new MapSqlParameterSource("memeId", memeId)
+                        .addValue("userId", userId))
+                .query(Integer.class)
+                .optional()
+                .isEmpty();
+    }
+
     enum Statements {
         // language=sql
         SAVE("""
-            INSERT INTO memes (id, title, description, img, contentType, course, authorUserId, addedAt, lastUpdated)
-            VALUES (:id, :title, :description, :img, :contentType, :course, :authorUserId, :currentTime, :currentTime)
+            INSERT INTO memes (id, title, description, img, contentType, course, authorUserId, likes, dislikes, addedAt, lastUpdated)
+            VALUES (:id, :title, :description, :img, :contentType, :course, :authorUserId, :likes, :dislikes, :currentTime, :currentTime)
         """),
 
         // language=sql
@@ -144,6 +182,8 @@ public class MemeRepository implements MemePersistancePort {
                 m.authorUserId,
                 m.addedAt,
                 m.lastUpdated,
+                m.likes,
+                m.dislikes,
                 u.username AS "authorUsername"
             FROM memes m
             LEFT JOIN users u ON u.id = m.authorUserId
@@ -170,6 +210,8 @@ public class MemeRepository implements MemePersistancePort {
                 m.authorUserId,
                 m.addedAt,
                 m.lastUpdated,
+                m.likes,
+                m.dislikes,
                 u.username AS "authorUsername"
             FROM memes m
             LEFT JOIN users u ON u.id = m.authorUserId
@@ -190,6 +232,8 @@ public class MemeRepository implements MemePersistancePort {
                 m.authorUserId,
                 m.addedAt,
                 m.lastUpdated,
+                m.likes,
+                m.dislikes,
                 u.username AS "authorUsername"
             FROM memes m
             LEFT JOIN users u ON u.id = m.authorUserId
@@ -211,6 +255,8 @@ public class MemeRepository implements MemePersistancePort {
                 m.authorUserId,
                 m.addedAt,
                 m.lastUpdated,
+                m.likes,
+                m.dislikes,
                 u.username AS "authorUsername"
             FROM memes m
             LEFT JOIN users u ON u.id = m.authorUserId
@@ -219,13 +265,40 @@ public class MemeRepository implements MemePersistancePort {
 
         // language=sql
         FIND_OWNER("""
-            SELECT id, title, authorUserId
+            SELECT id, title, authorUserId, course
             FROM memes
             WHERE id = :id
         """),
 
         DELETE("""
             DELETE FROM memes WHERE id = :id
+        """),
+
+        // language=sql
+        DELETE_VOTES("""
+            DELETE FROM memeVotes WHERE memeId = :id
+        """),
+
+        // language=sql
+        INSERT_VOTE("""
+            INSERT INTO memeVotes (memeId, userId)
+            VALUES (:memeId, :userId)
+            ON CONFLICT (memeId, userId) DO NOTHING
+        """),
+
+        // language=sql
+        UPDATE_RATING("""
+            UPDATE memes
+            SET
+                likes = likes + CASE WHEN :upVote THEN 1 ELSE 0 END,
+                dislikes = dislikes + CASE WHEN :upVote THEN 0 ELSE 1 END,
+                lastUpdated = :currentTime
+            WHERE id = :id
+        """),
+
+        // language=sql
+        HAS_VOTE("""
+            SELECT 1 FROM memeVotes WHERE memeId = :memeId AND userId = :userId LIMIT 1
         """);
 
         private final String sql;

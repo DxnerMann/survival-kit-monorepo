@@ -1,7 +1,7 @@
 package com.survivalkit.backend.adapter.postgres.quicklink;
 
-import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.web.ErrorCode;
+import com.survivalkit.backend.core.qucklink.QuickLinkSort;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Page;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -17,8 +17,6 @@ import static com.survivalkit.backend.shared.Utils.toTimestamp;
 
 @Repository
 public class QuickLinkRepository implements QuickLinkPersistancePort {
-
-    private static final String CURSOR_SEPARATOR = "\u001f";
 
     private final JdbcClient jdbcClient;
     private final SecurityLog securityLog;
@@ -39,13 +37,14 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
     }
 
     @Override
-    public Page<QuickLink> getQuickLinksFiltered(boolean approved, int pageSize, String continuation, boolean sortByPopularity) {
-        var cursor = cursor(continuation, sortByPopularity);
+    public Page<QuickLink> getQuickLinksFiltered(boolean approved, int pageSize, String continuation, QuickLinkSort sort) {
+        var cursor = sort.decode(decode(continuation));
         var quicklinks = jdbcClient.sql(Statements.GET_FILTERED.sql)
                 .paramSource(new MapSqlParameterSource("approved", approved)
                         .addValue("pageSize", pageSize)
-                        .addValue("sortByPopularity", sortByPopularity)
+                        .addValue("sort", sort.name())
                         .addValue("continuationClicks", cursor.clicks(), Types.INTEGER)
+                        .addValue("continuationAddedAt", toTimestamp(cursor.addedAt()), Types.TIMESTAMP)
                         .addValue("continuationId", cursor.id(), Types.VARCHAR)
                 ).query(QuickLink.class)
                 .list();
@@ -56,46 +55,19 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                     null
             );
         }
-        var last = quicklinks.getLast();
-        var token = sortByPopularity
-                ? last.clickedThisMonth() + CURSOR_SEPARATOR + last.id()
-                : last.id();
         return new Page<>(
                 quicklinks,
-                encode(token)
+                encode(sort.encode(quicklinks.getLast()))
         );
     }
 
     @Override
-    public List<QuickLink> listQuickLinks(boolean approved, boolean sortByPopularity) {
+    public List<QuickLink> listQuickLinks(boolean approved) {
         return jdbcClient.sql(Statements.LIST.sql)
-                .paramSource(new MapSqlParameterSource("approved", approved)
-                        .addValue("sortByPopularity", sortByPopularity)
-                ).query(QuickLink.class)
+                .paramSource(new MapSqlParameterSource("approved", approved))
+                .query(QuickLink.class)
                 .list();
     }
-
-    private static Cursor cursor(String continuation, boolean sortByPopularity) {
-        var decoded = decode(continuation);
-        if (decoded == null || decoded.isBlank()) {
-            return new Cursor(null, null);
-        }
-        if (!sortByPopularity) {
-            return new Cursor(null, decoded);
-        }
-        var separator = decoded.indexOf(CURSOR_SEPARATOR);
-        if (separator < 0) {
-            return new Cursor(null, decoded);
-        }
-        try {
-            var clicks = Integer.valueOf(decoded.substring(0, separator));
-            return new Cursor(clicks, decoded.substring(separator + 1));
-        } catch (NumberFormatException ex) {
-            return new Cursor(null, decoded);
-        }
-    }
-
-    private record Cursor(Integer clicks, String id) {}
 
     @Override
     public void approveQuickLink(String id, String title, String description) {
@@ -163,13 +135,13 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
         // language=sql
         GET_FILTERED(
                 """
-                        SELECT *
+                    SELECT *
                     FROM quicklinks
                     WHERE (:approved::BOOLEAN IS NULL OR approvedByAdmin = :approved)
                       AND (
                         :continuationId::TEXT IS NULL
                         OR (
-                          :sortByPopularity::BOOLEAN = TRUE
+                          :sort = 'POPULAR'
                           AND :continuationClicks::INTEGER IS NOT NULL
                           AND (
                             COALESCE(clickedThisMonth, 0) < :continuationClicks
@@ -180,17 +152,51 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                           )
                         )
                         OR (
-                          (:sortByPopularity::BOOLEAN = FALSE OR :continuationClicks::INTEGER IS NULL)
+                          :sort = 'LEAST_POPULAR'
+                          AND :continuationClicks::INTEGER IS NOT NULL
+                          AND (
+                            COALESCE(clickedThisMonth, 0) > :continuationClicks
+                            OR (
+                              COALESCE(clickedThisMonth, 0) = :continuationClicks
+                              AND id > :continuationId
+                            )
+                          )
+                        )
+                        OR (
+                          :sort = 'NEWEST'
+                          AND :continuationAddedAt::TIMESTAMP IS NOT NULL
+                          AND (
+                            COALESCE(addedAt, TIMESTAMP '1970-01-01 00:00:00') < :continuationAddedAt
+                            OR (
+                              COALESCE(addedAt, TIMESTAMP '1970-01-01 00:00:00') = :continuationAddedAt
+                              AND id < :continuationId
+                            )
+                          )
+                        )
+                        OR (
+                          :sort = 'OLDEST'
+                          AND :continuationAddedAt::TIMESTAMP IS NOT NULL
+                          AND (
+                            COALESCE(addedAt, TIMESTAMP '1970-01-01 00:00:00') > :continuationAddedAt
+                            OR (
+                              COALESCE(addedAt, TIMESTAMP '1970-01-01 00:00:00') = :continuationAddedAt
+                              AND id > :continuationId
+                            )
+                          )
+                        )
+                        OR (
+                          :sort = 'ID'
                           AND id > :continuationId
                         )
                       )
                     ORDER BY
-                      CASE
-                        WHEN :sortByPopularity::BOOLEAN = TRUE THEN COALESCE(clickedThisMonth, 0)
-                        ELSE NULL
-                      END DESC,
+                      CASE WHEN :sort = 'POPULAR' THEN COALESCE(clickedThisMonth, 0) END DESC,
+                      CASE WHEN :sort = 'LEAST_POPULAR' THEN COALESCE(clickedThisMonth, 0) END ASC,
+                      CASE WHEN :sort = 'NEWEST' THEN COALESCE(addedAt, TIMESTAMP '1970-01-01 00:00:00') END DESC,
+                      CASE WHEN :sort = 'OLDEST' THEN COALESCE(addedAt, TIMESTAMP '1970-01-01 00:00:00') END ASC,
+                      CASE WHEN :sort = 'NEWEST' THEN id END DESC,
                       id ASC
-                    LIMIT :pageSize;
+                    LIMIT :pageSize
                     """
         ),
         // language=sql
@@ -199,12 +205,6 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                     SELECT *
                     FROM quicklinks
                     WHERE approvedByAdmin = :approved
-                    ORDER BY
-                      CASE
-                        WHEN :sortByPopularity::BOOLEAN = TRUE THEN COALESCE(clickedThisMonth, 0)
-                        ELSE NULL
-                      END DESC,
-                      id ASC
                     """
         ),
         // language=sql

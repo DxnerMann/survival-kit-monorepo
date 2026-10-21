@@ -2,6 +2,7 @@ package com.survivalkit.backend.core.meme;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.survivalkit.backend.adapter.postgres.memewall.Meme;
+import com.survivalkit.backend.adapter.postgres.memewall.MemeOwner;
 import com.survivalkit.backend.adapter.postgres.memewall.MemePersistancePort;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
@@ -79,6 +80,8 @@ public class MemeService implements MemePort {
                     user.userId(),
                     now,
                     now,
+                    0,
+                    0,
                     null
             ));
         } catch (IOException e) {
@@ -141,6 +144,46 @@ public class MemeService implements MemePort {
                                 .put("id", activity.id())
                 )
         );
+    }
+
+    @Override
+    public void rateMeme(String id, boolean upVote) {
+        requireVerification();
+
+        var user = SecurityContext.current();
+        var owner = memeInCurrentCourse(id);
+        var counted = memePersistancePort.rateMeme(id, upVote, user.userId());
+        if (!counted || !upVote) {
+            return;
+        }
+        if (owner.authorUserId() == null || owner.authorUserId().isBlank() || owner.authorUserId().equals(user.userId())) {
+            return;
+        }
+
+        var activity = activityPort.recordMemeLiked(owner.authorUserId(), owner.title(), user.username());
+        webSocketPort.sendToUser(
+                owner.authorUserId(),
+                WebSocketEnvelope.of(
+                        WebSocketMessageType.ACTIVITY,
+                        objectMapper.createObjectNode()
+                                .put("kind", "MEME_LIKED")
+                                .put("id", activity.id())
+                )
+        );
+    }
+
+    @Override
+    public boolean hasVoted(String id) {
+        var user = SecurityContext.current();
+        memeInCurrentCourse(id);
+        return !memePersistancePort.canVote(id, user.userId());
+    }
+
+    private MemeOwner memeInCurrentCourse(String id) {
+        var course = currentUserCourse();
+        return memePersistancePort.findOwner(id)
+                .filter(owner -> course.equals(owner.course()))
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.MEME_NOT_FOUND.getCode()));
     }
 
     private String currentUserCourse() {

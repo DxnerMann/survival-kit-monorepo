@@ -3,8 +3,8 @@ import {createPortal} from "react-dom";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import Button from "@/components/ui/Button.tsx";
 import MemeUploadDialog from "@/components/dialog/MemeUploadDialog.tsx";
-import {deleteMeme, getMemes, uploadMeme} from "@/services/memeService.tsx";
-import {ExternalLink, ImagePlus, Trash2, Upload, X} from "lucide-react";
+import {deleteMeme, getMemes, hasAlreadyVotedMeme, rateMeme, uploadMeme} from "@/services/memeService.tsx";
+import {ExternalLink, ImagePlus, ThumbsDown, ThumbsUp, Trash2, Upload, X} from "lucide-react";
 import type {Meme} from "@/models/Meme.tsx";
 import {isAdmin} from "@/services/tokenService.tsx";
 import {snackbarService} from "@/services/snackBarService.tsx";
@@ -130,6 +130,7 @@ const MemeWallPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
     const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const votedIds = useRef(new Set<string>());
     const canDeleteMemes = isAdmin();
 
     const loadFirstPage = useCallback(async () => {
@@ -191,6 +192,41 @@ const MemeWallPage = () => {
 
     const closeLightbox = useCallback(() => setSelectedMeme(null), []);
     const newestId = newestMemeId(memes);
+
+    const handleRate = async (id: string, like: boolean) => {
+        if (votedIds.current.has(id)) {
+            return;
+        }
+        votedIds.current.add(id);
+
+        let counted = false;
+        try {
+            if (await hasAlreadyVotedMeme(id)) {
+                return;
+            }
+            counted = true;
+            setMemes((current) => current.map((meme) => meme.id === id
+                ? {
+                    ...meme,
+                    likes: (meme.likes ?? 0) + (like ? 1 : 0),
+                    dislikes: (meme.dislikes ?? 0) + (like ? 0 : 1),
+                }
+                : meme));
+            await rateMeme(id, like);
+        } catch {
+            votedIds.current.delete(id);
+            if (counted) {
+                setMemes((current) => current.map((meme) => meme.id === id
+                    ? {
+                        ...meme,
+                        likes: (meme.likes ?? 0) - (like ? 1 : 0),
+                        dislikes: (meme.dislikes ?? 0) - (like ? 0 : 1),
+                    }
+                    : meme));
+            }
+            snackbarService.showSnackbar({type: "error", text: "Abstimmung fehlgeschlagen.", showIcon: true});
+        }
+    };
 
     const handleDelete = async (id: string) => {
         await deleteMeme(id);
@@ -256,41 +292,63 @@ const MemeWallPage = () => {
                             className="memewall-meme"
                             style={memePlacementStyle(meme.id, index)}
                         >
-                            {meme.id === newestId && (
-                                <span className="memewall-meme__badge">Neuste</span>
-                            )}
-                            <button
-                                type="button"
-                                className="memewall-meme__open"
-                                onClick={() => setSelectedMeme(meme)}
-                                aria-label={meme.title ? `${meme.title} öffnen` : "Meme öffnen"}
-                            >
-                                <img
-                                    src={memeSrc(meme)}
-                                    alt={meme.title || "Meme"}
-                                    loading="lazy"
-                                />
-                            </button>
-                            <div className="memewall-meme__overlay">
-                                <div className="memewall-meme__text">
-                                    {meme.title && <h3>{meme.title}</h3>}
-                                    {!meme.title && !meme.description && <p>Kein Titel oder Beschreibung vorhanden.</p>}
-                                    <p className="memewall-meme__author">{authorLabel(meme)}</p>
-                                    {meme.description && <p>{meme.description}</p>}
-                                </div>
-                                {canDeleteMemes && (
-                                    <button
-                                        type="button"
-                                        className="memewall-meme__delete"
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                            void handleDelete(meme.id);
-                                        }}
-                                        aria-label="Meme löschen"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                            <div className="memewall-meme__media">
+                                {meme.id === newestId && (
+                                    <span className="memewall-meme__badge">Neuste</span>
                                 )}
+                                <button
+                                    type="button"
+                                    className="memewall-meme__open"
+                                    onClick={() => setSelectedMeme(meme)}
+                                    aria-label={meme.title ? `${meme.title} öffnen` : "Meme öffnen"}
+                                >
+                                    <img
+                                        src={memeSrc(meme)}
+                                        alt={meme.title || "Meme"}
+                                        loading="lazy"
+                                    />
+                                </button>
+                                <div className="memewall-meme__overlay">
+                                    <div className="memewall-meme__text">
+                                        {meme.title && <h3>{meme.title}</h3>}
+                                        {!meme.title && !meme.description && <p>Kein Titel oder Beschreibung vorhanden.</p>}
+                                        <p className="memewall-meme__author">{authorLabel(meme)}</p>
+                                        {meme.description && <p>{meme.description}</p>}
+                                    </div>
+                                    {canDeleteMemes && (
+                                        <button
+                                            type="button"
+                                            className="memewall-meme__delete"
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                void handleDelete(meme.id);
+                                            }}
+                                            aria-label="Meme löschen"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="memewall-meme__votes">
+                                <button
+                                    type="button"
+                                    className="memewall-meme__vote"
+                                    onClick={() => void handleRate(meme.id, true)}
+                                    aria-label="Gefällt mir"
+                                >
+                                    <ThumbsUp size={20} />
+                                    <h5>{meme.likes ?? 0}</h5>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="memewall-meme__vote"
+                                    onClick={() => void handleRate(meme.id, false)}
+                                    aria-label="Gefällt mir nicht"
+                                >
+                                    <ThumbsDown size={20} />
+                                    <h5>{meme.dislikes ?? 0}</h5>
+                                </button>
                             </div>
                         </article>
                     ))}

@@ -1,5 +1,6 @@
 import type {ReactNode} from "react";
 import {expandEmojiNotation} from "@/pages/chat/chatEmoji.ts";
+import {linkRanges} from "@/pages/chat/chatLinks.ts";
 import {mentionRanges} from "@/pages/chat/chatMentions.ts";
 
 type Mark = "bold" | "italic" | "underline" | "strike";
@@ -61,8 +62,8 @@ const findMatch = (text: string) => {
     return {spec: best, start: bestStart, end: bestEnd};
 };
 
-const splitMentions = (text: string, usernames: string[], keyPrefix: string): ReactNode[] => {
-    const ranges = mentionRanges(text, usernames);
+const splitLinks = (text: string, keyPrefix: string): ReactNode[] => {
+    const ranges = linkRanges(text);
     if (ranges.length === 0) {
         return text ? [text] : [];
     }
@@ -73,9 +74,15 @@ const splitMentions = (text: string, usernames: string[], keyPrefix: string): Re
             nodes.push(text.slice(cursor, range.start));
         }
         nodes.push(
-            <span className="chat-mention" key={`${keyPrefix}n${index}`}>
+            <a
+                key={`${keyPrefix}l${index}`}
+                className="chat-link"
+                href={range.href}
+                target="_blank"
+                rel="noopener noreferrer"
+            >
                 {text.slice(range.start, range.end)}
-            </span>,
+            </a>,
         );
         cursor = range.end;
     });
@@ -85,17 +92,42 @@ const splitMentions = (text: string, usernames: string[], keyPrefix: string): Re
     return nodes;
 };
 
+const splitMentions = (text: string, usernames: string[], keyPrefix: string, links: boolean): ReactNode[] => {
+    const plain = (chunk: string, key: string) => (links ? splitLinks(chunk, key) : (chunk ? [chunk] : []));
+    const ranges = mentionRanges(text, usernames);
+    if (ranges.length === 0) {
+        return plain(text, keyPrefix);
+    }
+    const nodes: ReactNode[] = [];
+    let cursor = 0;
+    ranges.forEach((range, index) => {
+        if (range.start > cursor) {
+            nodes.push(...plain(text.slice(cursor, range.start), `${keyPrefix}p${index}`));
+        }
+        nodes.push(
+            <span className="chat-mention" key={`${keyPrefix}n${index}`}>
+                {text.slice(range.start, range.end)}
+            </span>,
+        );
+        cursor = range.end;
+    });
+    if (cursor < text.length) {
+        nodes.push(...plain(text.slice(cursor), `${keyPrefix}e`));
+    }
+    return nodes;
+};
+
 const parse = (text: string, depth: number, keyPrefix: string, usernames: string[]): ReactNode[] => {
     if (!text) {
         return [];
     }
     if (depth > 24) {
-        return splitMentions(text, usernames, keyPrefix);
+        return splitMentions(text, usernames, keyPrefix, true);
     }
 
     const match = findMatch(text);
     if (!match) {
-        return splitMentions(text, usernames, keyPrefix);
+        return splitMentions(text, usernames, keyPrefix, true);
     }
 
     const inner = text.slice(match.start + match.spec.open.length, match.end);
@@ -103,7 +135,7 @@ const parse = (text: string, depth: number, keyPrefix: string, usernames: string
     const after = text.slice(match.end + match.spec.close.length);
     const nodes: ReactNode[] = [];
     if (before) {
-        nodes.push(...splitMentions(before, usernames, `${keyPrefix}b`));
+        nodes.push(...splitMentions(before, usernames, `${keyPrefix}b`, true));
     }
     nodes.push(wrapMark(match.spec.mark, parse(inner, depth + 1, `${keyPrefix}i`, usernames), `${keyPrefix}m`));
     nodes.push(...parse(after, depth, `${keyPrefix}a`, usernames));
@@ -142,7 +174,7 @@ export const wrapSelection = (value: string, start: number, end: number, marker:
 };
 
 export const ChatMentionText = ({text, usernames}: {text: string; usernames: string[]}) => (
-    <>{splitMentions(text, usernames, "q")}</>
+    <>{splitMentions(text, usernames, "q", false)}</>
 );
 
 const ChatFormattedText = ({text, usernames = []}: {text: string; usernames?: string[]}) => (

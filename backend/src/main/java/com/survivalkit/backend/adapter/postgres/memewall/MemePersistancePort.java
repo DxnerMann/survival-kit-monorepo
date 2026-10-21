@@ -19,4 +19,8 @@ public interface MemePersistancePort {
     Optional<MemeOwner> findOwner(String id);
 
     void deleteMeme(String id);
+
+    boolean rateMeme(String id, boolean upVote, String userId);
+
+    boolean canVote(String memeId, String userId);
 }

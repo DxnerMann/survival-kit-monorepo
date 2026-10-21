@@ -22,8 +22,6 @@ import static com.survivalkit.backend.context.SecurityContext.requireVerificatio
 @Service
 public class QuickLinkService implements QuickLinkPort {
 
-    private static final String CURSOR_SEPARATOR = "\u001f";
-
     private final QuickLinkPersistancePort quickLinkPersistancePort;
     private final FavouritePersistancePort favouritePersistancePort;
     private final StatisticsPort statisticsPort;
@@ -41,26 +39,28 @@ public class QuickLinkService implements QuickLinkPort {
     }
 
     @Override
-    public Page<QuickLink> getQuickLinksFiltered(boolean approved, Integer pageSize, String continuation, boolean sortByPopularity, String query) {
+    public Page<QuickLink> getQuickLinksFiltered(boolean approved, Integer pageSize, String continuation, boolean sortByPopularity, String sort, String query) {
 
         pageSize = pageSize == null ? 20 : pageSize;
         pageSize = pageSize > 50 ? 50 : pageSize;
+        var order = QuickLinkSort.fromRequest(sort, sortByPopularity);
 
         if (QuickLinkSearch.normalize(query).isEmpty()) {
-            return quickLinkPersistancePort.getQuickLinksFiltered(approved, pageSize, continuation, sortByPopularity);
+            return quickLinkPersistancePort.getQuickLinksFiltered(approved, pageSize, continuation, order);
         }
 
-        var matches = quickLinkPersistancePort.listQuickLinks(approved, sortByPopularity).stream()
+        var matches = quickLinkPersistancePort.listQuickLinks(approved).stream()
                 .filter(link -> QuickLinkSearch.matches(link.title(), link.description(), query))
+                .sorted(order.comparator())
                 .toList();
-        return pageMatches(matches, pageSize, continuation, sortByPopularity);
+        return pageMatches(matches, pageSize, continuation, order);
     }
 
-    private Page<QuickLink> pageMatches(List<QuickLink> matches, int pageSize, String continuation, boolean sortByPopularity) {
-        var cursor = cursor(continuation, sortByPopularity);
+    private Page<QuickLink> pageMatches(List<QuickLink> matches, int pageSize, String continuation, QuickLinkSort sort) {
+        var cursor = sort.decode(ContinuationTokenHelper.decode(continuation));
         int from = 0;
         if (cursor.id() != null) {
-            while (from < matches.size() && !isAfter(matches.get(from), cursor, sortByPopularity)) {
+            while (from < matches.size() && !sort.isAfter(matches.get(from), cursor)) {
                 from++;
             }
         }
@@ -72,47 +72,8 @@ public class QuickLinkService implements QuickLinkPort {
         if (to >= matches.size()) {
             return new Page<>(slice, null);
         }
-        var last = slice.getLast();
-        var token = sortByPopularity
-                ? last.clickedThisMonth() + CURSOR_SEPARATOR + last.id()
-                : last.id();
-        return new Page<>(slice, ContinuationTokenHelper.encode(token));
+        return new Page<>(slice, ContinuationTokenHelper.encode(sort.encode(slice.getLast())));
     }
-
-    private static boolean isAfter(QuickLink link, Cursor cursor, boolean sortByPopularity) {
-        if (!sortByPopularity || cursor.clicks() == null) {
-            return link.id().compareTo(cursor.id()) > 0;
-        }
-        if (link.clickedThisMonth() < cursor.clicks()) {
-            return true;
-        }
-        if (link.clickedThisMonth() > cursor.clicks()) {
-            return false;
-        }
-        return link.id().compareTo(cursor.id()) > 0;
-    }
-
-    private static Cursor cursor(String continuation, boolean sortByPopularity) {
-        var decoded = ContinuationTokenHelper.decode(continuation);
-        if (decoded == null || decoded.isBlank()) {
-            return new Cursor(null, null);
-        }
-        if (!sortByPopularity) {
-            return new Cursor(null, decoded);
-        }
-        var separator = decoded.indexOf(CURSOR_SEPARATOR);
-        if (separator < 0) {
-            return new Cursor(null, decoded);
-        }
-        try {
-            var clicks = Integer.valueOf(decoded.substring(0, separator));
-            return new Cursor(clicks, decoded.substring(separator + 1));
-        } catch (NumberFormatException ex) {
-            return new Cursor(null, decoded);
-        }
-    }
-
-    private record Cursor(Integer clicks, String id) {}
 
     @Override
     public void suggestLink(QuickLinkSuggestionRequest suggestion) {

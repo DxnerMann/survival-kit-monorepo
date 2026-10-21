@@ -370,7 +370,7 @@ export function ChatReactionBar({
                                     remove(group.emoji);
                                     return;
                                 }
-                                setWhoEmoji(group.emoji);
+                                void changeReaction(messageId, group.emoji, "add", reactions, userId, username, onChange);
                             }}
                         >
                             <span>{group.emoji}</span>

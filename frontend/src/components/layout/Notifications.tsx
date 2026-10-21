@@ -51,7 +51,7 @@ const markSeen = (seen: SeenMap, ids: string[]): SeenMap => {
 
 type ActivityNotice = {
     id: string;
-    kind: "FEEDBACK_ANSWERED" | "MEME_DELETED";
+    kind: "FEEDBACK_ANSWERED" | "MEME_DELETED" | "MEME_LIKED";
     title: string;
     actorUsername?: string;
 };
@@ -63,6 +63,11 @@ const noticeText = (item: ActivityNotice) => {
         return item.title
             ? `Dein Meme '${item.title}' wurde von ${by} gelöscht.`
             : `Dein Meme wurde von ${by} gelöscht.`;
+    }
+    if (item.kind === "MEME_LIKED") {
+        const user = item.actorUsername?.trim() || "Jemand";
+        const title = item.title?.trim();
+        return title ? `${user} gefällt dein Meme ${title}` : `${user} gefällt dein Meme`;
     }
     return `Dein Feedback-Beitrag '${item.title}' wurde von einem Admin beantwortet.`;
 };
@@ -90,11 +95,11 @@ const Notifications = () => {
                     if (cancelled) {
                         return;
                     }
-                    const memeDeletions = activities
-                        .filter(item => item.kind === "MEME_DELETED")
+                    const memeNotices = activities
+                        .filter(item => item.kind === "MEME_DELETED" || item.kind === "MEME_LIKED")
                         .map(item => ({
                             id: item.id,
-                            kind: "MEME_DELETED" as const,
+                            kind: item.kind as "MEME_DELETED" | "MEME_LIKED",
                             title: item.title?.trim() ?? "",
                             actorUsername: item.actorUsername?.trim() || undefined,
                         }));
@@ -103,7 +108,7 @@ const Notifications = () => {
                         kind: "FEEDBACK_ANSWERED" as const,
                         title: item.title,
                     }));
-                    setItems([...memeDeletions, ...answers]);
+                    setItems([...memeNotices, ...answers]);
                 })
                 .catch(() => {
                     // Keep the current list when a refresh fails.
@@ -170,7 +175,7 @@ const Notifications = () => {
 
     const openItem = (item: ActivityNotice) => {
         setOpen(false);
-        if (item.kind === "MEME_DELETED") {
+        if (item.kind === "MEME_DELETED" || item.kind === "MEME_LIKED") {
             navigate("/memewall");
             return;
         }

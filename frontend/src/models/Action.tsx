@@ -4,4 +4,5 @@ export interface Action {
     icon: ComponentType<{ size?: number; className?: string }>;
     text: string;
     link: string | (() => void);
+    title?: string;
 }

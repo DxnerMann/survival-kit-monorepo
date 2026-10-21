@@ -7,6 +7,8 @@ export type Meme = {
     course: string;
     authorUserId: string | null;
     authorUsername?: string | null;
+    likes: number;
+    dislikes: number;
     addedAt: string;
     lastUpdated: string;
 };
