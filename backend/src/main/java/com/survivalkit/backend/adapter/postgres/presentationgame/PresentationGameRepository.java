@@ -213,6 +213,21 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
     }
 
     @Override
+    public void removeMember(String roomId, String userId) {
+        jdbcClient.sql(Statements.DELETE_MEMBER.sql)
+                .paramSource(new MapSqlParameterSource("roomId", roomId)
+                        .addValue("userId", userId)
+                ).update();
+    }
+
+    @Override
+    public void deleteRoom(String roomId) {
+        jdbcClient.sql(Statements.DELETE_ROOM.sql)
+                .param("roomId", roomId)
+                .update();
+    }
+
+    @Override
     public void updatePresenterPoints(String roomId, int pointsDelta) {
         jdbcClient.sql(Statements.UPDATE_POINTS.sql)
                 .paramSource(new MapSqlParameterSource("roomId", roomId)
@@ -241,6 +256,18 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                 """
                     SELECT COUNT(*) FROM presentation_game_room_members
                     WHERE room_id = :roomId AND user_id = :userId
+                    """
+        ),
+        DELETE_MEMBER(
+                """
+                    DELETE FROM presentation_game_room_members
+                    WHERE room_id = :roomId AND user_id = :userId
+                    """
+        ),
+        DELETE_ROOM(
+                """
+                    DELETE FROM presentation_game_rooms
+                    WHERE id = :roomId
                     """
         ),
         FIND_BY_ID(

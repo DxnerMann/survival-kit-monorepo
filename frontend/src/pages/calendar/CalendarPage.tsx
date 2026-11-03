@@ -10,6 +10,7 @@ import type { DayOfWeek, Lecture } from "@/models/Lecture.tsx";
 import type { LecturePlanResponse } from "@/models/LecturePlanResponse.tsx";
 import { lectureConversionUtil } from "@/services/lectureConversionUtil.tsx";
 import { normalizeRaplaUrl } from "@/utils/raplaUrl.ts";
+import { readStoredPlan, rememberCourse, rememberWeek, sameLectures, type StoredPlan } from "@/pages/calendar/planCache.ts";
 import "@/pages/calendar/CalendarPage.css";
 
 const COLORS: Record<Lecture["type"], string> = {
@@ -66,6 +67,32 @@ const isTitleHidden = (title: string, hidden: string[]) =>
     hidden.some((entry) => title.trim().includes(entry.trim()));
 
 const STORED_FILE_KEY = "calendar-source";
+
+const memoryKey = (file: string, offset: number) => `${file}:${toDateKey(mondayOfWeek(offset))}`;
+
+const mapStoredWeeks = (plan: StoredPlan | null): Record<string, Lecture[]> => {
+    if (!plan) {
+        return {};
+    }
+    const mapped: Record<string, Lecture[]> = {};
+    for (const [monday, lectures] of Object.entries(plan.weeks)) {
+        const [year, month, day] = monday.split("-").map(Number);
+        if (!year || !month || !day) {
+            continue;
+        }
+        mapped[String(weekOffsetOf(new Date(year, month - 1, day)))] = lectures;
+    }
+    return mapped;
+};
+
+const seedMemory = (file: string, target: Map<string, Lecture[]>, plan: StoredPlan | null) => {
+    for (const [offset, lectures] of Object.entries(mapStoredWeeks(plan))) {
+        const key = memoryKey(file, Number(offset));
+        if (!target.has(key)) {
+            target.set(key, lectures);
+        }
+    }
+};
 
 const RAPLA_EXTRA_KEYS = ["user", "salt", "key", "day", "month", "year", "next", "pages"];
 
@@ -310,13 +337,16 @@ const CalendarPage = () => {
     const [view, setView] = useState<ViewMode>("week");
     const [weekOffset, setWeekOffset] = useState(0);
     const [dayIndex, setDayIndex] = useState(todayIndex);
-    const [title, setTitle] = useState("Stundenplan");
-    const [courseName, setCourseName] = useState("");
-    const [semesterNames, setSemesterNames] = useState<string[]>([]);
-    const [hiddenTitles, setHiddenTitles] = useState<string[]>([]);
+    const [title, setTitle] = useState(() => readStoredPlan(source)?.title || "Stundenplan");
+    const [courseName, setCourseName] = useState(() => readStoredPlan(source)?.courseName ?? "");
+    const [semesterNames, setSemesterNames] = useState<string[]>(() => readStoredPlan(source)?.semesterNames ?? []);
+    const [hiddenTitles, setHiddenTitles] = useState<string[]>(() => {
+        const storedCourse = readStoredPlan(source)?.courseName ?? "";
+        return storedCourse ? readHiddenTitles(storedCourse) : [];
+    });
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [weeks, setWeeks] = useState<Record<string, Lecture[]>>({});
-    const [loading, setLoading] = useState(Boolean(source));
+    const [weeks, setWeeks] = useState<Record<string, Lecture[]>>(() => mapStoredWeeks(readStoredPlan(source)));
+    const [loading, setLoading] = useState(() => Boolean(source) && mapStoredWeeks(readStoredPlan(source))["0"] === undefined);
     const [failed, setFailed] = useState(false);
     const [selected, setSelected] = useState<Lecture | null>(null);
     const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
@@ -324,6 +354,9 @@ const CalendarPage = () => {
     const [iosHint, setIosHint] = useState(false);
 
     const cacheRef = useRef(new Map<string, Lecture[]>());
+    if (cacheRef.current.size === 0 && source) {
+        seedMemory(source, cacheRef.current, readStoredPlan(source));
+    }
     const bodyRef = useRef<HTMLDivElement>(null);
     const swipeRef = useRef<HTMLDivElement>(null);
     const trackRef = useRef<HTMLDivElement>(null);
@@ -337,8 +370,15 @@ const CalendarPage = () => {
     if (loadedSource.current !== source) {
         loadedSource.current = source;
         cacheRef.current.clear();
-        setWeeks({});
-        setLoading(Boolean(source));
+        const stored = readStoredPlan(source);
+        const mapped = mapStoredWeeks(stored);
+        seedMemory(source, cacheRef.current, stored);
+        setWeeks(mapped);
+        setTitle(stored?.title || "Stundenplan");
+        setCourseName(stored?.courseName ?? "");
+        setSemesterNames(stored?.semesterNames ?? []);
+        setHiddenTitles(stored?.courseName ? readHiddenTitles(stored.courseName) : []);
+        setLoading(Boolean(source) && mapped[String(weekOffset)] === undefined);
         setFailed(false);
     }
 
@@ -382,11 +422,35 @@ const CalendarPage = () => {
     }, [source]);
 
     useEffect(() => {
-        if (!source || !("serviceWorker" in navigator)) {
+        if (!("serviceWorker" in navigator)) {
             return;
         }
-        navigator.serviceWorker.register("/calendar-sw.js").catch(() => undefined);
-    }, [source]);
+        let cancelled = false;
+        const seedShell = (worker: ServiceWorker | null) => {
+            if (cancelled || !worker) {
+                return;
+            }
+            const urls = [
+                window.location.href,
+                ...performance.getEntriesByType("resource").map((entry) => entry.name),
+            ];
+            worker.postMessage({ type: "cache-urls", urls });
+        };
+        navigator.serviceWorker.register("/calendar-sw.js")
+            .then((registration) => {
+                if (registration.active) {
+                    seedShell(registration.active);
+                    return;
+                }
+                navigator.serviceWorker.addEventListener("controllerchange", () => {
+                    seedShell(navigator.serviceWorker.controller);
+                }, { once: true });
+            })
+            .catch(() => undefined);
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         if (!source) {
@@ -397,8 +461,12 @@ const CalendarPage = () => {
         setSettingsOpen(false);
         readCourseName(source)
             .then(async (course) => {
-                if (cancelled || !course) {
-                    if (!cancelled) {
+                if (cancelled) {
+                    return;
+                }
+                if (!course) {
+                    const stored = readStoredPlan(source);
+                    if (!stored?.courseName) {
                         setTitle("Stundenplan");
                         setCourseName("");
                         setSemesterNames([]);
@@ -408,19 +476,28 @@ const CalendarPage = () => {
                 setTitle(course);
                 setCourseName(course);
                 setHiddenTitles(readHiddenTitles(course));
+                const storedNames = readStoredPlan(source)?.courseName === course
+                    ? readStoredPlan(source)?.semesterNames ?? []
+                    : [];
+                rememberCourse(source, { title: course, courseName: course, semesterNames: storedNames });
                 try {
                     const names = await readSemesterNames(course);
                     if (!cancelled) {
                         setSemesterNames(names);
+                        rememberCourse(source, { title: course, courseName: course, semesterNames: names });
                     }
                 } catch {
                     if (!cancelled) {
-                        setSemesterNames([]);
+                        setSemesterNames(storedNames);
                     }
                 }
             })
             .catch(() => {
-                if (!cancelled) {
+                if (cancelled) {
+                    return;
+                }
+                const stored = readStoredPlan(source);
+                if (!stored?.courseName) {
                     setTitle("Stundenplan");
                     setCourseName("");
                     setSemesterNames([]);
@@ -457,22 +534,29 @@ const CalendarPage = () => {
         const requested = weekOffset;
         let cancelled = false;
         const offsets = [requested - 1, requested, requested + 1];
+        const stored = readStoredPlan(source);
+        seedMemory(source, cacheRef.current, stored);
+        if (stored) {
+            const mapped = mapStoredWeeks(stored);
+            setWeeks((current) => {
+                let changed = false;
+                const next = { ...current };
+                for (const [offset, lectures] of Object.entries(mapped)) {
+                    if (current[offset] === undefined) {
+                        next[offset] = lectures;
+                        changed = true;
+                    }
+                }
+                return changed ? next : current;
+            });
+        }
 
         offsets.forEach((offset) => {
-            const cacheKey = `${source}:${offset}`;
+            const cacheKey = memoryKey(source, offset);
             const cached = cacheRef.current.get(cacheKey);
-            if (cached) {
-                setWeeks((current) => current[String(offset)] === cached ? current : { ...current, [String(offset)]: cached });
-                if (offset === requested) {
-                    setFailed(false);
-                    setLoading(false);
-                }
-                return;
-            }
-
             if (offset === requested) {
-                setLoading(true);
                 setFailed(false);
+                setLoading(!cached);
             }
 
             readWeek(source, offset)
@@ -480,8 +564,13 @@ const CalendarPage = () => {
                     if (cancelled) {
                         return;
                     }
+                    const previous = cacheRef.current.get(cacheKey);
+                    const changed = !previous || !sameLectures(previous, nextLectures);
                     cacheRef.current.set(cacheKey, nextLectures);
-                    setWeeks((current) => ({ ...current, [String(offset)]: nextLectures }));
+                    if (changed) {
+                        setWeeks((current) => ({ ...current, [String(offset)]: nextLectures }));
+                        rememberWeek(source, toDateKey(mondayOfWeek(offset)), nextLectures);
+                    }
                     if (offset === requested) {
                         setFailed(false);
                         setLoading(false);
@@ -489,7 +578,7 @@ const CalendarPage = () => {
                 })
                 .catch(() => {
                     if (!cancelled && offset === requested) {
-                        setFailed(true);
+                        setFailed(!cacheRef.current.has(cacheKey));
                         setLoading(false);
                     }
                 });

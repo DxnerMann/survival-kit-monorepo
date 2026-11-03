@@ -162,6 +162,21 @@ const DashboardPage = () => {
                         previewImagePath={"/images/idea-hub-preview.png"}
                     />
                 </div>
+                <SectionHeading
+                    heading={"Tipps & Tricks"}
+                    centered={false}
+                />
+                <div className="dashboard-last-resort-links">
+                    <LinkCard
+                        href={"/calendar"}
+                        heading={"Stundenplan herunterladen"}
+                        description={
+                            "Öffne den Rapla-Plan und installiere ihn. Am PC und Mac über den Browser, am iPhone unter Teilen → Zum Home-Bildschirm, auf Android im Menü unter App installieren."
+                        }
+                        alingRight={false}
+                        previewImagePath={"/pwa/icon-512.png"}
+                    />
+                </div>
             </div>
         </div>
     )

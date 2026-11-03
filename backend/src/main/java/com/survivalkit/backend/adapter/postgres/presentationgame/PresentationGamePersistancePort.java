@@ -12,6 +12,10 @@ public interface PresentationGamePersistancePort {
 
     boolean isMember(String roomId, String userId);
 
+    void removeMember(String roomId, String userId);
+
+    void deleteRoom(String roomId);
+
     Optional<PresentationGameRoom> findById(String id);
 
     Optional<PresentationGameRoom> findByJoinCode(String joinCode);

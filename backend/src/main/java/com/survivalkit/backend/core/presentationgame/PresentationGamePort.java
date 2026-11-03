@@ -34,4 +34,8 @@ public interface PresentationGamePort {
     PresentationGameActionResponse skipWord(String code);
 
     PresentationGameActionResponse approveWord(String code);
+
+    void cancelPresentationDisconnect(String roomId, String userId);
+
+    void schedulePresentationDisconnect(String roomId, String userId, java.util.function.BooleanSupplier stillConnected);
 }

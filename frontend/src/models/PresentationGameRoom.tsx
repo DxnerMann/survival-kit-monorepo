@@ -48,7 +48,7 @@ export type PresentationGameState = {
 };
 
 export type PresentationGameAction = {
-    event: "SKIP" | "APPROVE" | "APPROVE_VOTE" | "STARTED" | "FINISHED";
+    event: "SKIP" | "APPROVE" | "APPROVE_VOTE" | "STARTED" | "FINISHED" | "MEMBER_LEFT" | "ROOM_CLOSED";
     pointsDelta: number;
     userId: string | null;
     username: string | null;

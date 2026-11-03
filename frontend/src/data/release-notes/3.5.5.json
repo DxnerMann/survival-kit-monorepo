@@ -1,0 +1,22 @@
+{
+  "version": "3.5.5",
+  "date": "2026-11-03",
+  "sections": [
+    {
+      "title": "Stundenplan",
+      "items": [
+        "Der Plan bleibt auf dem Gerät gespeichert und öffnet sich sofort, auch ohne Internet",
+        "Im Hintergrund wird nach einem neuen Plan geschaut. Er ersetzt den alten nur, wenn sich etwas geändert hat",
+        "Auf der Startseite gibt es unter Tipps & Tricks eine Karte, wie du den Plan auf PC, Mac, iPhone und Android installierst"
+      ]
+    },
+    {
+      "title": "Präsi-Spiel",
+      "items": [
+        "Überspringen und Bestätigen kommen bei allen sofort an. Jede Person sieht dasselbe Wort",
+        "Dafür muss niemand mehr neu laden",
+        "Bricht die Verbindung ab, fliegst du aus der Lobby. Fällt der Presenter weg, endet die Runde für die anderen"
+      ]
+    }
+  ]
+}

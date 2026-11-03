@@ -31,6 +31,99 @@ import "@/pages/presentation-game/PresentationGameRoomPage.css";
 const LOBBY_REFRESH_MS = 3000;
 const THUMBS_UP_MS = 1500;
 const POINTS_FLOAT_MS = 1200;
+const CONNECTION_GRACE_MS = 5000;
+
+type WordSnapshot = {
+    wordIndex: number;
+    currentApprovals: number;
+    currentWord?: string;
+    presenterPoints?: number;
+};
+
+const isOlderSnapshot = (incoming: WordSnapshot, current: WordSnapshot) => {
+    if (incoming.wordIndex !== current.wordIndex) {
+        return incoming.wordIndex < current.wordIndex;
+    }
+    return incoming.currentApprovals < current.currentApprovals;
+};
+
+const isSameSnapshot = (incoming: WordSnapshot, current: WordSnapshot) =>
+    incoming.wordIndex === current.wordIndex
+    && incoming.currentApprovals === current.currentApprovals
+    && incoming.currentWord === current.currentWord
+    && incoming.presenterPoints === current.presenterPoints;
+
+const applyActionToState = (
+    prev: PresentationGameState,
+    action: PresentationGameAction,
+    myUserId: string | null
+): PresentationGameState => {
+    if (action.event === "MEMBER_LEFT") {
+        const members = action.userId
+            ? prev.members.filter(member => member.userId !== action.userId)
+            : prev.members;
+        const jurySize = Math.max(0, members.length - 1);
+        const keepWord = isOlderSnapshot(action, prev) || isSameSnapshot(action, prev);
+        const wordIndex = keepWord ? prev.wordIndex : action.wordIndex;
+        const totalWords = keepWord ? prev.totalWords : action.totalWords;
+        const hasVotedCurrentWord = keepWord ? prev.hasVotedCurrentWord : false;
+        const canVote = (!prev.isHost && jurySize > 0) || (prev.isHost && jurySize === 0);
+        return {
+            ...prev,
+            members,
+            jurySize,
+            isJury: !prev.isHost && jurySize > 0,
+            currentWord: keepWord ? prev.currentWord : action.currentWord,
+            wordIndex,
+            totalWords,
+            presenterPoints: keepWord ? prev.presenterPoints : action.presenterPoints,
+            currentApprovals: keepWord ? prev.currentApprovals : action.currentApprovals,
+            approvalThreshold: action.approvalThreshold,
+            approvingUserIds: keepWord ? prev.approvingUserIds : [],
+            hasVotedCurrentWord,
+            canApprove: canVote && !hasVotedCurrentWord && wordIndex < totalWords,
+        };
+    }
+
+    if (isOlderSnapshot(action, prev) || isSameSnapshot(action, prev)) {
+        return prev;
+    }
+
+    if (action.event === "APPROVE" || action.event === "SKIP" || action.event === "STARTED") {
+        const canVote = (!prev.isHost && prev.jurySize > 0) || (prev.isHost && prev.jurySize === 0);
+        return {
+            ...prev,
+            currentWord: action.currentWord,
+            wordIndex: action.wordIndex,
+            totalWords: action.totalWords,
+            presenterPoints: action.presenterPoints,
+            currentApprovals: action.currentApprovals,
+            approvalThreshold: action.approvalThreshold,
+            approvingUserIds: [],
+            hasVotedCurrentWord: false,
+            canApprove: canVote && action.wordIndex < action.totalWords,
+        };
+    }
+
+    const approvingUserIds =
+        action.event === "APPROVE_VOTE" && action.userId
+            ? [...new Set([...(prev.approvingUserIds ?? []), action.userId])]
+            : prev.approvingUserIds ?? [];
+    const hasVotedCurrentWord = prev.hasVotedCurrentWord || (action.userId != null && action.userId === myUserId);
+
+    return {
+        ...prev,
+        currentWord: action.currentWord,
+        wordIndex: action.wordIndex,
+        totalWords: action.totalWords,
+        presenterPoints: action.presenterPoints,
+        currentApprovals: action.currentApprovals,
+        approvalThreshold: action.approvalThreshold,
+        approvingUserIds,
+        hasVotedCurrentWord,
+        canApprove: prev.canApprove && !hasVotedCurrentWord,
+    };
+};
 
 type FloatingPoints = {
     id: number;
@@ -52,6 +145,9 @@ const PresentationGameRoomPage = () => {
     const roomRef = useRef(room);
     const gameStateRef = useRef(gameState);
     const finishedDialogShownRef = useRef(false);
+    const myUserIdRef = useRef<string | null>(websocketService.getConnectedUserId());
+    const leftLobbyRef = useRef(false);
+    const pendingActionRef = useRef<PresentationGameAction | null>(null);
     const [finishedSummary, setFinishedSummary] = useState<PresentationGameFinishedSummary | null>(null);
     const [showFinishedDialog, setShowFinishedDialog] = useState(false);
 
@@ -86,6 +182,7 @@ const PresentationGameRoomPage = () => {
             members,
         });
         setShowFinishedDialog(true);
+        gameStateRef.current = null;
         setGameState(null);
         setRoom({...currentRoom, status: "FINISHED"});
     }, []);
@@ -96,6 +193,18 @@ const PresentationGameRoomPage = () => {
         setFinishedSummary(null);
         navigate("/presentation-game", {replace: true});
     }, [navigate]);
+
+    const commitServerState = useCallback((state: PresentationGameState) => {
+        setGameState(prev => {
+            const pending = pendingActionRef.current;
+            let next = prev && isOlderSnapshot(state, prev) ? prev : state;
+            if (pending) {
+                next = applyActionToState(next, pending, myUserIdRef.current);
+            }
+            gameStateRef.current = next;
+            return next;
+        });
+    }, []);
 
     const loadRoom = useCallback(async () => {
         if (!code) {
@@ -108,10 +217,16 @@ const PresentationGameRoomPage = () => {
             return null;
         }
 
+        if (detail.status === "LOBBY" && gameStateRef.current) {
+            return detail;
+        }
+
         setRoom(detail);
 
         if (detail.status === "FINISHED") {
-            navigate("/presentation-game", {replace: true});
+            if (!finishedDialogShownRef.current) {
+                navigate("/presentation-game", {replace: true});
+            }
             return null;
         }
 
@@ -120,13 +235,14 @@ const PresentationGameRoomPage = () => {
             if (seq !== loadRoomSeqRef.current) {
                 return null;
             }
-            setGameState(state);
+            commitServerState(state);
         } else {
+            gameStateRef.current = null;
             setGameState(null);
         }
 
         return detail;
-    }, [code, navigate]);
+    }, [code, navigate, commitServerState]);
 
     const refreshGameState = useCallback(async () => {
         if (!code) {
@@ -134,12 +250,12 @@ const PresentationGameRoomPage = () => {
         }
         try {
             const state = await getPresentationGameState(code);
-            setGameState(state);
+            commitServerState(state);
             setRoom(prev => prev ? {...prev, status: state.status, members: state.members} : prev);
         } catch {
             // room may have ended
         }
-    }, [code]);
+    }, [code, commitServerState]);
 
     const showPointsFloat = (delta: number) => {
         if (delta === 0) {
@@ -171,9 +287,34 @@ const PresentationGameRoomPage = () => {
     };
 
     const applyGameAction = useCallback((action: PresentationGameAction) => {
+        if (action.event === "ROOM_CLOSED") {
+            if (!leftLobbyRef.current) {
+                leftLobbyRef.current = true;
+                snackbarService.showSnackbar({
+                    type: "warning",
+                    text: "Der Presenter hat die Verbindung verloren. Die Lobby wurde geschlossen.",
+                    showIcon: true,
+                });
+                navigate("/presentation-game", {replace: true});
+            }
+            return;
+        }
+
         if (action.event === "FINISHED") {
             openFinishedDialog(action);
             return;
+        }
+
+        const pending = pendingActionRef.current;
+        if (!pending || !isOlderSnapshot(action, pending)) {
+            pendingActionRef.current = action;
+        }
+
+        if (action.event === "MEMBER_LEFT" && action.userId) {
+            setRoom(prev => prev ? {
+                ...prev,
+                members: prev.members.filter(member => member.userId !== action.userId),
+            } : prev);
         }
 
         if (action.event === "STARTED") {
@@ -182,44 +323,19 @@ const PresentationGameRoomPage = () => {
             return;
         }
 
-        setGameState(prev => {
-            if (!prev) {
-                return prev;
-            }
+        const current = gameStateRef.current;
+        if (!current) {
+            void refreshGameState();
+            return;
+        }
 
-            if (action.event === "APPROVE" || action.event === "SKIP") {
-                const canVote = (!prev.isHost && prev.jurySize > 0) || (prev.isHost && prev.jurySize === 0);
-                return {
-                    ...prev,
-                    currentWord: action.currentWord,
-                    wordIndex: action.wordIndex,
-                    totalWords: action.totalWords,
-                    presenterPoints: action.presenterPoints,
-                    currentApprovals: 0,
-                    approvalThreshold: action.approvalThreshold,
-                    approvingUserIds: [],
-                    hasVotedCurrentWord: false,
-                    canApprove: canVote && action.wordIndex < action.totalWords,
-                };
-            }
+        const next = applyActionToState(current, action, myUserIdRef.current);
+        if (next === current) {
+            return;
+        }
 
-            const approvingUserIds =
-                action.event === "APPROVE_VOTE" && action.userId
-                    ? [...new Set([...(prev.approvingUserIds ?? []), action.userId])]
-                    : prev.approvingUserIds ?? [];
-
-            return {
-                ...prev,
-                currentWord: action.currentWord,
-                wordIndex: action.wordIndex,
-                totalWords: action.totalWords,
-                presenterPoints: action.presenterPoints,
-                currentApprovals: action.currentApprovals,
-                approvalThreshold: action.approvalThreshold,
-                approvingUserIds,
-                status: prev.status,
-            };
-        });
+        gameStateRef.current = next;
+        setGameState(next);
 
         if (action.event === "APPROVE_VOTE" || action.event === "APPROVE") {
             showThumbsUp(action.userId ?? undefined);
@@ -228,7 +344,7 @@ const PresentationGameRoomPage = () => {
         if (action.event === "SKIP" || action.event === "APPROVE") {
             showPointsFloat(action.pointsDelta);
         }
-    }, [openFinishedDialog, refreshGameState]);
+    }, [navigate, openFinishedDialog, refreshGameState]);
 
     useEffect(() => {
         const init = async () => {
@@ -266,20 +382,88 @@ const PresentationGameRoomPage = () => {
         }
 
         const channel = websocketChannels.presentationGameRoom(room.id);
-        websocketService.joinChannel(channel);
+        myUserIdRef.current = websocketService.getConnectedUserId();
+
+        let kickTimer: number | null = null;
+        const clearKick = () => {
+            if (kickTimer != null) {
+                window.clearTimeout(kickTimer);
+                kickTimer = null;
+            }
+        };
+        const armKick = () => {
+            if (kickTimer != null || leftLobbyRef.current) {
+                return;
+            }
+            kickTimer = window.setTimeout(() => {
+                if (leftLobbyRef.current) {
+                    return;
+                }
+                leftLobbyRef.current = true;
+                snackbarService.showSnackbar({
+                    type: "warning",
+                    text: "Die Verbindung ist abgebrochen. Du wurdest aus der Lobby entfernt.",
+                    showIcon: true,
+                });
+                navigate("/presentation-game", {replace: true});
+            }, CONNECTION_GRACE_MS);
+        };
 
         const unsubscribe = websocketService.subscribe(envelope => {
+            if (envelope.type === WebSocketMessageType.CONNECTED) {
+                const userId = (envelope.payload as {userId?: string} | null)?.userId;
+                if (userId) {
+                    myUserIdRef.current = userId;
+                }
+                return;
+            }
+
+            if (envelope.type === WebSocketMessageType.ERROR) {
+                const code = (envelope.payload as {code?: string} | null)?.code;
+                if (code === "NOT_ROOM_MEMBER" && !leftLobbyRef.current) {
+                    clearKick();
+                    leftLobbyRef.current = true;
+                    snackbarService.showSnackbar({
+                        type: "warning",
+                        text: "Die Verbindung ist abgebrochen. Du wurdest aus der Lobby entfernt.",
+                        showIcon: true,
+                    });
+                    navigate("/presentation-game", {replace: true});
+                }
+                return;
+            }
+
+            if (envelope.type === WebSocketMessageType.JOINED && envelope.channel === channel) {
+                clearKick();
+                if (roomRef.current?.status === "IN_PROGRESS") {
+                    void refreshGameState();
+                }
+                return;
+            }
+
             if (envelope.type !== WebSocketMessageType.MESSAGE || envelope.channel !== channel) {
                 return;
             }
             applyGameAction(envelope.payload as PresentationGameAction);
         });
 
+        const unsubscribeStatus = websocketService.onStatusChange(status => {
+            if (status === "disconnected") {
+                armKick();
+            }
+        });
+
+        websocketService.connect();
+        websocketService.joinChannel(channel);
+        armKick();
+
         return () => {
+            clearKick();
             unsubscribe();
+            unsubscribeStatus();
             websocketService.leaveChannel(channel);
         };
-    }, [room?.id, applyGameAction]);
+    }, [room?.id, applyGameAction, navigate, refreshGameState]);
 
     const handleSkip = useCallback(async () => {
         if (!code || !gameState?.canSkip) {
@@ -306,9 +490,6 @@ const PresentationGameRoomPage = () => {
         try {
             const action = await approvePresentationWord(code);
             applyGameAction(action);
-            if (action.event === "APPROVE_VOTE") {
-                setGameState(prev => prev ? {...prev, hasVotedCurrentWord: true, canApprove: false} : prev);
-            }
         } catch (err: unknown) {
             snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});
         } finally {
@@ -361,7 +542,7 @@ const PresentationGameRoomPage = () => {
             const state = await startPresentationRoom(code);
             loadRoomSeqRef.current += 1;
             setRoom(prev => prev ? {...prev, status: state.status, members: state.members} : prev);
-            setGameState(state);
+            commitServerState(state);
             snackbarService.showSnackbar({type: "success", text: "Spiel gestartet.", showIcon: true});
         } catch (err: unknown) {
             snackbarService.showSnackbar({type: "error", text: getErrorText(err), showIcon: true});

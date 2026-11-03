@@ -13,6 +13,8 @@ public interface WebSocketPort {
 
     void sendToUser(String userId, WebSocketEnvelope envelope);
 
+    void sendToUsers(java.util.Collection<String> userIds, WebSocketEnvelope envelope);
+
     void broadcastToChannel(String channel, WebSocketEnvelope envelope);
 
     void broadcastChatMessage(String course, WebSocketEnvelope envelope);

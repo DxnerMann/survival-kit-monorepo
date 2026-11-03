@@ -7,14 +7,17 @@ import com.survivalkit.backend.adapter.web.chat.ChatSendRequest;
 import com.survivalkit.backend.adapter.websocket.WebSocketSessionRegistry;
 import com.survivalkit.backend.adapter.websocket.WebSocketUserContext;
 import com.survivalkit.backend.core.chat.ChatPort;
+import com.survivalkit.backend.core.presentationgame.PresentationGamePort;
 import com.survivalkit.backend.shared.WebSocketChannels;
 import com.survivalkit.backend.shared.WebSocketEnvelope;
 import com.survivalkit.backend.shared.WebSocketMessageType;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
@@ -24,17 +27,20 @@ public class WebSocketService implements WebSocketPort {
     private final WebSocketSessionRegistry sessionRegistry;
     private final CourseChannelAccessValidator channelAccessValidator;
     private final ChatPort chatPort;
+    private final PresentationGamePort presentationGamePort;
     private final ObjectMapper objectMapper;
 
     public WebSocketService(
             WebSocketSessionRegistry sessionRegistry,
             CourseChannelAccessValidator channelAccessValidator,
             ChatPort chatPort,
+            @Lazy PresentationGamePort presentationGamePort,
             ObjectMapper objectMapper
     ) {
         this.sessionRegistry = sessionRegistry;
         this.channelAccessValidator = channelAccessValidator;
         this.chatPort = chatPort;
+        this.presentationGamePort = presentationGamePort;
         this.objectMapper = objectMapper;
     }
 
@@ -84,6 +90,33 @@ public class WebSocketService implements WebSocketPort {
     public void sendToUser(String userId, WebSocketEnvelope envelope) {
         for (var session : sessionRegistry.getSessionsForUser(userId)) {
             sendToSession(session, envelope);
+        }
+    }
+
+    @Override
+    public void sendToUsers(Collection<String> userIds, WebSocketEnvelope envelope) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        var delivered = new HashSet<String>();
+        for (var userId : userIds) {
+            for (var session : sessionRegistry.getSessionsForUser(userId)) {
+                if (delivered.add(session.getId())) {
+                    sendToSession(session, envelope);
+                }
+            }
+        }
+    }
+
+    public void handleSessionClosed(String sessionId) {
+        var user = sessionRegistry.getUser(sessionId).orElse(null);
+        var channels = sessionRegistry.channelsOf(sessionId);
+        sessionRegistry.unregister(sessionId);
+        if (user == null) {
+            return;
+        }
+        for (var channel : channels) {
+            notePresentationChannelLeft(channel, user.userId());
         }
     }
 
@@ -148,6 +181,7 @@ public class WebSocketService implements WebSocketPort {
         }
 
         sessionRegistry.join(session.getId(), channel);
+        notePresentationChannelJoined(channel, user.userId());
 
         var joinedPayload = objectMapper.createObjectNode()
                 .put("userId", user.userId())
@@ -171,6 +205,7 @@ public class WebSocketService implements WebSocketPort {
         }
 
         sessionRegistry.leave(session.getId(), channel);
+        notePresentationChannelLeft(channel, user.userId());
 
         var leftPayload = objectMapper.createObjectNode()
                 .put("userId", user.userId())
@@ -273,6 +308,38 @@ public class WebSocketService implements WebSocketPort {
                 .put("code", code)
                 .put("message", message);
         sendToSession(session, WebSocketEnvelope.of(WebSocketMessageType.ERROR, payload));
+    }
+
+    private void notePresentationChannelJoined(String channel, String userId) {
+        var roomId = presentationRoomId(channel);
+        if (roomId == null) {
+            return;
+        }
+        presentationGamePort.cancelPresentationDisconnect(roomId, userId);
+    }
+
+    private void notePresentationChannelLeft(String channel, String userId) {
+        var roomId = presentationRoomId(channel);
+        if (roomId == null) {
+            return;
+        }
+        presentationGamePort.schedulePresentationDisconnect(
+                roomId,
+                userId,
+                () -> sessionRegistry.isUserInChannel(userId, channel)
+        );
+    }
+
+    private String presentationRoomId(String channel) {
+        var parsed = WebSocketChannels.parse(channel);
+        if (parsed.isEmpty() || parsed.get().kind() != WebSocketChannels.ChannelKind.PRESENTATION_GAME) {
+            return null;
+        }
+        var roomId = parsed.get().lobbyId();
+        if (roomId == null || roomId.isBlank()) {
+            return null;
+        }
+        return roomId;
     }
 
     private WebSocketUserContextView toView(WebSocketUserContext user) {

@@ -23,11 +23,18 @@ import com.survivalkit.backend.shared.WebSocketChannels;
 import com.survivalkit.backend.shared.WebSocketEnvelope;
 import com.survivalkit.backend.shared.WebSocketMessageType;
 import io.viascom.nanoid.NanoId;
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 
 import static com.survivalkit.backend.context.SecurityContext.requireVerification;
 
@@ -38,6 +45,7 @@ public class PresentationGameService implements PresentationGamePort {
     private static final int CODE_LENGTH = 6;
     private static final int FINISHED_GAMES_LIMIT = 20;
     private static final String VOTE_APPROVE = "APPROVE";
+    private static final long DISCONNECT_GRACE_SECONDS = 5;
 
     private final PresentationGamePersistancePort persistancePort;
     private final UserPersistancePort userPersistancePort;
@@ -46,6 +54,12 @@ public class PresentationGameService implements PresentationGamePort {
     private final WebSocketPort webSocketPort;
     private final ObjectMapper objectMapper;
     private final SecureRandom random = new SecureRandom();
+    private final ScheduledExecutorService disconnectScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        var thread = new Thread(runnable, "presentation-game-presence");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private final ConcurrentHashMap<String, ScheduledFuture<?>> pendingDisconnects = new ConcurrentHashMap<>();
 
     public PresentationGameService(
             PresentationGamePersistancePort persistancePort,
@@ -381,6 +395,76 @@ public class PresentationGameService implements PresentationGamePort {
         return voteAction;
     }
 
+    @Override
+    public void cancelPresentationDisconnect(String roomId, String userId) {
+        var pending = pendingDisconnects.remove(disconnectKey(roomId, userId));
+        if (pending != null) {
+            pending.cancel(false);
+        }
+    }
+
+    @Override
+    public void schedulePresentationDisconnect(String roomId, String userId, BooleanSupplier stillConnected) {
+        if (roomId == null || roomId.isBlank() || userId == null || userId.isBlank()) {
+            return;
+        }
+        var key = disconnectKey(roomId, userId);
+        pendingDisconnects.compute(key, (ignored, existing) -> {
+            if (existing != null) {
+                existing.cancel(false);
+            }
+            return disconnectScheduler.schedule(() -> {
+                pendingDisconnects.remove(key);
+                if (stillConnected.getAsBoolean()) {
+                    return;
+                }
+                removeDisconnectedMember(roomId, userId, stillConnected);
+            }, DISCONNECT_GRACE_SECONDS, TimeUnit.SECONDS);
+        });
+    }
+
+    @PreDestroy
+    public void shutdownPresence() {
+        disconnectScheduler.shutdownNow();
+    }
+
+    private void removeDisconnectedMember(String roomId, String userId, BooleanSupplier stillConnected) {
+        if (stillConnected.getAsBoolean()) {
+            return;
+        }
+        var room = persistancePort.findById(roomId).orElse(null);
+        if (room == null || room.status() == PresentationGameRoom.Status.FINISHED) {
+            return;
+        }
+        if (!persistancePort.isMember(roomId, userId)) {
+            return;
+        }
+        if (stillConnected.getAsBoolean()) {
+            return;
+        }
+
+        if (room.hostUserId().equals(userId)) {
+            if (room.status() == PresentationGameRoom.Status.IN_PROGRESS) {
+                completeGame(room);
+                return;
+            }
+            broadcastGameEvent(room.id(), buildStateEvent("ROOM_CLOSED", room.id(), userId, room));
+            persistancePort.deleteRoom(room.id());
+            return;
+        }
+
+        persistancePort.removeMember(roomId, userId);
+        var latest = persistancePort.findById(roomId).orElse(null);
+        if (latest == null) {
+            return;
+        }
+        broadcastGameEvent(roomId, buildStateEvent("MEMBER_LEFT", roomId, userId, latest));
+    }
+
+    private String disconnectKey(String roomId, String userId) {
+        return roomId + ":" + userId;
+    }
+
     private void completeGame(PresentationGameRoom room) {
         var latest = reloadRoom(room.id());
         if (latest.status() == PresentationGameRoom.Status.FINISHED) {
@@ -483,10 +567,12 @@ public class PresentationGameService implements PresentationGamePort {
     private void broadcastGameEvent(String roomId, PresentationGameActionResponse action) {
         var channel = WebSocketChannels.presentationGameRoom(roomId);
         ObjectNode payload = objectMapper.valueToTree(action);
-        webSocketPort.broadcastToChannel(
-                channel,
-                WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, payload)
-        );
+        var envelope = WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, payload);
+        webSocketPort.broadcastToChannel(channel, envelope);
+        var memberIds = persistancePort.findMembers(roomId).stream()
+                .map(member -> member.userId())
+                .toList();
+        webSocketPort.sendToUsers(memberIds, envelope);
     }
 
     private PresentationGameRoom reloadRoom(String roomId) {

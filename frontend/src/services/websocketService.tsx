@@ -32,6 +32,7 @@ class WebSocketClient {
     private explicitDisconnect = false;
     private reconnectAttempt = 0;
     private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    private connectedUserId: string | null = null;
 
     connect(): void {
         this.explicitDisconnect = false;
@@ -60,6 +61,13 @@ class WebSocketClient {
         socket.onmessage = (event) => {
             try {
                 const envelope = JSON.parse(event.data) as WebSocketEnvelope;
+                if (envelope.type === WebSocketMessageType.CONNECTED) {
+                    const userId = (envelope.payload as {userId?: string} | null)?.userId;
+                    if (userId) {
+                        this.connectedUserId = userId;
+                    }
+                    this.rejoinChannels();
+                }
                 this.messageHandlers.forEach(handler => handler(envelope));
             } catch {
                 // ignore malformed payloads
@@ -101,6 +109,10 @@ class WebSocketClient {
 
     isConnected(): boolean {
         return this.socket?.readyState === WebSocket.OPEN;
+    }
+
+    getConnectedUserId(): string | null {
+        return this.connectedUserId;
     }
 
     getStatus(): WebSocketStatus {
@@ -233,6 +245,7 @@ export const websocketService = {
     connect: () => client.connect(),
     disconnect: () => client.disconnect(),
     isConnected: () => client.isConnected(),
+    getConnectedUserId: () => client.getConnectedUserId(),
     getStatus: () => client.getStatus(),
     subscribe: (handler: WebSocketMessageHandler) => client.subscribe(handler),
     onStatusChange: (handler: WebSocketStatusHandler) => client.onStatusChange(handler),

@@ -22,6 +22,29 @@ public class WebSocketSessionRegistry {
         usersBySessionId.put(session.getId(), user);
     }
 
+    public Set<String> channelsOf(String sessionId) {
+        var channels = channelIdsBySession.get(sessionId);
+        if (channels == null || channels.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(channels);
+    }
+
+    public boolean isUserInChannel(String userId, String channel) {
+        var sessionIds = sessionIdsByChannel.get(channel);
+        if (sessionIds == null || userId == null) {
+            return false;
+        }
+        for (var sessionId : sessionIds) {
+            var user = usersBySessionId.get(sessionId);
+            var session = sessionsById.get(sessionId);
+            if (user != null && userId.equals(user.userId()) && session != null && session.isOpen()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void unregister(String sessionId) {
         var channels = channelIdsBySession.remove(sessionId);
         if (channels != null) {
