@@ -11,6 +11,7 @@ import {suggestLink} from "@/services/quickLinkService.tsx";
 import LinkCard from "@/components/explore/LinkCard/LinkCard.tsx";
 import UsefulLinks from "@/components/explore/UsefulLinks.tsx";
 import Minigames from "@/components/explore/Minigames.tsx";
+import {Link} from "react-router-dom";
 
 const DashboardPage = () => {
 
@@ -166,17 +167,51 @@ const DashboardPage = () => {
                     heading={"Tipps & Tricks"}
                     centered={false}
                 />
-                <div className="dashboard-last-resort-links">
-                    <LinkCard
-                        href={"/calendar"}
-                        heading={"Stundenplan herunterladen"}
-                        description={
-                            "Öffne den Rapla-Plan und installiere ihn. Am PC und Mac über den Browser, am iPhone unter Teilen → Zum Home-Bildschirm, auf Android im Menü unter App installieren."
-                        }
-                        alingRight={false}
-                        previewImagePath={"/pwa/icon-512.png"}
-                    />
-                </div>
+                <Link to="/calendar" className="dashboard-calendar-tip">
+                    <div className="dashboard-calendar-tip__intro">
+                        <img src="/pwa/icon-512.png" alt="" />
+                        <div>
+                            <h2>Stundenplan herunterladen</h2>
+                            <p>Öffne den Rapla-Plan und installiere ihn auf dem Gerät, das du in der Vorlesung dabei hast. Danach liegt er als eigene App auf dem Home-Bildschirm und öffnet sich auch ohne Internet.</p>
+                        </div>
+                    </div>
+                    <div className="dashboard-calendar-tip__columns">
+                        <div>
+                            <h3>Am Computer</h3>
+                            <p className="dashboard-calendar-tip__device">PC mit Chrome oder Edge</p>
+                            <ol>
+                                <li>Diese Karte öffnen und den Rapla-Link einfügen.</li>
+                                <li>In der Adressleiste auf das Installieren-Symbol klicken.</li>
+                                <li>Im Dialog „Installieren“ bestätigen.</li>
+                                <li>Der Plan liegt danach im Startmenü und öffnet sich als eigenes Fenster.</li>
+                            </ol>
+                            <p className="dashboard-calendar-tip__device">Mac mit Safari oder Chrome</p>
+                            <ol>
+                                <li>Diese Karte öffnen und den Rapla-Link einfügen.</li>
+                                <li>In Safari im Menü „Ablage“ auf „Zum Dock hinzufügen“ klicken.</li>
+                                <li>In Chrome das Installieren-Symbol in der Adressleiste nutzen und bestätigen.</li>
+                                <li>Der Plan liegt danach im Dock.</li>
+                            </ol>
+                        </div>
+                        <div>
+                            <h3>Am Handy</h3>
+                            <p className="dashboard-calendar-tip__device">iPhone mit Safari</p>
+                            <ol>
+                                <li>Diese Karte in Safari öffnen. Chrome kann den Plan auf dem iPhone nicht installieren.</li>
+                                <li>Unten auf das Teilen-Symbol tippen.</li>
+                                <li>In der Liste „Zum Home-Bildschirm“ wählen.</li>
+                                <li>Oben rechts „Hinzufügen“ tippen. Das Icon liegt danach auf dem Home-Bildschirm.</li>
+                            </ol>
+                            <p className="dashboard-calendar-tip__device">Android mit Chrome</p>
+                            <ol>
+                                <li>Diese Karte in Chrome öffnen.</li>
+                                <li>Oben rechts auf die drei Punkte tippen.</li>
+                                <li>„App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.</li>
+                                <li>Bestätigen. Der Plan liegt danach zwischen den anderen Apps.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </Link>
             </div>
         </div>
     )
