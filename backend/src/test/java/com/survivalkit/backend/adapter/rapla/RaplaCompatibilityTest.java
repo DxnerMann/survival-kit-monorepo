@@ -319,6 +319,87 @@ class WeekTableLectureParserTest {
         assertEquals(Lecture.LectureType.EXAM, filled.get(2).type());
     }
 
+    @Test
+    void treatsColoredBlocksWithAPersonOrRoomAsLectures() {
+        var html = """
+                <table class="week_table">
+                  <tr>
+                    <td class="week_header" colspan="1">Mi 04.11.</td>
+                  </tr>
+                  <tr>
+                    <td class="week_block" style="background-color:#c0e2ff">
+                      <a>08:30 -11:45<br/>Kommunikations- und Netztechnik</a>
+                      <span class="person">Müller, Max</span>
+                      <span class="resource">E210 Hörsaal</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="week_block" style="background-color:#c0e2ff">
+                      <a>13:00 -14:00<br/>Klausurwoche</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="week_block" style="background-color:#99cc99">
+                      <span class="tooltip"><strong>Sonstiger Termin</strong></span>
+                      <a>15:00 -16:00<br/>Projektarbeit</a>
+                      <span class="person">Müller, Max</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="week_block" style="background-color:#ff6666">
+                      <a>09:00 -10:00<br/>Klausur Netze</a>
+                      <span class="resource">E210</span>
+                    </td>
+                  </tr>
+                </table>
+                """;
+
+        var lectures = WeekTableLectureParser.parse(Jsoup.parse(html));
+
+        assertEquals(Lecture.LectureType.LECTURE, lectures.get(0).type());
+        assertEquals(Lecture.LectureType.OTHER, lectures.get(1).type());
+        assertEquals(Lecture.LectureType.OTHER, lectures.get(2).type());
+        assertEquals(Lecture.LectureType.EXAM, lectures.get(3).type());
+    }
+
+    @Test
+    void matchesHyphenatedTitlesByDayAndKeepsUnknownCategoriesAsLectures() {
+        var ical = """
+                BEGIN:VCALENDAR
+                BEGIN:VEVENT
+                DTSTART;TZID=Europe/Berlin:20261102T083000
+                SUMMARY:Kommunikations und Netztechnik
+                DESCRIPTION:Kommunikations und Netztechnik   Personen: Müller\\, Max
+                CATEGORIES:Wahlpflicht
+                RRULE:FREQ=WEEKLY;BYDAY=WE
+                EXDATE;TZID=Europe/Berlin:20261104T083000
+                END:VEVENT
+                BEGIN:VEVENT
+                DTSTART;TZID=Europe/Berlin:20261104T083000
+                RECURRENCE-ID;TZID=Europe/Berlin:20261104T083000
+                SUMMARY:Kommunikations- und Netztechnik
+                DESCRIPTION:Kommunikations- und Netztechnik   Personen: Weber\\, Anna
+                CATEGORIES:Lehrveranstaltung
+                END:VEVENT
+                BEGIN:VEVENT
+                DTSTART;TZID=Europe/Berlin:20261102T150000
+                SUMMARY:Projektarbeit
+                CATEGORIES:Sonstiger Termin
+                RRULE:FREQ=WEEKLY;BYDAY=WE
+                END:VEVENT
+                END:VCALENDAR
+                """;
+
+        var filled = RaplaIcalLecturers.apply(List.of(
+                new Lecture("Kommunikations- und Netztechnik", Lecture.LectureType.OTHER, "08:30", "11:45", List.of("E210 Hörsaal"), "", List.of(), DayOfWeek.WEDNESDAY),
+                new Lecture("Projektarbeit", Lecture.LectureType.LECTURE, "15:00", "16:00", List.of(), "", List.of(), DayOfWeek.WEDNESDAY)
+        ), ical, LocalDate.of(2026, 11, 2));
+
+        assertEquals(Lecture.LectureType.LECTURE, filled.get(0).type());
+        assertEquals("Anna Weber", filled.get(0).lecturer());
+        assertEquals(Lecture.LectureType.OTHER, filled.get(1).type());
+    }
+
     private String loadResource(String path) throws IOException {
         try (var stream = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(path))) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);

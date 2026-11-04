@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -69,22 +70,21 @@ public final class RaplaIcalLecturers {
         var weekEnd = monday.plusDays(7);
         var lecturersByKey = new HashMap<String, LinkedHashSet<String>>();
         var types = new HashMap<String, Lecture.LectureType>();
+        var series = new ArrayList<Event>();
+        var exceptions = new ArrayList<Event>();
 
         for (var event : parseEvents(ical)) {
-            var lecturer = lecturerName(event.description);
-            var type = typeFromCategory(event.category);
-            if (lecturer.isBlank() && type == null) {
-                continue;
+            if (event.recurrenceId != null) {
+                exceptions.add(event);
+            } else {
+                series.add(event);
             }
-            for (var occurrence : occurrencesInWeek(event, monday, weekEnd)) {
-                var eventKey = key(occurrence.day, occurrence.start, event.summary);
-                if (!lecturer.isBlank()) {
-                    lecturersByKey.computeIfAbsent(eventKey, ignored -> new LinkedHashSet<>()).add(lecturer);
-                }
-                if (type != null) {
-                    types.putIfAbsent(eventKey, type);
-                }
-            }
+        }
+        for (var event : series) {
+            indexEvent(event, monday, weekEnd, lecturersByKey, types, false);
+        }
+        for (var event : exceptions) {
+            indexEvent(event, monday, weekEnd, lecturersByKey, types, true);
         }
 
         var lecturers = new HashMap<String, String>();
@@ -92,20 +92,65 @@ public final class RaplaIcalLecturers {
         return new WeekIndex(lecturers, types);
     }
 
+    private static void indexEvent(
+            Event event,
+            LocalDate monday,
+            LocalDate weekEnd,
+            Map<String, LinkedHashSet<String>> lecturersByKey,
+            Map<String, Lecture.LectureType> types,
+            boolean overwrite
+    ) {
+        var lecturer = lecturerName(event.description);
+        var type = typeFromCategory(event.category);
+        if (lecturer.isBlank() && type == null) {
+            return;
+        }
+        for (var occurrence : occurrencesInWeek(event, monday, weekEnd)) {
+            var eventKey = key(occurrence.day, occurrence.start, event.summary);
+            if (!lecturer.isBlank()) {
+                if (overwrite) {
+                    var names = new LinkedHashSet<String>();
+                    names.add(lecturer);
+                    lecturersByKey.put(eventKey, names);
+                } else {
+                    lecturersByKey.computeIfAbsent(eventKey, ignored -> new LinkedHashSet<>()).add(lecturer);
+                }
+            }
+            if (type != null) {
+                if (overwrite) {
+                    types.put(eventKey, type);
+                } else {
+                    types.putIfAbsent(eventKey, type);
+                }
+            }
+        }
+    }
+
     private static Lecture.LectureType typeFromCategory(String category) {
         if (category == null || category.isBlank()) {
             return null;
         }
+        var sawLecture = false;
+        var sawOther = false;
         for (var part : category.split(",")) {
-            var mapped = switch (part.trim()) {
-                case "Lehrveranstaltung" -> Lecture.LectureType.LECTURE;
-                case "Prüfung" -> Lecture.LectureType.EXAM;
-                case "Sonstiger Termin" -> Lecture.LectureType.OTHER;
-                default -> null;
-            };
-            if (mapped != null) {
-                return mapped;
+            var trimmed = part.trim();
+            if (trimmed.isEmpty()) {
+                continue;
             }
+            if ("Prüfung".equals(trimmed)) {
+                return Lecture.LectureType.EXAM;
+            }
+            if ("Sonstiger Termin".equals(trimmed)) {
+                sawOther = true;
+            } else {
+                sawLecture = true;
+            }
+        }
+        if (sawLecture) {
+            return Lecture.LectureType.LECTURE;
+        }
+        if (sawOther) {
+            return Lecture.LectureType.OTHER;
         }
         return null;
     }
@@ -117,6 +162,9 @@ public final class RaplaIcalLecturers {
     private static String normalizeTitle(String title) {
         return unescape(title == null ? "" : title)
                 .replace('\u00a0', ' ')
+                .replace('-', ' ')
+                .replace('–', ' ')
+                .replace('—', ' ')
                 .replaceAll("\\s+", " ")
                 .trim()
                 .toLowerCase(Locale.ROOT);
@@ -177,6 +225,10 @@ public final class RaplaIcalLecturers {
             return hits;
         }
 
+        if (event.frequency == Frequency.WEEKLY && !event.byDays.isEmpty()) {
+            return weeklyByDay(event, monday, weekEnd);
+        }
+
         var cursor = event.start.toLocalDate();
         var produced = 0;
         var limit = event.count == null ? 400 : event.count;
@@ -197,6 +249,31 @@ public final class RaplaIcalLecturers {
             if (event.frequency == Frequency.YEARLY && cursor.getYear() > monday.getYear() + 1) {
                 break;
             }
+        }
+        return hits;
+    }
+
+    private static List<Occurrence> weeklyByDay(Event event, LocalDate monday, LocalDate weekEnd) {
+        var hits = new ArrayList<Occurrence>();
+        var counted = 0;
+        var limit = event.count == null ? 400 : event.count;
+        var weekStart = event.start.toLocalDate().with(DayOfWeek.MONDAY);
+        while (counted < limit && weekStart.isBefore(weekEnd)) {
+            for (var day : event.byDays) {
+                if (counted >= limit) {
+                    break;
+                }
+                var date = weekStart.with(day);
+                if (date.isBefore(event.start.toLocalDate())) {
+                    continue;
+                }
+                if (event.until != null && date.isAfter(event.until)) {
+                    continue;
+                }
+                addIfInside(hits, event, date, monday, weekEnd);
+                counted++;
+            }
+            weekStart = weekStart.plusWeeks(event.interval);
         }
         return hits;
     }
@@ -244,6 +321,7 @@ public final class RaplaIcalLecturers {
                 case "CATEGORIES" -> current.category = value;
                 case "DTSTART" -> current.start = parseStamp(value);
                 case "EXDATE" -> current.excluded.addAll(parseStamps(value));
+                case "RECURRENCE-ID" -> current.recurrenceId = parseStamp(value);
                 case "RRULE" -> applyRule(current, value);
                 default -> {
                 }
@@ -272,6 +350,7 @@ public final class RaplaIcalLecturers {
                 case "INTERVAL" -> interval = parseInt(pieces[1], 1);
                 case "COUNT" -> count = parseInt(pieces[1], 0);
                 case "UNTIL" -> until = untilDate(pieces[1]);
+                case "BYDAY" -> event.byDays.addAll(parseByDays(pieces[1]));
                 default -> {
                 }
             }
@@ -283,6 +362,27 @@ public final class RaplaIcalLecturers {
         event.interval = interval;
         event.count = count != null && count > 0 ? count : null;
         event.until = until;
+    }
+
+    private static EnumSet<DayOfWeek> parseByDays(String value) {
+        var days = EnumSet.noneOf(DayOfWeek.class);
+        for (var token : value.split(",")) {
+            var letters = token.trim().toUpperCase(Locale.ROOT).replaceAll("[^A-Z]", "");
+            var day = switch (letters) {
+                case "MO" -> DayOfWeek.MONDAY;
+                case "TU" -> DayOfWeek.TUESDAY;
+                case "WE" -> DayOfWeek.WEDNESDAY;
+                case "TH" -> DayOfWeek.THURSDAY;
+                case "FR" -> DayOfWeek.FRIDAY;
+                case "SA" -> DayOfWeek.SATURDAY;
+                case "SU" -> DayOfWeek.SUNDAY;
+                default -> null;
+            };
+            if (day != null) {
+                days.add(day);
+            }
+        }
+        return days;
     }
 
     private static LocalDate untilDate(String value) {
@@ -365,6 +465,8 @@ public final class RaplaIcalLecturers {
         private String description = "";
         private String category = "";
         private LocalDateTime start;
+        private LocalDateTime recurrenceId;
+        private final EnumSet<DayOfWeek> byDays = EnumSet.noneOf(DayOfWeek.class);
         private Frequency frequency;
         private int interval = 1;
         private Integer count;

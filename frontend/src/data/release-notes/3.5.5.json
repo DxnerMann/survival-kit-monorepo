@@ -1,13 +1,15 @@
 {
   "version": "3.5.5",
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "sections": [
     {
       "title": "Stundenplan",
       "items": [
         "Der Plan bleibt auf dem Gerät gespeichert und öffnet sich sofort, auch ohne Internet",
         "Im Hintergrund wird nach einem neuen Plan geschaut. Er ersetzt den alten nur, wenn sich etwas geändert hat",
-        "Auf der Startseite gibt es unter Tipps & Tricks eine Karte, wie du den Plan auf PC, Mac, iPhone und Android installierst"
+        "Auf der Startseite gibt es unter Tipps & Tricks eine Karte über die ganze Breite. Dort steht, wie du den Plan am Computer und am Handy installierst",
+        "Farbige Termine mit Dozent oder Raum zählen wieder als Vorlesung. Sonstiger Termin bleibt Andere, Prüfungen bleiben Prüfungen",
+        "Eine geänderte Serie und ein Titel mit oder ohne Bindestrich werden wieder derselben Vorlesung zugeordnet"
       ]
     },
     {
@@ -15,7 +17,22 @@
       "items": [
         "Überspringen und Bestätigen kommen bei allen sofort an. Jede Person sieht dasselbe Wort",
         "Dafür muss niemand mehr neu laden",
-        "Bricht die Verbindung ab, fliegst du aus der Lobby. Fällt der Presenter weg, endet die Runde für die anderen"
+        "Nur wenn die Verbindung weg bleibt, fliegst du aus der Lobby. Ein kurzer Aussetzer wirft dich nicht raus",
+        "Fällt der Presenter weg, endet die Runde für die anderen"
+      ]
+    },
+    {
+      "title": "Statistiken",
+      "items": [
+        "Dein Filter bleibt gespeichert. Beim nächsten Besuch sind dieselben Diagramme wieder an",
+        "Persönlich, Kurs und Global schaltest du oben um. Es ist immer nur ein Bereich offen, mit einem Satz, wessen Zahlen das sind"
+      ]
+    },
+    {
+      "title": "Aktualisierung",
+      "items": [
+        "Die App schaut regelmäßig nach, ob auf dem Server eine neuere Version oder sonst etwas Neues liegt. Das gilt auch, wenn die Versionsnummer gleich bleibt",
+        "Unten bleibt dann ein Hinweis mit der Versionsnummer und Neu laden stehen, bis du ihn benutzt"
       ]
     }
   ]

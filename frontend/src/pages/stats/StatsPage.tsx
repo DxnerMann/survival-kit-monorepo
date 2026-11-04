@@ -1,6 +1,7 @@
 import "@/pages/stats/StatsPage.css";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import {getUserRole} from "@/services/tokenService.tsx";
+import {getUsername} from "@/services/userService.tsx";
 import { useEffect, useState } from "react";
 import type {TrackAction, TrackActionType} from "@/models/TrackAction.tsx";
 import type {Page} from "@/models/Page.tsx";
@@ -22,6 +23,7 @@ import {
 type CaffeineStat = "CAFFEINE_SUM" | "CAFFEINE_AVG";
 type VisibleAction = Exclude<TrackActionType, "LOGGED_IN">;
 type StatsFilter = VisibleAction | CaffeineStat;
+type StatsScope = "personal" | "course" | "global";
 
 const ALL_ACTIONS: VisibleAction[] = [
     "EXMATRICULATED",
@@ -53,7 +55,51 @@ const translateFilterReverse = (label: string): StatsFilter | undefined => {
     return ALL_FILTERS.find((filter) => translateFilter(filter) === label);
 };
 
+const storageKey = () => `lsk-stats-view:${getUsername() || "guest"}`;
+
+const isStatsFilter = (value: unknown): value is StatsFilter =>
+    typeof value === "string" && (ALL_FILTERS as string[]).includes(value);
+
+const isStatsScope = (value: unknown): value is StatsScope =>
+    value === "personal" || value === "course" || value === "global";
+
+const readStoredView = (): {filters: StatsFilter[]; scope: StatsScope} => {
+    const fallback = {filters: [...ALL_FILTERS], scope: "personal" as StatsScope};
+    try {
+        const raw = localStorage.getItem(storageKey());
+        if (!raw) {
+            return fallback;
+        }
+        const parsed = JSON.parse(raw) as {filters?: unknown; scope?: unknown};
+        const filters = Array.isArray(parsed.filters)
+            ? parsed.filters.filter(isStatsFilter)
+            : fallback.filters;
+        return {
+            filters,
+            scope: isStatsScope(parsed.scope) ? parsed.scope : fallback.scope,
+        };
+    } catch {
+        return fallback;
+    }
+};
+
+const SCOPE_COPY: Record<StatsScope, {heading: string; hint: string}> = {
+    personal: {
+        heading: "Persönliche Statistiken",
+        hint: "Nur deine eigenen Aktionen",
+    },
+    course: {
+        heading: "Kurs-Statistiken",
+        hint: "Zusammengezählt für deinen Kurs",
+    },
+    global: {
+        heading: "Globale Statistiken",
+        hint: "Alle Benutzer des Survival Kits",
+    },
+};
+
 const StatsPage = () => {
+    const isGuest = getUserRole() === "GUEST";
     const [userActions, setUserActions] = useState<TrackAction[]>([]);
     const [courseActions, setCourseActions] = useState<TrackAction[]>([]);
     const [globalActions, setGlobalActions] = useState<TrackAction[]>([]);
@@ -62,7 +108,8 @@ const StatsPage = () => {
     const [courseCaffeine, setCourseCaffeine] = useState<CaffeineEntry[]>([]);
     const [globalCaffeine, setGlobalCaffeine] = useState<CaffeineEntry[]>([]);
 
-    const [selectedFilter, setSelectedFilter] = useState<StatsFilter[]>([...ALL_FILTERS]);
+    const [selectedFilter, setSelectedFilter] = useState<StatsFilter[]>(() => readStoredView().filters);
+    const [scope, setScope] = useState<StatsScope>(() => (getUserRole() === "GUEST" ? "global" : readStoredView().scope));
 
     useEffect(() => {
         const fetchAllPages = async (
@@ -110,11 +157,15 @@ const StatsPage = () => {
             setGlobalCaffeine(await getGlobalCaffeineEntries());
         };
 
-        if (getUserRole() !== "GUEST") fetchUserActions();
-        if (getUserRole() !== "GUEST") fetchCourseActions();
+        if (!isGuest) fetchUserActions();
+        if (!isGuest) fetchCourseActions();
         fetchGlobalActions();
         fetchCaffeine();
-    }, []);
+    }, [isGuest]);
+
+    const persistView = (filters: StatsFilter[], nextScope: StatsScope) => {
+        localStorage.setItem(storageKey(), JSON.stringify({filters, scope: nextScope}));
+    };
 
     const onFilterChange = (items: string[]) => {
         const filters = items
@@ -122,6 +173,12 @@ const StatsPage = () => {
             .filter((filter): filter is StatsFilter => filter !== undefined);
 
         setSelectedFilter(filters);
+        persistView(filters, scope);
+    };
+
+    const selectScope = (nextScope: StatsScope) => {
+        setScope(nextScope);
+        persistView(selectedFilter, nextScope);
     };
 
     const showAction = (action: VisibleAction) => selectedFilter.includes(action);
@@ -151,9 +208,31 @@ const StatsPage = () => {
         </>
     );
 
+    const activeScope: StatsScope = isGuest ? "global" : scope;
+    const scopeCopy = SCOPE_COPY[activeScope];
+    const scopeActions = activeScope === "personal" ? userActions : activeScope === "course" ? courseActions : globalActions;
+    const scopeCaffeine = activeScope === "personal" ? userCaffeine : activeScope === "course" ? courseCaffeine : globalCaffeine;
+    const caffeinePerPerson = activeScope !== "personal";
+
     return <div className="survival-kit-page">
         <div className="stats-page">
             <div className="stats-page-header">
+                {!isGuest && (
+                    <div className="stats-scope" role="tablist" aria-label="Statistikbereich">
+                        {(["personal", "course", "global"] as StatsScope[]).map((item) => (
+                            <button
+                                key={item}
+                                type="button"
+                                role="tab"
+                                aria-selected={activeScope === item}
+                                className={activeScope === item ? "is-active" : ""}
+                                onClick={() => selectScope(item)}
+                            >
+                                {item === "personal" ? "Persönlich" : item === "course" ? "Kurs" : "Global"}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 <FilterDropdown
                     values={ALL_FILTERS.map(translateFilter)}
                     selectedItems={selectedFilter.map(translateFilter)}
@@ -162,26 +241,16 @@ const StatsPage = () => {
                     placeholder="Statistiken filtern"
                 />
             </div>
-            { getUserRole() !== "GUEST" && <SectionHeading heading={"Persönliche Statistiken"} subheading={"Statistiken deines persönlichen Profils"} centered={false} /> }
-            <div className="stats-page-action-charts">
-                {getUserRole() !== "GUEST" && actionCharts(userActions)}
-                {getUserRole() !== "GUEST" && caffeineCharts(userCaffeine, false)}
-            </div>
-            { getUserRole() !== "GUEST" && selectedFilter.length === 0 && <div className="stats-page-no-filter-info">Keine Statistiken, die deinem Filter entsprechen.</div> }
-
-            { getUserRole() !== "GUEST" && selectedFilter.length > 0 && <SectionHeading heading={"Kurs-Statistiken"} subheading={"Statistiken deines Kurses"} centered={false} /> }
-            <div className="stats-page-action-charts">
-                {getUserRole() !== "GUEST" && actionCharts(courseActions)}
-                {getUserRole() !== "GUEST" && caffeineCharts(courseCaffeine, true)}
-            </div>
-
-            <SectionHeading heading={"Globale Statistiken"} subheading={"Statistiken aller Benutzer des Survival Kits"} centered={false} />
-            <div className="stats-page-action-charts">
-                {actionCharts(globalActions)}
-                {caffeineCharts(globalCaffeine, true)}
-            </div>
-            { selectedFilter.length === 0 && <div className="stats-page-no-filter-info">Keine Statistiken, die deinem Filter entsprechen.</div> }
-            { getUserRole() === "GUEST" && <div className="stats-page-no-filter-info">Melde dich an, um deine persönlichen Statistiken zu sehen.</div> }
+            <SectionHeading heading={scopeCopy.heading} subheading={scopeCopy.hint} centered={false} />
+            {selectedFilter.length === 0 ? (
+                <div className="stats-page-no-filter-info">Keine Statistiken, die deinem Filter entsprechen.</div>
+            ) : (
+                <div className="stats-page-action-charts">
+                    {actionCharts(scopeActions)}
+                    {caffeineCharts(scopeCaffeine, caffeinePerPerson)}
+                </div>
+            )}
+            {isGuest && <div className="stats-page-no-filter-info">Melde dich an, um deine persönlichen Statistiken und die deines Kurses zu sehen.</div>}
         </div>
     </div>
 }

@@ -1,6 +1,8 @@
 # Lecture Survival Kit
 
-A pastime tool for students at DHBW Karlsruhe — built to survive the long lectures.
+A pastime tool for students at DHBW Karlsruhe — built to survive the long lectures. The app version lives in `frontend/package.json`.
+
+The current app has a customizable dashboard, the Rapla lecture plan (also installable at `/calendar` and cached on the device), roomfinder, course chat, meme wall, caffeine calculator, statistics, an ideas hub, a presentation game, and release notes. Open tabs poll `/version.json` and offer a reload when a newer build is deployed, even if the version number stayed the same.
 
 ---
 
@@ -9,9 +11,9 @@ A pastime tool for students at DHBW Karlsruhe — built to survive the long lect
 ```
 survival-kit-monorepo
 ├── backend/
-├     ├── docker-compose.yml    # Local Development
+│   └── docker-compose.yml    # Local PostgreSQL, Redis, MailHog, Roomfinder
 ├── frontend/
-├── docker-compose.yml          # Production
+├── docker-compose.yml        # Production
 └── .github/workflows/
     └── ci-cd.yml
 ```
@@ -25,8 +27,8 @@ A React + TypeScript single-page application built with Vite.
 ### Dependencies
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
-![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite)
 ![React Router](https://img.shields.io/badge/React_Router-7-CA4245?logo=reactrouter)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-12-EF0079?logo=framer)
 ![Lucide](https://img.shields.io/badge/Lucide_React-1.14-F56565)
@@ -36,12 +38,13 @@ A React + TypeScript single-page application built with Vite.
 ![React Grid Layout](https://img.shields.io/badge/React_Grid_Layout-2-orange)
 ![react-easy-crop](https://img.shields.io/badge/react--easy--crop-6.0.2-000000)
 ![Recharts](https://img.shields.io/badge/Recharts-3.9.0-22B5BF)
+![emoji-mart](https://img.shields.io/badge/emoji--mart-5-FFDD67)
 
 ---
 
 ## Backend
 
-A Spring Boot REST API with JWT authentication, email verification, and PostgreSQL persistence.
+A Spring Boot REST API with JWT authentication, email verification, WebSocket (`/v1/ws`), and PostgreSQL persistence. Redis stores revoked sessions and rate-limit windows.
 
 ### Dependencies
 
@@ -62,7 +65,7 @@ A Spring Boot REST API with JWT authentication, email verification, and PostgreS
 
 ### Local Development
 
-The backend uses a `local` Spring profile. A `docker-compose.yml` inside `backend/` spins up PostgreSQL and MailHog (a local mail catcher — no real emails are sent during development).
+The backend uses a `local` Spring profile. A `docker-compose.yml` inside `backend/` spins up PostgreSQL, Redis, MailHog (a local mail catcher — no real emails are sent during development), and a locally built Roomfinder API. The published Roomfinder image is linux/amd64 only, so local development builds it from source.
 
 ```bash
 # Start local services
@@ -101,16 +104,17 @@ The deploy job:
 2. Pushes them to GitHub Container Registry (`ghcr.io`)
 3. SSHs into the server as the `deploy` user
 4. Writes the `.env` from GitHub Secrets
-5. Pulls the new images and runs `docker compose up -d`
+5. Copies `docker-compose.yml`, pulls the new images, and runs `docker compose up -d --remove-orphans`
 
 ### Production Services
 
 | Container | Description                                   |
 |---|-----------------------------------------------|
 | `survival-kit-backend` | Spring Boot API on port 8080                  |
-| `survival-kit-frontend` | Static React build served by Nginx on port 80 |
+| `survival-kit-frontend` | Static React build served by Nginx on port 80. `/version.json` is sent with `Cache-Control: no-store` |
 | `survival-kit-postgres` | PostgreSQL 16 database                        |
-| `survival-kit-redis` | In-memory store for revoked JWT session tokens |
+| `survival-kit-redis` | In-memory store for revoked JWT session tokens and rate limits |
+| `survival-kit-roomfinder` | Roomfinder API (`ghcr.io/rudi-regentonne/roomfinder_api`) on port 8000 |
 
 Routing is handled by the external Nginx proxy:
 
@@ -148,9 +152,9 @@ Roles: `GUEST` (public), `USER`, `ADMIN`. Interactive OpenAPI UI: `/swagger-ui/i
 | `GET` | `/` | USER | Current user profile |
 | `GET` | `/courses` | GUEST | List known courses |
 | `POST` | `/course?course=` | USER | Set user course |
-| `PUT` | `/img` | USER | Upload profile picture (`multipart/form-data`) |
+| `POST` / `PUT` | `/img` | USER | Upload profile picture (`multipart/form-data`) |
 | `GET` | `/img/{userId}` | — | Get profile picture |
-| `PUT` | `/?username=&color=` | USER | Update username and/or color |
+| `PUT` | `/?username=&color=&accentColor=` | USER | Update username, color, and/or accent color |
 
 ### Dashboard — `/v1/dashboard`
 
@@ -183,9 +187,10 @@ Roles: `GUEST` (public), `USER`, `ADMIN`. Interactive OpenAPI UI: `/swagger-ui/i
 | Method | Path | Role | Description |
 |--------|------|------|-------------|
 | `POST` | `/click?linkId=` | GUEST | Record a link click |
-| `GET` | `/filter?approved=&pageSize=&continuation=&sortByPopularity=` | GUEST | List links (`approved=false` only for ADMIN) |
+| `GET` | `/filter?approved=&pageSize=&continuation=&sortByPopularity=&sort=&query=` | GUEST | List links (`approved=false` only for ADMIN). `sortByPopularity` is required |
 | `POST` | `/` | USER | Suggest a link. Body: `{ title, description, url }` |
 | `POST` | `/approve` | ADMIN | Approve/reject suggestion |
+| `DELETE` | `/{id}` | ADMIN | Delete a link |
 | `POST` | `/favourite?quickLinkId=&fav=` | USER | Toggle favourite |
 | `GET` | `/favourite?pageSize=&continuation=` | USER | List favourites |
 
@@ -193,9 +198,10 @@ Roles: `GUEST` (public), `USER`, `ADMIN`. Interactive OpenAPI UI: `/swagger-ui/i
 
 | Method | Path | Role | Description |
 |--------|------|------|-------------|
-| `POST` | `/` | USER | Submit feedback |
+| `POST` | `/` | GUEST | Submit feedback |
 | `GET` | `/?pageSize=&continuation=` | GUEST | Paged feedback |
 | `PATCH` | `/rate?id=&upVote=` | USER | Up/downvote |
+| `GET` | `/answered` | USER | Answered feedback for the current user |
 | `GET` | `/alreadyVoted?id=` | USER | Whether current user voted |
 | `DELETE` | `/?id=` | ADMIN | Delete feedback |
 | `PATCH` | `/answer` | ADMIN | Answer feedback. Body: `{ id, answer }` |
@@ -206,6 +212,9 @@ Roles: `GUEST` (public), `USER`, `ADMIN`. Interactive OpenAPI UI: `/swagger-ui/i
 |--------|------|------|-------------|
 | `POST` | `/` | USER | Upload one PNG/JPG/JPEG/GIF meme (`multipart/form-data`: `file`, optional `title`, optional `description`) |
 | `GET` | `/?pageSize=&continuation=` | USER | Paged memes for the current user's course |
+| `GET` | `/daily` | USER | Today's meme for the course, or `204` when there is none |
+| `PATCH` | `/rate?id=&upVote=` | USER | Up/downvote a meme |
+| `GET` | `/alreadyVoted?id=` | USER | Whether the current user voted on that meme |
 | `GET` | `/admin?course=&pageSize=&continuation=` | ADMIN | Paged admin meme list, optionally filtered by course |
 | `GET` | `/{id}` | USER | Get a meme from the current user's course |
 | `DELETE` | `/{id}` | ADMIN | Delete a meme by ID |
@@ -231,6 +240,9 @@ Meme uploads are limited to the global multipart size limit (`2MB`) and to one u
 | `GET` | `/logs?pageSize=&continuation=` | ADMIN | Security logs (newest first) |
 | `GET` | `/users?pageSize=&continuation=` | ADMIN | List users |
 | `PUT` | `/users/promote?userId=&role=` | ADMIN | Set role (`USER` or `ADMIN`) |
+| `GET` | `/guests` | ADMIN | Guests seen recently |
+| `GET` | `/health` | ADMIN | Dependency health |
+| `GET` | `/monitoring/storage` | ADMIN | Storage usage |
 
 ### Daily — `/v1/daily`
 
@@ -251,16 +263,76 @@ Meme uploads are limited to the global multipart size limit (`2MB`) and to one u
 | `GET` | `/average/user` | USER | Average dose mg (7 days) |
 | `GET` | `/average/course` | USER | Average dose mg for course (7 days) |
 | `GET` | `/average/global` | GUEST | Average dose mg global (7 days) |
+| `GET` | `/presets` | USER | Own caffeine presets |
+| `POST` | `/presets` | USER | Create a preset. Body: `{ name, amountMg }` |
+| `PUT` | `/presets/{id}` | USER | Update a preset |
+| `DELETE` | `/presets/{id}` | USER | Delete a preset |
+| `GET` | `/sum/user` | USER | Caffeine sum mg (7 days, user) |
+| `GET` | `/sum/course` | USER | Caffeine sum mg (7 days, course) |
+| `GET` | `/sum/global` | GUEST | Caffeine sum mg (7 days, global) |
 
 Entries older than 7 days are deleted hourly by a scheduler.
 
 Paginated endpoints return `{ data: [...], continuation: string | null }`.
 
+### Chat — `/v1/chat`
+
+Course chat for the current day. New messages and reactions are also broadcast on the WebSocket channel `course:<course>:chat`.
+
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| `GET` | `/messages?before=&beforeId=&after=&afterId=&limit=` | USER | Today's messages. `limit` defaults to 50 |
+| `GET` | `/usernames` | USER | Usernames in the current course |
+| `POST` | `/messages` | USER | Send a message. Body: `{ text, attachmentIds?, clientId?, replyToId? }` |
+| `POST` | `/messages/{id}/reactions` | USER | Add a reaction. Body: `{ emoji }` |
+| `DELETE` | `/messages/{id}/reactions?emoji=` | USER | Remove a reaction |
+| `POST` | `/attachments` | USER | Upload an attachment (`multipart/form-data`: `file`, optional `durationMs`) |
+| `GET` | `/attachments/{id}` | USER | Download an attachment |
+
+### Presentation game — `/v1/presentation-game/rooms`
+
+All routes require `USER`. Live updates use the WebSocket channel `presentation-game:<roomId>`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/` | Create a room |
+| `GET` | `/public` | List public rooms |
+| `GET` | `/finished` | List finished games |
+| `GET` | `/code/{code}?autoJoin=` | Room by code. `autoJoin` defaults to `true` |
+| `POST` | `/{roomId}/join` | Join by id |
+| `POST` | `/join` | Join by code. Body: `{ code }` |
+| `POST` | `/code/{code}/start` | Start the round |
+| `POST` | `/code/{code}/finish` | End the round |
+| `GET` | `/code/{code}/state` | Current game state |
+| `POST` | `/code/{code}/skip` | Skip the current word |
+| `POST` | `/code/{code}/approve` | Approve the current word |
+
+### Activities — `/v1/activities`
+
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | USER | Recent activity for the current user |
+
+### Guests — `/v1/guests`
+
+| Method | Path | Role | Description |
+|--------|------|------|-------------|
+| `POST` | `/presence` | GUEST | Record that this browser is still open |
+
+### WebSocket — `/v1/ws`
+
+The handshake uses the session cookie. Clients then join a channel:
+
+| Channel | Use |
+|---------|-----|
+| `course:<course>:chat` | Course chat messages and reactions |
+| `presentation-game:<roomId>` | Presentation game state |
+
 ---
 
 ## Rate Limiting
 
-Limits are enforced via Redis fixed windows. IP-based limits honor `X-Forwarded-For` and return **HTTP 429** with error code `01x0000000C`; meme upload limits are per user and return `0Ax00000006`.
+Limits are enforced via Redis fixed windows. IP-based limits honor `X-Forwarded-For` and return **HTTP 429** with error code `01x0000000C`. Chat limits are per user and use the same code. Meme upload limits are per user and return `0Ax00000006`.
 
 | Scope | Limit | Window |
 |-------|------:|--------|
@@ -271,14 +343,16 @@ Limits are enforced via Redis fixed windows. IP-based limits honor `X-Forwarded-
 | `PUT /v1/auth/password` | 5 | 1 minute |
 | `/v1/lecture/**` | 60 | 1 minute |
 | `POST /v1/memes` | 1 | 5 minutes |
+| `POST /v1/chat/messages` | 30 | 1 minute |
+| `POST /v1/chat/messages/{id}/reactions` | 40 | 1 minute |
+| `POST /v1/chat/attachments` | 10 | 1 minute |
 
-Redis keys use the prefix `rate:<bucket>:<ip>` for anonymous/IP based limits and `rate:meme-upload:<userId>` for meme uploads.
+Redis keys use the prefix `rate:<bucket>:<ip>` for anonymous/IP based limits. Meme uploads use `rate:meme-upload:<userId>`. Chat limits use `rate:chat-message:<userId>`, `rate:chat-reaction:<userId>`, and `rate:chat-upload:<userId>`.
 
 ---
 
 ## Roadmap and ToDo's
 
-- [ ] Integrate Free-Room-Finder from Kai
 - [ ] Daily Phrase Rework from v2
 
 ## Further Ideas

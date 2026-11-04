@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/context/ThemeContext"
 import Layout from "@/app/Layout.tsx";
 import DialogProvider from "@/components/dialog/DialogProvider.tsx";
 import CalendarPage from "@/pages/calendar/CalendarPage.tsx";
+import VersionUpdateNotice from "@/components/update/VersionUpdateNotice.tsx";
 
 const AppShell = () => {
     const { pathname } = useLocation();
@@ -23,6 +24,7 @@ const App = () => {
         <ThemeProvider>
             <BrowserRouter>
                 <AppShell />
+                <VersionUpdateNotice />
             </BrowserRouter>
         </ThemeProvider>
     )

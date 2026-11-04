@@ -12,10 +12,40 @@
 }
 
 .stats-page-header {
-    margin-bottom: -2rem;
+    margin-bottom: 0.5rem;
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.stats-page-header .filter-dropdown {
+    margin-left: auto;
+}
+
+.stats-scope {
+    display: flex;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--color-background-primary);
+}
+
+.stats-scope button {
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.stats-scope button.is-active {
+    background: var(--color-primary-accent);
+    color: #fff;
 }
 
 .stats-page-no-filter-info {

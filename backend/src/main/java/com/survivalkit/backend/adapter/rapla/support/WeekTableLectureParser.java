@@ -151,26 +151,54 @@ public final class WeekTableLectureParser {
     }
 
     private static Lecture.LectureType lectureType(Element cell) {
-        var strongEl = cell.selectFirst("span.tooltip strong");
-        if (strongEl != null) {
-            return switch (strongEl.text().trim()) {
-                case "Lehrveranstaltung" -> Lecture.LectureType.LECTURE;
-                case "Prüfung" -> Lecture.LectureType.EXAM;
-                default -> Lecture.LectureType.OTHER;
-            };
+        var label = tooltipLabel(cell);
+        if ("Prüfung".equals(label)) {
+            return Lecture.LectureType.EXAM;
+        }
+        if ("Sonstiger Termin".equals(label)) {
+            return Lecture.LectureType.OTHER;
+        }
+        if ("Lehrveranstaltung".equals(label)) {
+            return Lecture.LectureType.LECTURE;
         }
 
+        var colored = false;
+        var examColor = false;
+        var lectureGray = false;
         var style = cell.attr("style");
         if (style.contains("background-color:")) {
+            colored = true;
             var color = style.replaceAll(".*background-color:\\s*", "").replaceAll(";.*", "").trim();
-            if (isExamColor(color)) {
-                return Lecture.LectureType.EXAM;
-            }
-            if (color.equalsIgnoreCase("#EEEEEE")) {
-                return Lecture.LectureType.LECTURE;
-            }
+            examColor = isExamColor(color);
+            lectureGray = color.equalsIgnoreCase("#EEEEEE");
+        }
+        if (examColor) {
+            return Lecture.LectureType.EXAM;
+        }
+        if (colored && hasPersonOrRoom(cell)) {
+            return Lecture.LectureType.LECTURE;
+        }
+        if (lectureGray) {
+            return Lecture.LectureType.LECTURE;
         }
         return Lecture.LectureType.OTHER;
+    }
+
+    private static String tooltipLabel(Element cell) {
+        var strongEl = cell.selectFirst("span.tooltip strong");
+        return strongEl == null ? "" : strongEl.text().trim();
+    }
+
+    private static boolean hasPersonOrRoom(Element cell) {
+        if (!cell.select("span.person").isEmpty()) {
+            return true;
+        }
+        for (var span : cell.select("span.resource")) {
+            if (isRoom(span.text().trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isExamColor(String color) {
