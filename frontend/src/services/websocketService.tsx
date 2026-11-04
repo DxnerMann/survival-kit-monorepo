@@ -74,12 +74,6 @@ class WebSocketClient {
             }
         };
 
-        socket.onerror = () => {
-            if (this.socket === socket) {
-                this.setStatus("disconnected");
-            }
-        };
-
         socket.onclose = () => {
             if (this.socket !== socket) {
                 return;
@@ -164,6 +158,18 @@ class WebSocketClient {
             return;
         }
         this.leaveChannel(channel);
+    }
+
+    resendJoin(channel: string): void {
+        if (!this.joinedChannels.has(channel)) {
+            this.joinChannel(channel);
+            return;
+        }
+        this.send({
+            type: WebSocketMessageType.JOIN,
+            channel,
+            payload: null,
+        });
     }
 
     leaveChannel(channel: string): void {
@@ -251,6 +257,7 @@ export const websocketService = {
     onStatusChange: (handler: WebSocketStatusHandler) => client.onStatusChange(handler),
     send: (envelope: WebSocketEnvelope) => client.send(envelope),
     joinChannel: (channel: string) => client.joinChannel(channel),
+    resendJoin: (channel: string) => client.resendJoin(channel),
     ensureJoined: (channel: string) => client.ensureJoined(channel),
     releaseJoined: (channel: string) => client.releaseJoined(channel),
     leaveChannel: (channel: string) => client.leaveChannel(channel),

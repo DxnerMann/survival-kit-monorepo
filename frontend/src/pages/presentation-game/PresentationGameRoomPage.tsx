@@ -148,6 +148,9 @@ const PresentationGameRoomPage = () => {
     const myUserIdRef = useRef<string | null>(websocketService.getConnectedUserId());
     const leftLobbyRef = useRef(false);
     const pendingActionRef = useRef<PresentationGameAction | null>(null);
+    const channelLeaveRef = useRef<{channel: string; timer: number} | null>(null);
+    const applyGameActionRef = useRef<(action: PresentationGameAction) => void>(() => undefined);
+    const refreshGameStateRef = useRef<() => void>(() => undefined);
     const [finishedSummary, setFinishedSummary] = useState<PresentationGameFinishedSummary | null>(null);
     const [showFinishedDialog, setShowFinishedDialog] = useState(false);
 
@@ -346,6 +349,9 @@ const PresentationGameRoomPage = () => {
         }
     }, [navigate, openFinishedDialog, refreshGameState]);
 
+    applyGameActionRef.current = applyGameAction;
+    refreshGameStateRef.current = refreshGameState;
+
     useEffect(() => {
         const init = async () => {
             setLoading(true);
@@ -384,7 +390,20 @@ const PresentationGameRoomPage = () => {
         const channel = websocketChannels.presentationGameRoom(room.id);
         myUserIdRef.current = websocketService.getConnectedUserId();
 
+        const pendingLeave = channelLeaveRef.current;
+        let alreadyJoined = false;
+        if (pendingLeave?.channel === channel) {
+            window.clearTimeout(pendingLeave.timer);
+            channelLeaveRef.current = null;
+            alreadyJoined = true;
+        } else if (pendingLeave) {
+            window.clearTimeout(pendingLeave.timer);
+            channelLeaveRef.current = null;
+            websocketService.leaveChannel(pendingLeave.channel);
+        }
+
         let kickTimer: number | null = null;
+        let joinRetries = 0;
         const clearKick = () => {
             if (kickTimer != null) {
                 window.clearTimeout(kickTimer);
@@ -392,11 +411,12 @@ const PresentationGameRoomPage = () => {
             }
         };
         const armKick = () => {
-            if (kickTimer != null || leftLobbyRef.current) {
+            if (kickTimer != null || leftLobbyRef.current || websocketService.getStatus() !== "disconnected") {
                 return;
             }
             kickTimer = window.setTimeout(() => {
-                if (leftLobbyRef.current) {
+                kickTimer = null;
+                if (leftLobbyRef.current || websocketService.getStatus() !== "disconnected") {
                     return;
                 }
                 leftLobbyRef.current = true;
@@ -415,28 +435,33 @@ const PresentationGameRoomPage = () => {
                 if (userId) {
                     myUserIdRef.current = userId;
                 }
+                clearKick();
                 return;
             }
 
             if (envelope.type === WebSocketMessageType.ERROR) {
-                const code = (envelope.payload as {code?: string} | null)?.code;
-                if (code === "NOT_ROOM_MEMBER" && !leftLobbyRef.current) {
-                    clearKick();
-                    leftLobbyRef.current = true;
-                    snackbarService.showSnackbar({
-                        type: "warning",
-                        text: "Die Verbindung ist abgebrochen. Du wurdest aus der Lobby entfernt.",
-                        showIcon: true,
-                    });
-                    navigate("/presentation-game", {replace: true});
+                const errorCode = (envelope.payload as {code?: string} | null)?.code;
+                if ((errorCode === "NOT_ROOM_MEMBER" || errorCode === "NOT_AUTHENTICATED") && joinRetries < 2) {
+                    joinRetries += 1;
+                    void (async () => {
+                        if (errorCode === "NOT_ROOM_MEMBER" && code) {
+                            try {
+                                await getPresentationRoomByCode(code, true);
+                            } catch {
+                                // The lobby poll retries membership.
+                            }
+                        }
+                        websocketService.resendJoin(channel);
+                    })();
                 }
                 return;
             }
 
             if (envelope.type === WebSocketMessageType.JOINED && envelope.channel === channel) {
+                joinRetries = 0;
                 clearKick();
                 if (roomRef.current?.status === "IN_PROGRESS") {
-                    void refreshGameState();
+                    refreshGameStateRef.current();
                 }
                 return;
             }
@@ -444,26 +469,38 @@ const PresentationGameRoomPage = () => {
             if (envelope.type !== WebSocketMessageType.MESSAGE || envelope.channel !== channel) {
                 return;
             }
-            applyGameAction(envelope.payload as PresentationGameAction);
+            applyGameActionRef.current(envelope.payload as PresentationGameAction);
         });
 
         const unsubscribeStatus = websocketService.onStatusChange(status => {
             if (status === "disconnected") {
                 armKick();
+            } else {
+                clearKick();
             }
         });
 
         websocketService.connect();
-        websocketService.joinChannel(channel);
-        armKick();
+        if (!alreadyJoined) {
+            websocketService.joinChannel(channel);
+        }
+        if (websocketService.getStatus() === "disconnected") {
+            armKick();
+        }
 
         return () => {
             clearKick();
             unsubscribe();
             unsubscribeStatus();
-            websocketService.leaveChannel(channel);
+            channelLeaveRef.current = {
+                channel,
+                timer: window.setTimeout(() => {
+                    channelLeaveRef.current = null;
+                    websocketService.leaveChannel(channel);
+                }, 200),
+            };
         };
-    }, [room?.id, applyGameAction, navigate, refreshGameState]);
+    }, [room?.id, code, navigate]);
 
     const handleSkip = useCallback(async () => {
         if (!code || !gameState?.canSkip) {
