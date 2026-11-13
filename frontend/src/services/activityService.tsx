@@ -7,6 +7,7 @@ export type UserActivity = {
     kind: string;
     title: string | null;
     actorUsername: string | null;
+    subjectId?: string | null;
 };
 
 export const getMyActivities = async (): Promise<UserActivity[]> => {

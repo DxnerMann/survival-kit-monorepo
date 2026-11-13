@@ -8,6 +8,7 @@ public record UserActivity(
         String kind,
         String title,
         String actorUsername,
+        String subjectId,
         Instant createdAt
 ) {
 }

@@ -108,6 +108,17 @@ public class FeedbackRepository implements FeedbackPersistancePort {
     }
 
     @Override
+    public Optional<FeedbackSubject> findSubject(String id) {
+        return jdbcClient.sql(Statements.FIND_SUBJECT.sql)
+                .param("id", id)
+                .query((rs, rowNum) -> new FeedbackSubject(
+                        rs.getString("authorUserId"),
+                        rs.getString("title")
+                ))
+                .optional();
+    }
+
+    @Override
     public void answerFeedback(String id, String answer) {
         jdbcClient.sql(Statements.ANSWER.sql)
                 .paramSource(new MapSqlParameterSource("id", id)
@@ -212,6 +223,9 @@ public class FeedbackRepository implements FeedbackPersistancePort {
         """),
         FIND_AUTHOR("""
             SELECT authorUserId FROM feedback WHERE id = :id
+        """),
+        FIND_SUBJECT("""
+            SELECT authorUserId, title FROM feedback WHERE id = :id
         """);
 
         private final String sql;

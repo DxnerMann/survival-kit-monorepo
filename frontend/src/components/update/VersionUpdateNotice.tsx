@@ -17,8 +17,13 @@ const isNewer = (server: string, current: string) => {
     return false;
 };
 
+type AvailableUpdate = {
+    version: string;
+    versionChanged: boolean;
+};
+
 const VersionUpdateNotice = () => {
-    const [availableVersion, setAvailableVersion] = useState<string | null>(null);
+    const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
 
     useEffect(() => {
         let stopped = false;
@@ -44,7 +49,7 @@ const VersionUpdateNotice = () => {
                 if (versionChanged || contentChanged) {
                     stopped = true;
                     window.clearTimeout(timer);
-                    setAvailableVersion(version);
+                    setAvailableUpdate({version, versionChanged});
                 }
             } catch {
                 // Offline tabs keep the version they already have.
@@ -71,7 +76,7 @@ const VersionUpdateNotice = () => {
         };
     }, []);
 
-    if (!availableVersion) {
+    if (!availableUpdate) {
         return null;
     }
 
@@ -83,7 +88,11 @@ const VersionUpdateNotice = () => {
 
     return (
         <div className="version-update" role="status">
-            <span>Neue Version {availableVersion} verfügbar</span>
+            <span>
+                {availableUpdate.versionChanged
+                    ? `Neue Version ${availableUpdate.version} verfügbar`
+                    : "Bitte lade die Seite neu."}
+            </span>
             <button type="button" onClick={reload}>Neu laden</button>
         </div>
     );

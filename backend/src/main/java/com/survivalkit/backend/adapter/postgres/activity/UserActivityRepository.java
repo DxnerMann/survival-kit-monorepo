@@ -28,6 +28,7 @@ public class UserActivityRepository implements UserActivityPersistancePort {
                         .addValue("kind", activity.kind())
                         .addValue("title", activity.title())
                         .addValue("actorUsername", activity.actorUsername())
+                        .addValue("subjectId", activity.subjectId())
                         .addValue("createdAt", toTimestamp(activity.createdAt())))
                 .update();
     }
@@ -47,17 +48,18 @@ public class UserActivityRepository implements UserActivityPersistancePort {
                 rs.getString("kind"),
                 rs.getString("title"),
                 rs.getString("actorUsername"),
+                rs.getString("subjectId"),
                 toInstant(rs.getTimestamp("createdAt"))
         );
     }
 
     private enum Statements {
         SAVE("""
-            INSERT INTO userActivities (id, userId, kind, title, actorUsername, createdAt)
-            VALUES (:id, :userId, :kind, :title, :actorUsername, :createdAt)
+            INSERT INTO userActivities (id, userId, kind, title, actorUsername, subjectId, createdAt)
+            VALUES (:id, :userId, :kind, :title, :actorUsername, :subjectId, :createdAt)
         """),
         FIND_BY_USER("""
-            SELECT id, userId, kind, title, actorUsername, createdAt
+            SELECT id, userId, kind, title, actorUsername, subjectId, createdAt
             FROM userActivities
             WHERE userId = :userId
             ORDER BY createdAt DESC

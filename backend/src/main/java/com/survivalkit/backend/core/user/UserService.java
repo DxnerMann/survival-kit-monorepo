@@ -1,5 +1,6 @@
 package com.survivalkit.backend.core.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.survivalkit.backend.adapter.postgres.user.ImgWrapper;
 import com.survivalkit.backend.adapter.postgres.user.UserModel;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
@@ -7,7 +8,11 @@ import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.ProfileImageResponse;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.context.SecurityContext;
+import com.survivalkit.backend.core.activity.ActivityPort;
 import com.survivalkit.backend.core.security.SecurityLog;
+import com.survivalkit.backend.core.websocket.WebSocketPort;
+import com.survivalkit.backend.shared.WebSocketEnvelope;
+import com.survivalkit.backend.shared.WebSocketMessageType;
 import com.survivalkit.backend.core.user.exception.CannotDeleteLastAdminException;
 import com.survivalkit.backend.core.user.exception.UsernameChangeToSoonException;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
@@ -34,10 +39,22 @@ public class UserService implements UserPort {
 
     private final UserPersistancePort userPersistancePort;
     private final SecurityLog securityLog;
+    private final ActivityPort activityPort;
+    private final WebSocketPort webSocketPort;
+    private final ObjectMapper objectMapper;
 
-    public UserService(UserPersistancePort userPersistancePort, SecurityLog securityLog) {
+    public UserService(
+            UserPersistancePort userPersistancePort,
+            SecurityLog securityLog,
+            ActivityPort activityPort,
+            WebSocketPort webSocketPort,
+            ObjectMapper objectMapper
+    ) {
         this.userPersistancePort = userPersistancePort;
         this.securityLog = securityLog;
+        this.activityPort = activityPort;
+        this.webSocketPort = webSocketPort;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -268,6 +285,22 @@ public class UserService implements UserPort {
             throw new CannotDeleteLastAdminException(ErrorCode.UNABLE_TO_DELETE_LAST_ADMIN.getCode());
         }
 
+        var actor = SecurityContext.current();
+        var previous = userPersistancePort.getUserProfile(userId).map(UserProfile::role).orElse(null);
         userPersistancePort.setRole(userId, role);
+        if (previous == null || previous == role || userId.equals(actor.userId())) {
+            return;
+        }
+
+        var activity = activityPort.recordRoleChanged(userId, role.name(), actor.username());
+        webSocketPort.sendToUser(
+                userId,
+                WebSocketEnvelope.of(
+                        WebSocketMessageType.ACTIVITY,
+                        objectMapper.createObjectNode()
+                                .put("kind", "ROLE_CHANGED")
+                                .put("id", activity.id())
+                )
+        );
     }
 }

@@ -1,6 +1,6 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState, type ReactNode} from "react";
 import {useNavigate} from "react-router-dom";
-import {Bell} from "lucide-react";
+import {Bell, Heart, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
 import {getMyActivities} from "@/services/activityService.tsx";
 import {getAnsweredFeedback} from "@/services/feedbackService.tsx";
 import {getUsername} from "@/services/userService.tsx";
@@ -49,11 +49,35 @@ const markSeen = (seen: SeenMap, ids: string[]): SeenMap => {
     return next;
 };
 
+type ActivityKind =
+    | "FEEDBACK_ANSWERED"
+    | "FEEDBACK_DELETED"
+    | "FEEDBACK_LIKED"
+    | "MEME_DELETED"
+    | "MEME_LIKED"
+    | "ROLE_CHANGED";
+
+const STORED_KINDS = new Set<ActivityKind>([
+    "FEEDBACK_DELETED",
+    "FEEDBACK_LIKED",
+    "MEME_DELETED",
+    "MEME_LIKED",
+    "ROLE_CHANGED",
+]);
+
+const isActivityKind = (kind: string): kind is ActivityKind => STORED_KINDS.has(kind as ActivityKind);
+
 type ActivityNotice = {
     id: string;
-    kind: "FEEDBACK_ANSWERED" | "MEME_DELETED" | "MEME_LIKED";
+    kind: ActivityKind;
     title: string;
     actorUsername?: string;
+    subjectId?: string;
+};
+
+const quoted = (title: string) => {
+    const value = title.trim();
+    return value ? ` '${value}'` : "";
 };
 
 const noticeText = (item: ActivityNotice) => {
@@ -69,7 +93,41 @@ const noticeText = (item: ActivityNotice) => {
         const title = item.title?.trim();
         return title ? `${user} gefällt dein Meme ${title}` : `${user} gefällt dein Meme`;
     }
+    if (item.kind === "FEEDBACK_DELETED") {
+        return `Dein Feedback${quoted(item.title)} wurde von einem Admin bearbeitet und gelöscht.`;
+    }
+    if (item.kind === "FEEDBACK_LIKED") {
+        const user = item.actorUsername?.trim() || "Jemand";
+        return `${user} gefällt dein Feedback${quoted(item.title)}.`;
+    }
+    if (item.kind === "ROLE_CHANGED") {
+        const admin = item.actorUsername?.trim();
+        const by = admin ? ` von ${admin}` : "";
+        const role = item.title === "ADMIN" ? "Admin" : item.title === "USER" ? "Nutzer" : "";
+        return role
+            ? `Deine Rolle wurde${by} zu ${role} geändert.`
+            : `Deine Rolle wurde${by} geändert.`;
+    }
     return `Dein Feedback-Beitrag '${item.title}' wurde von einem Admin beantwortet.`;
+};
+
+const noticeIcon = (kind: ActivityKind): ReactNode => {
+    if (kind === "MEME_LIKED") {
+        return <Heart size={18} />;
+    }
+    if (kind === "MEME_DELETED") {
+        return <Trash2 size={18} />;
+    }
+    if (kind === "FEEDBACK_LIKED") {
+        return <ThumbsUp size={18} />;
+    }
+    if (kind === "FEEDBACK_DELETED") {
+        return <MessageSquareX size={18} />;
+    }
+    if (kind === "ROLE_CHANGED") {
+        return <Shield size={18} />;
+    }
+    return <MessageSquare size={18} />;
 };
 
 const isVisible = (item: ActivityNotice, seen: SeenMap, now: number) => {
@@ -95,20 +153,21 @@ const Notifications = () => {
                     if (cancelled) {
                         return;
                     }
-                    const memeNotices = activities
-                        .filter(item => item.kind === "MEME_DELETED" || item.kind === "MEME_LIKED")
+                    const stored = activities
+                        .filter((item): item is typeof item & {kind: ActivityKind} => isActivityKind(item.kind))
                         .map(item => ({
                             id: item.id,
-                            kind: item.kind as "MEME_DELETED" | "MEME_LIKED",
+                            kind: item.kind,
                             title: item.title?.trim() ?? "",
                             actorUsername: item.actorUsername?.trim() || undefined,
+                            subjectId: item.subjectId?.trim() || undefined,
                         }));
                     const answers = feedback.map(item => ({
                         id: item.id,
                         kind: "FEEDBACK_ANSWERED" as const,
                         title: item.title,
                     }));
-                    setItems([...memeNotices, ...answers]);
+                    setItems([...stored, ...answers]);
                 })
                 .catch(() => {
                     // Keep the current list when a refresh fails.
@@ -179,7 +238,16 @@ const Notifications = () => {
             navigate("/memewall");
             return;
         }
-        navigate(`/ideas?feedback=${encodeURIComponent(item.id)}`);
+        if (item.kind === "ROLE_CHANGED") {
+            navigate("/account");
+            return;
+        }
+        if (item.kind === "FEEDBACK_DELETED") {
+            navigate("/ideas");
+            return;
+        }
+        const feedbackId = item.subjectId || item.id;
+        navigate(`/ideas?feedback=${encodeURIComponent(feedbackId)}`);
     };
 
     return (
@@ -200,15 +268,21 @@ const Notifications = () => {
                 <div className="notifications-overlay" role="dialog" aria-label="Aktivitäten">
                     <h2>Aktivitäten</h2>
                     {visible.length > 0 ? (
-                        <ul className="notifications-list">
+                        <div className="notifications-list">
                             {visible.map(item => (
-                                <li key={item.id}>
-                                    <button type="button" onClick={() => openItem(item)}>
-                                        {noticeText(item)}
-                                    </button>
-                                </li>
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    className="notifications-item"
+                                    onClick={() => openItem(item)}
+                                >
+                                    <span className={`notifications-item-icon notifications-item-icon--${item.kind.toLowerCase().split("_").join("-")}`}>
+                                        {noticeIcon(item.kind)}
+                                    </span>
+                                    <span className="notifications-item-text">{noticeText(item)}</span>
+                                </button>
                             ))}
-                        </ul>
+                        </div>
                     ) : (
                         <p className="notifications-empty">Keine Aktivitäten.</p>
                     )}

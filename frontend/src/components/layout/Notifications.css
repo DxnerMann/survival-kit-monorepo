@@ -47,26 +47,34 @@
 
 .notifications-overlay {
     position: absolute;
-    top: calc(100% + 0.35rem);
+    top: calc(100% + 0.45rem);
     right: 0;
-    width: min(22rem, 70vw);
-    padding: 0.9rem 1rem;
-    background: var(--color-background-primary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    width: min(22rem, calc(100vw - 1.5rem));
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
     z-index: 120;
 }
 
 .notifications-overlay h2 {
-    margin: 0 0 0.75rem;
-    font-size: 0.95rem;
+    margin: 0 0.15rem;
+    font-size: 0.82rem;
     font-weight: 700;
-    color: var(--color-text-primary);
+    letter-spacing: 0.01em;
+    color: var(--color-text-secondary);
 }
 
 .notifications-empty {
     margin: 0;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-background-primary);
+    box-shadow: 0 8px 22px var(--color-shadow);
     font-size: 0.88rem;
     font-weight: 500;
     line-height: 1.4;
@@ -74,31 +82,56 @@
 }
 
 .notifications-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    max-height: 18rem;
+    gap: 0.45rem;
+    max-height: min(22rem, 60vh);
+    margin: 0;
+    padding: 0.15rem;
     overflow-y: auto;
+    background: transparent;
 }
 
-.notifications-list button {
+.notifications-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
     width: 100%;
-    padding: 0.65rem 0.7rem;
-    border: none;
-    border-radius: calc(var(--border-radius) - 2px);
-    background: var(--color-background-secondary);
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-background-primary);
+    box-shadow: 0 8px 22px var(--color-shadow);
     color: var(--color-text-primary);
     font: inherit;
-    font-size: 0.84rem;
-    font-weight: 500;
-    line-height: 1.4;
     text-align: left;
     cursor: pointer;
 }
 
-.notifications-list button:hover {
+.notifications-item:hover {
+    border-color: var(--color-primary-accent);
+}
+
+.notifications-item-icon {
+    flex: 0 0 auto;
+    display: flex;
+    margin-top: 0.05rem;
     color: var(--color-primary-accent);
+}
+
+.notifications-item-icon--meme-liked,
+.notifications-item-icon--feedback-liked {
+    color: var(--color-favourite);
+}
+
+.notifications-item-icon--meme-deleted,
+.notifications-item-icon--feedback-deleted {
+    color: var(--color-error);
+}
+
+.notifications-item-text {
+    font-size: 0.84rem;
+    font-weight: 500;
+    line-height: 1.4;
 }

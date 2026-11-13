@@ -13,6 +13,7 @@ public interface FeedbackPersistancePort {
     void deleteAllVotes(String userId);
     void answerFeedback(String id, String answer);
     Optional<String> findAuthorUserId(String id);
+    Optional<FeedbackSubject> findSubject(String id);
     boolean canVote(String feedbackId, String userId);
     List<AnsweredFeedbackNotice> findAnsweredByUser(String userId);
     void deleteUser(String userId);

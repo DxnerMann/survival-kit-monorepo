@@ -6,6 +6,7 @@ import com.survivalkit.backend.adapter.postgres.feedback.Feedback;
 import com.survivalkit.backend.adapter.postgres.feedback.FeedbackPersistancePort;
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.context.SecurityContext;
+import com.survivalkit.backend.core.activity.ActivityPort;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.core.websocket.WebSocketPort;
 import com.survivalkit.backend.shared.Page;
@@ -25,17 +26,20 @@ public class FeedbackService implements FeedbackPort {
 
     private final FeedbackPersistancePort feedbackPersistancePort;
     private final StatisticsPort statisticsPort;
+    private final ActivityPort activityPort;
     private final WebSocketPort webSocketPort;
     private final ObjectMapper objectMapper;
 
     public FeedbackService(
             FeedbackPersistancePort feedbackPersistancePort,
             StatisticsPort statisticsPort,
+            ActivityPort activityPort,
             WebSocketPort webSocketPort,
             ObjectMapper objectMapper
     ) {
         this.feedbackPersistancePort = feedbackPersistancePort;
-		this.statisticsPort = statisticsPort;
+        this.statisticsPort = statisticsPort;
+        this.activityPort = activityPort;
         this.webSocketPort = webSocketPort;
         this.objectMapper = objectMapper;
     }
@@ -76,20 +80,48 @@ public class FeedbackService implements FeedbackPort {
 
     @Override
     public void rateFeedback(String feedbackId, Boolean upVote) {
-
         requireVerification();
 
         var user = SecurityContext.current();
-
-        if (feedbackPersistancePort.canVote(feedbackId, user.userId())) {
-            feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.userId());
+        if (!feedbackPersistancePort.canVote(feedbackId, user.userId())) {
+            return;
         }
+
+        var subject = feedbackPersistancePort.findSubject(feedbackId).orElse(null);
+        feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.userId());
+        if (!Boolean.TRUE.equals(upVote) || subject == null) {
+            return;
+        }
+        var authorUserId = subject.authorUserId();
+        if (authorUserId == null || authorUserId.isBlank() || authorUserId.equals(user.userId())) {
+            return;
+        }
+
+        var activity = activityPort.recordFeedbackLiked(
+                authorUserId,
+                subject.title(),
+                user.username(),
+                feedbackId
+        );
+        publish(authorUserId, "FEEDBACK_LIKED", activity.id());
     }
 
     @Override
     public void deleteFeedback(String feedbackId) {
         requireVerification();
+        var admin = SecurityContext.current();
+        var subject = feedbackPersistancePort.findSubject(feedbackId).orElse(null);
         feedbackPersistancePort.deleteFeedback(feedbackId);
+        if (subject == null) {
+            return;
+        }
+        var authorUserId = subject.authorUserId();
+        if (authorUserId == null || authorUserId.isBlank() || authorUserId.equals(admin.userId())) {
+            return;
+        }
+
+        var activity = activityPort.recordFeedbackDeleted(authorUserId, subject.title(), admin.username());
+        publish(authorUserId, "FEEDBACK_DELETED", activity.id());
     }
 
     @Override
@@ -100,11 +132,15 @@ public class FeedbackService implements FeedbackPort {
         if (authorUserId == null || authorUserId.isBlank() || answer == null || answer.isBlank()) {
             return;
         }
+        publish(authorUserId, "FEEDBACK_ANSWERED", id);
+    }
+
+    private void publish(String userId, String kind, String id) {
         webSocketPort.sendToUser(
-                authorUserId,
+                userId,
                 WebSocketEnvelope.of(
                         WebSocketMessageType.ACTIVITY,
-                        objectMapper.createObjectNode().put("kind", "FEEDBACK_ANSWERED").put("id", id)
+                        objectMapper.createObjectNode().put("kind", kind).put("id", id)
                 )
         );
     }
