@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState, type ReactNode} from "react";
+import {createPortal} from "react-dom";
 import {useNavigate} from "react-router-dom";
 import {Bell, Heart, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
 import {getMyActivities} from "@/services/activityService.tsx";
@@ -77,21 +78,18 @@ type ActivityNotice = {
 
 const quoted = (title: string) => {
     const value = title.trim();
-    return value ? ` '${value}'` : "";
+    return value ? ` "${value}"` : "";
 };
 
 const noticeText = (item: ActivityNotice) => {
     if (item.kind === "MEME_DELETED") {
         const admin = item.actorUsername?.trim();
         const by = admin ? admin : "einem Admin";
-        return item.title
-            ? `Dein Meme '${item.title}' wurde von ${by} gelöscht.`
-            : `Dein Meme wurde von ${by} gelöscht.`;
+        return `Dein Meme${quoted(item.title)} wurde von ${by} gelöscht.`;
     }
     if (item.kind === "MEME_LIKED") {
         const user = item.actorUsername?.trim() || "Jemand";
-        const title = item.title?.trim();
-        return title ? `${user} gefällt dein Meme ${title}` : `${user} gefällt dein Meme`;
+        return `${user} gefällt dein Meme${quoted(item.title)}`;
     }
     if (item.kind === "FEEDBACK_DELETED") {
         return `Dein Feedback${quoted(item.title)} wurde von einem Admin bearbeitet und gelöscht.`;
@@ -108,7 +106,7 @@ const noticeText = (item: ActivityNotice) => {
             ? `Deine Rolle wurde${by} zu ${role} geändert.`
             : `Deine Rolle wurde${by} geändert.`;
     }
-    return `Dein Feedback-Beitrag '${item.title}' wurde von einem Admin beantwortet.`;
+    return `Dein Feedback-Beitrag${quoted(item.title)} wurde von einem Admin beantwortet.`;
 };
 
 const noticeIcon = (kind: ActivityKind): ReactNode => {
@@ -144,6 +142,7 @@ const Notifications = () => {
     const [items, setItems] = useState<ActivityNotice[]>([]);
     const [seen, setSeen] = useState<SeenMap>(() => readSeen());
     const rootRef = useRef<HTMLDivElement>(null);
+    const overlayRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -210,9 +209,11 @@ const Notifications = () => {
         }
 
         const onPointerDown = (event: MouseEvent) => {
-            if (!rootRef.current?.contains(event.target as Node)) {
-                setOpen(false);
+            const target = event.target as Node;
+            if (rootRef.current?.contains(target) || overlayRef.current?.contains(target)) {
+                return;
             }
+            setOpen(false);
         };
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
@@ -264,29 +265,28 @@ const Notifications = () => {
                     <span className="notifications-badge">{unseenCount > 9 ? "9+" : unseenCount}</span>
                 )}
             </button>
-            {open && (
-                <div className="notifications-overlay" role="dialog" aria-label="Aktivitäten">
-                    <h2>Aktivitäten</h2>
+            {open && createPortal(
+                <div className="notifications-overlay" role="dialog" aria-label="Aktivitäten" ref={overlayRef}>
+                    <h2 className="notifications-heading">Aktivitäten</h2>
                     {visible.length > 0 ? (
-                        <div className="notifications-list">
-                            {visible.map(item => (
-                                <button
-                                    key={item.id}
-                                    type="button"
-                                    className="notifications-item"
-                                    onClick={() => openItem(item)}
-                                >
-                                    <span className={`notifications-item-icon notifications-item-icon--${item.kind.toLowerCase().split("_").join("-")}`}>
-                                        {noticeIcon(item.kind)}
-                                    </span>
-                                    <span className="notifications-item-text">{noticeText(item)}</span>
-                                </button>
-                            ))}
-                        </div>
+                        visible.map(item => (
+                            <button
+                                key={item.id}
+                                type="button"
+                                className="notifications-item"
+                                onClick={() => openItem(item)}
+                            >
+                                <span className="notifications-item-icon">
+                                    {noticeIcon(item.kind)}
+                                </span>
+                                <span className="notifications-item-text">{noticeText(item)}</span>
+                            </button>
+                        ))
                     ) : (
                         <p className="notifications-empty">Keine Aktivitäten.</p>
                     )}
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

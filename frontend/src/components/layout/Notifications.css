@@ -46,22 +46,39 @@
 }
 
 .notifications-overlay {
-    position: absolute;
-    top: calc(100% + 0.45rem);
+    position: fixed;
+    top: var(--header-height);
     right: 0;
-    width: min(22rem, calc(100vw - 1.5rem));
+    z-index: 120;
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
-    padding: 0;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: min(22rem, 100vw);
+    max-height: calc(100vh - var(--header-height));
+    margin: 0;
+    padding: 0.65rem 0.75rem 0.85rem;
+    overflow-y: auto;
     background: transparent;
     border: none;
     box-shadow: none;
-    z-index: 120;
+    pointer-events: none;
+    animation: notifications-drop 0.16s ease-out;
 }
 
-.notifications-overlay h2 {
-    margin: 0 0.15rem;
+.notifications-heading,
+.notifications-empty,
+.notifications-item {
+    pointer-events: auto;
+    margin: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-background-primary);
+    box-shadow: 0 8px 22px var(--color-shadow);
+}
+
+.notifications-heading {
+    padding: 0.65rem 0.9rem;
     font-size: 0.82rem;
     font-weight: 700;
     letter-spacing: 0.01em;
@@ -69,27 +86,11 @@
 }
 
 .notifications-empty {
-    margin: 0;
     padding: 0.8rem 0.9rem;
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    background: var(--color-background-primary);
-    box-shadow: 0 8px 22px var(--color-shadow);
     font-size: 0.88rem;
     font-weight: 500;
     line-height: 1.4;
     color: var(--color-text-secondary);
-}
-
-.notifications-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    max-height: min(22rem, 60vh);
-    margin: 0;
-    padding: 0.15rem;
-    overflow-y: auto;
-    background: transparent;
 }
 
 .notifications-item {
@@ -97,12 +98,7 @@
     align-items: flex-start;
     gap: 0.7rem;
     width: 100%;
-    margin: 0;
     padding: 0.75rem 0.85rem;
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    background: var(--color-background-primary);
-    box-shadow: 0 8px 22px var(--color-shadow);
     color: var(--color-text-primary);
     font: inherit;
     text-align: left;
@@ -117,21 +113,33 @@
     flex: 0 0 auto;
     display: flex;
     margin-top: 0.05rem;
+    color: var(--color-text-secondary);
+    transition: color 0.15s ease;
+}
+
+.notifications-item:hover .notifications-item-icon {
     color: var(--color-primary-accent);
-}
-
-.notifications-item-icon--meme-liked,
-.notifications-item-icon--feedback-liked {
-    color: var(--color-favourite);
-}
-
-.notifications-item-icon--meme-deleted,
-.notifications-item-icon--feedback-deleted {
-    color: var(--color-error);
 }
 
 .notifications-item-text {
     font-size: 0.84rem;
     font-weight: 500;
     line-height: 1.4;
+}
+
+@keyframes notifications-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .notifications-overlay {
+        animation: none;
+    }
 }
