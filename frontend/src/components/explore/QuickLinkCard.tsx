@@ -1,7 +1,7 @@
 import {useEffect, useState, type MouseEvent} from "react";
 import {Star} from "lucide-react";
 import {getPreviewImage, onLinkClick} from "@/services/quickLinkService.tsx";
-import type {QuickLink} from "@/models/QuickLink.tsx";
+import {isQuickLinkNew, type QuickLink} from "@/models/QuickLink.tsx";
 import "@/components/explore/QuickLinkCard.css";
 
 interface QuickLinkCardProps {
@@ -21,8 +21,7 @@ const QuickLinkCard = ({
 } : QuickLinkCardProps) => {
     const [img, setImg] = useState<string | null>(null);
     const [localClickUpdate, setLocalClickUpdate] = useState(0);
-    // eslint-disable-next-line react-hooks/purity
-    const isNew = quickLink.addedAt && (Date.now() - new Date(quickLink.addedAt).getTime()) < 7 * 24 * 60 * 60 * 1000;
+    const isNew = Boolean(quickLink.addedAt) && isQuickLinkNew(quickLink.addedAt);
 
     useEffect(() => {
         getPreviewImage(quickLink.url).then(setImg);

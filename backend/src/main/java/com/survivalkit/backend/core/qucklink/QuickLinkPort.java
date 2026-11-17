@@ -14,5 +14,6 @@ public interface QuickLinkPort {
     void deleteQuickLink(String id);
     void markAsFav(String quickLinkId, boolean fav);
     Page<QuickLink> getFavouritesFiltered(Integer pageSize, String continuation);
+    void ensureMonthlyClickReset();
 
 }

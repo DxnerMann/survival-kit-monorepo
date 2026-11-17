@@ -3,6 +3,7 @@ package com.survivalkit.backend.adapter.postgres.quicklink;
 import com.survivalkit.backend.core.qucklink.QuickLinkSort;
 import com.survivalkit.backend.shared.Page;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface QuickLinkPersistancePort {
@@ -15,4 +16,5 @@ public interface QuickLinkPersistancePort {
     void deleteQuickLink(String id);
     List<QuickLink> getFromIds(List<String> ids);
     void upsertquickLink(QuickLink quickLink);
+    void resetClicksBefore(Instant monthStart, Instant now);
 }

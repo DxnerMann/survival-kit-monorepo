@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
+import java.time.Instant;
 import java.util.List;
 
 import static com.survivalkit.backend.shared.ContinuationTokenHelper.decode;
@@ -109,6 +110,14 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
                 .paramSource(new MapSqlParameterSource("id", id))
                 .update();
         securityLog.logInfo(ErrorCode.ErrorCategory.QUICKLINK, String.format("Quicklink with id %s deleted. ", id));
+    }
+
+    @Override
+    public void resetClicksBefore(Instant monthStart, Instant now) {
+        jdbcClient.sql(Statements.RESET_MONTHLY_CLICKS.sql)
+                .paramSource(new MapSqlParameterSource("monthStart", toTimestamp(monthStart))
+                        .addValue("now", toTimestamp(now)))
+                .update();
     }
 
     @Override
@@ -241,6 +250,16 @@ public class QuickLinkRepository implements QuickLinkPersistancePort {
         GET_FROM_LIST(
                 """
                     SELECT * FROM quicklinks WHERE id IN (:ids) ORDER BY id
+                    """
+        ),
+        // language=sql
+        RESET_MONTHLY_CLICKS(
+                """
+                    UPDATE quicklinks
+                    SET clickedThisMonth = 0,
+                        lastReset = :now
+                    WHERE lastReset IS NULL
+                       OR lastReset < :monthStart
                     """
         );
 

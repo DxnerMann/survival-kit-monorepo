@@ -15,12 +15,16 @@ import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 import static com.survivalkit.backend.context.SecurityContext.requireVerification;
 
 @Service
 public class QuickLinkService implements QuickLinkPort {
+
+    private static final ZoneId BERLIN = ZoneId.of("Europe/Berlin");
 
     private final QuickLinkPersistancePort quickLinkPersistancePort;
     private final FavouritePersistancePort favouritePersistancePort;
@@ -34,12 +38,14 @@ public class QuickLinkService implements QuickLinkPort {
 
     @Override
     public void clickLink(String linkId) {
+        ensureMonthlyClickReset();
         quickLinkPersistancePort.incrementClickedLink(linkId);
         statisticsPort.saveTrackAction(TrackAction.Action.GAME_PLAYED);
     }
 
     @Override
     public Page<QuickLink> getQuickLinksFiltered(boolean approved, Integer pageSize, String continuation, boolean sortByPopularity, String sort, String query) {
+        ensureMonthlyClickReset();
 
         pageSize = pageSize == null ? 20 : pageSize;
         pageSize = pageSize > 50 ? 50 : pageSize;
@@ -177,6 +183,12 @@ public class QuickLinkService implements QuickLinkPort {
                 quickLinks,
                 favIds.continuation()
         );
+    }
+
+    @Override
+    public void ensureMonthlyClickReset() {
+        var monthStart = LocalDate.now(BERLIN).withDayOfMonth(1).atStartOfDay(BERLIN).toInstant();
+        quickLinkPersistancePort.resetClicksBefore(monthStart, Instant.now());
     }
 
     private static boolean isHttpUrl(String url) {
