@@ -1,6 +1,8 @@
 package com.survivalkit.backend.adapter.web.profile;
 
 import com.survivalkit.backend.core.course.CoursePort;
+import com.survivalkit.backend.core.rank.UserRankView;
+import com.survivalkit.backend.core.rank.XpPort;
 import com.survivalkit.backend.core.user.UserPort;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
@@ -26,10 +28,25 @@ public class ProfileController {
 
     private final CoursePort coursePort;
     private final UserPort userPort;
+    private final XpPort xpPort;
 
-    public ProfileController(CoursePort coursePort, UserPort userPort) {
+    public ProfileController(CoursePort coursePort, UserPort userPort, XpPort xpPort) {
         this.coursePort = coursePort;
         this.userPort = userPort;
+        this.xpPort = xpPort;
+    }
+
+    @Role(RoleLevel.USER)
+    @GetMapping("rank")
+    public ResponseEntity<UserRankView> myRank() {
+        return ResponseEntity.ok(xpPort.mine());
+    }
+
+    @Role(RoleLevel.USER)
+    @GetMapping("ranks")
+    public ResponseEntity<List<UserRankView>> ranks(@RequestParam List<String> userIds) {
+        var ids = userIds.stream().filter(id -> id != null && !id.isBlank()).distinct().limit(80).toList();
+        return ResponseEntity.ok(xpPort.findByUsers(ids));
     }
 
     @Role(RoleLevel.USER)

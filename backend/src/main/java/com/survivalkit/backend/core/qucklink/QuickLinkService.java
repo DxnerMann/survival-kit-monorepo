@@ -8,6 +8,8 @@ import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkApprovementRequest;
 import com.survivalkit.backend.adapter.web.quicklink.QuickLinkSuggestionRequest;
 import com.survivalkit.backend.context.SecurityContext;
+import com.survivalkit.backend.core.rank.XpPort;
+import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.ContinuationTokenHelper;
 import com.survivalkit.backend.shared.Page;
@@ -29,11 +31,13 @@ public class QuickLinkService implements QuickLinkPort {
     private final QuickLinkPersistancePort quickLinkPersistancePort;
     private final FavouritePersistancePort favouritePersistancePort;
     private final StatisticsPort statisticsPort;
+    private final XpPort xpPort;
 
-    public QuickLinkService(QuickLinkPersistancePort quickLinkPersistancePort, FavouritePersistancePort favouritePersistancePort, StatisticsPort statisticsPort) {
+    public QuickLinkService(QuickLinkPersistancePort quickLinkPersistancePort, FavouritePersistancePort favouritePersistancePort, StatisticsPort statisticsPort, XpPort xpPort) {
         this.quickLinkPersistancePort = quickLinkPersistancePort;
         this.favouritePersistancePort = favouritePersistancePort;
         this.statisticsPort = statisticsPort;
+        this.xpPort = xpPort;
     }
 
     @Override
@@ -117,6 +121,7 @@ public class QuickLinkService implements QuickLinkPort {
         );
         quickLinkPersistancePort.upsertquickLink(newLink);
         statisticsPort.saveTrackAction(TrackAction.Action.GAME_SUGGESTED);
+        xpPort.award(SecurityContext.current().userId(), XpRules.Action.GAME_SUGGESTED);
     }
 
     @Override

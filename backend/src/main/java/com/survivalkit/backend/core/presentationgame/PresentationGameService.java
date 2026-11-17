@@ -13,6 +13,8 @@ import com.survivalkit.backend.adapter.web.presentationgame.PresentationGameRoom
 import com.survivalkit.backend.adapter.web.presentationgame.PresentationGameRoomJoinedResponse;
 import com.survivalkit.backend.adapter.web.presentationgame.PresentationGameRoomMemberResponse;
 import com.survivalkit.backend.context.SecurityContext;
+import com.survivalkit.backend.core.rank.XpPort;
+import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -53,6 +55,7 @@ public class PresentationGameService implements PresentationGamePort {
     private final GermanWordPort germanWordPort;
     private final WebSocketPort webSocketPort;
     private final ObjectMapper objectMapper;
+    private final XpPort xpPort;
     private final SecureRandom random = new SecureRandom();
     private final ScheduledExecutorService disconnectScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
         var thread = new Thread(runnable, "presentation-game-presence");
@@ -67,7 +70,8 @@ public class PresentationGameService implements PresentationGamePort {
             StatisticsPort statisticsPort,
             GermanWordPort germanWordPort,
             WebSocketPort webSocketPort,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            XpPort xpPort
     ) {
         this.persistancePort = persistancePort;
         this.userPersistancePort = userPersistancePort;
@@ -75,6 +79,7 @@ public class PresentationGameService implements PresentationGamePort {
         this.germanWordPort = germanWordPort;
         this.webSocketPort = webSocketPort;
         this.objectMapper = objectMapper;
+        this.xpPort = xpPort;
     }
 
     @Override
@@ -119,6 +124,7 @@ public class PresentationGameService implements PresentationGamePort {
         persistancePort.createRoom(room);
         persistancePort.addMember(room.id(), user.id(), user.username());
         statisticsPort.saveTrackAction(TrackAction.Action.PRESENTATION_GAME_PLAYED);
+        xpPort.award(user.id(), XpRules.Action.PRESENTATION_GAME);
 
         return new PresentationGameRoomCreatedResponse(
                 room.id(),
@@ -627,6 +633,7 @@ public class PresentationGameService implements PresentationGamePort {
         if (!persistancePort.isMember(room.id(), userId)) {
             persistancePort.addMember(room.id(), userId, username);
             statisticsPort.saveTrackAction(TrackAction.Action.PRESENTATION_GAME_PLAYED);
+            xpPort.award(userId, XpRules.Action.PRESENTATION_GAME);
         }
     }
 

@@ -265,6 +265,13 @@
     align-self: flex-end;
 }
 
+.chat-avatar-slot .user-rank-hover {
+    position: static;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 .chat-row:not(.chat-row--continued) .chat-avatar-slot:has(.chat-avatar) {
     height: 3.2rem;
 }

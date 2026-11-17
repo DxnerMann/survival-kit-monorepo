@@ -7,6 +7,8 @@ import com.survivalkit.backend.adapter.postgres.feedback.FeedbackPersistancePort
 import com.survivalkit.backend.adapter.postgres.usetracking.TrackAction;
 import com.survivalkit.backend.context.SecurityContext;
 import com.survivalkit.backend.core.activity.ActivityPort;
+import com.survivalkit.backend.core.rank.XpPort;
+import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.core.websocket.WebSocketPort;
 import com.survivalkit.backend.shared.Page;
@@ -29,19 +31,22 @@ public class FeedbackService implements FeedbackPort {
     private final ActivityPort activityPort;
     private final WebSocketPort webSocketPort;
     private final ObjectMapper objectMapper;
+    private final XpPort xpPort;
 
     public FeedbackService(
             FeedbackPersistancePort feedbackPersistancePort,
             StatisticsPort statisticsPort,
             ActivityPort activityPort,
             WebSocketPort webSocketPort,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            XpPort xpPort
     ) {
         this.feedbackPersistancePort = feedbackPersistancePort;
         this.statisticsPort = statisticsPort;
         this.activityPort = activityPort;
         this.webSocketPort = webSocketPort;
         this.objectMapper = objectMapper;
+        this.xpPort = xpPort;
     }
 
     @Override
@@ -68,6 +73,9 @@ public class FeedbackService implements FeedbackPort {
         );
         feedbackPersistancePort.saveFeedback(newFeedback);
         statisticsPort.saveTrackAction(TrackAction.Action.IDEA_SUBMITTED);
+        if (user != null) {
+            xpPort.award(user.userId(), XpRules.Action.IDEA_SUBMITTED);
+        }
     }
 
     @Override
@@ -89,6 +97,7 @@ public class FeedbackService implements FeedbackPort {
 
         var subject = feedbackPersistancePort.findSubject(feedbackId).orElse(null);
         feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.userId());
+        xpPort.award(user.userId(), XpRules.Action.FEEDBACK_VOTE);
         if (!Boolean.TRUE.equals(upVote) || subject == null) {
             return;
         }

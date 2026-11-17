@@ -1,0 +1,39 @@
+{
+  "version": "3.6.0",
+  "date": "2026-11-17",
+  "sections": [
+    {
+      "title": "Ränge",
+      "items": [
+        "Im Profil gibt es den Tab Rang, zwischen Profileinstellungen und Sicherheit",
+        "Von Bronze III über Silber, Gold und Diamond bis Platin. Ring, Wappen und Balken haben die Farbe des Rangs",
+        "XP gibt es fürs Mitmachen: anmelden, Memes, Chat, Ideen, Spielevorschläge und das Präsi-Spiel",
+        "Steigst du auf, kommt eine Aktivität: „Du bist aufgestiegen“",
+        "Im Chat, an Memes, bei Ideen und im Präsi-Spiel steht neben dem Namen das Profilbild. Darüber siehst du Rang und Fortschritt"
+      ]
+    },
+    {
+      "title": "Rollen",
+      "items": [
+        "Neue Rolle Memelord. Memelords und Admins laden Memes ohne Wartezeit hoch",
+        "Im Admin-Bereich wählst du die Rolle in einem Dialog, auch nach unten",
+        "Ändert ein Admin deine Rolle, steht das in den Aktivitäten"
+      ]
+    },
+    {
+      "title": "Aktivitäten",
+      "items": [
+        "Jede Meldung ist eine eigene Karte, mit Icon und kurzer Animation",
+        "Neu dabei: jemand bewertet deine Idee, ein Admin löscht sie, deine Rolle ändert sich, du steigst im Rang auf"
+      ]
+    },
+    {
+      "title": "Browserspiele",
+      "items": [
+        "Auf der Startseite kommen Spiele der letzten 7 Tage zuerst, danach die meistgeklickten",
+        "Die Klicks des Monats setzen sich am Monatsersten zurück",
+        "Lange Titel enden mit … . Fährst du darüber, siehst du den vollen Namen"
+      ]
+    }
+  ]
+}

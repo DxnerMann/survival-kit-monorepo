@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState, type ReactNode} from "react";
 import {createPortal} from "react-dom";
 import {useNavigate} from "react-router-dom";
-import {Bell, Heart, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
+import {Bell, Heart, Medal, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
 import {getMyActivities} from "@/services/activityService.tsx";
 import {getAnsweredFeedback} from "@/services/feedbackService.tsx";
 import {getUsername} from "@/services/userService.tsx";
@@ -56,7 +56,8 @@ type ActivityKind =
     | "FEEDBACK_LIKED"
     | "MEME_DELETED"
     | "MEME_LIKED"
-    | "ROLE_CHANGED";
+    | "ROLE_CHANGED"
+    | "RANK_UP";
 
 const STORED_KINDS = new Set<ActivityKind>([
     "FEEDBACK_DELETED",
@@ -64,6 +65,7 @@ const STORED_KINDS = new Set<ActivityKind>([
     "MEME_DELETED",
     "MEME_LIKED",
     "ROLE_CHANGED",
+    "RANK_UP",
 ]);
 
 const isActivityKind = (kind: string): kind is ActivityKind => STORED_KINDS.has(kind as ActivityKind);
@@ -101,10 +103,14 @@ const noticeText = (item: ActivityNotice) => {
     if (item.kind === "ROLE_CHANGED") {
         const admin = item.actorUsername?.trim();
         const by = admin ? ` von ${admin}` : "";
-        const role = item.title === "ADMIN" ? "Admin" : item.title === "USER" ? "Nutzer" : "";
+        const role = item.title === "ADMIN" ? "Admin" : item.title === "MEMELORD" ? "Memelord" : item.title === "USER" ? "Nutzer" : "";
         return role
             ? `Deine Rolle wurde${by} zu ${role} geändert.`
             : `Deine Rolle wurde${by} geändert.`;
+    }
+    if (item.kind === "RANK_UP") {
+        const rank = item.title.trim();
+        return rank ? `Du bist aufgestiegen: ${rank}.` : "Du bist aufgestiegen.";
     }
     return `Dein Feedback-Beitrag${quoted(item.title)} wurde von einem Admin beantwortet.`;
 };
@@ -124,6 +130,9 @@ const noticeIcon = (kind: ActivityKind): ReactNode => {
     }
     if (kind === "ROLE_CHANGED") {
         return <Shield size={18} />;
+    }
+    if (kind === "RANK_UP") {
+        return <Medal size={18} />;
     }
     return <MessageSquare size={18} />;
 };
@@ -239,7 +248,7 @@ const Notifications = () => {
             navigate("/memewall");
             return;
         }
-        if (item.kind === "ROLE_CHANGED") {
+        if (item.kind === "ROLE_CHANGED" || item.kind === "RANK_UP") {
             navigate("/account");
             return;
         }

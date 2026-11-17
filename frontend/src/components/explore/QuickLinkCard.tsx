@@ -1,4 +1,5 @@
 import {useEffect, useState, type MouseEvent} from "react";
+import {createPortal} from "react-dom";
 import {Star} from "lucide-react";
 import {getPreviewImage, onLinkClick} from "@/services/quickLinkService.tsx";
 import {isQuickLinkNew, type QuickLink} from "@/models/QuickLink.tsx";
@@ -21,6 +22,7 @@ const QuickLinkCard = ({
 } : QuickLinkCardProps) => {
     const [img, setImg] = useState<string | null>(null);
     const [localClickUpdate, setLocalClickUpdate] = useState(0);
+    const [titleTip, setTitleTip] = useState<{top: number; left: number} | null>(null);
     const isNew = Boolean(quickLink.addedAt) && isQuickLinkNew(quickLink.addedAt);
 
     useEffect(() => {
@@ -67,7 +69,25 @@ const QuickLinkCard = ({
                     </button>
                 )}
                 <div className="quick-link-info-1">
-                    <h2 className="quick-link-title">{quickLink.title}</h2>
+                    <h2
+                        className="quick-link-title"
+                        onMouseEnter={event => {
+                            const rect = event.currentTarget.getBoundingClientRect();
+                            setTitleTip({top: rect.top, left: rect.left + rect.width / 2});
+                        }}
+                        onMouseLeave={() => setTitleTip(null)}
+                    >
+                        {quickLink.title}
+                    </h2>
+                    {titleTip && createPortal(
+                        <span
+                            className="quick-link-title-tooltip"
+                            style={{top: titleTip.top, left: titleTip.left}}
+                        >
+                            {quickLink.title}
+                        </span>,
+                        document.body
+                    )}
                     <h3
                         className="quick-link-description"
                         title={quickLink.description}

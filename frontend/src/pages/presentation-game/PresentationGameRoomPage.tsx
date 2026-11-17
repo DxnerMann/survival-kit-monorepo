@@ -15,6 +15,7 @@ import {
 } from "@/services/presentationGameService.tsx";
 import {getErrorText} from "@/services/api.tsx";
 import {snackbarService} from "@/services/snackBarService.tsx";
+import UserRankHover from "@/components/rank/UserRankHover.tsx";
 import {websocketChannels} from "@/services/websocketChannels.ts";
 import {websocketService} from "@/services/websocketService.tsx";
 import {WebSocketMessageType} from "@/models/WebSocketEnvelope.tsx";
@@ -775,7 +776,9 @@ const PresentationGameRoomPage = () => {
                                     key={member.userId}
                                     className={`presentation-game-room-page__player ${member.host ? "is-host" : ""} ${thumbsUpUserIds.has(member.userId) || (gameState?.approvingUserIds?.includes(member.userId) ?? false) ? "has-thumbs-up" : ""}`}
                                 >
-                                    <span>{member.username}</span>
+                                    <UserRankHover userId={member.userId} username={member.username}>
+                                        <span>{member.username}</span>
+                                    </UserRankHover>
                                     <span className="presentation-game-room-page__player-badges">
                                         {member.host && (
                                             <span className="presentation-game-room-page__host-badge">Presenter</span>

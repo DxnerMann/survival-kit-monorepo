@@ -16,5 +16,7 @@ public interface ActivityPort {
 
     UserActivity recordRoleChanged(String userId, String role, String actorUsername);
 
+    UserActivity recordRankUp(String userId, String rankLabel);
+
     List<UserActivity> listMine();
 }

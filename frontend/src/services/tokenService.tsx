@@ -1,4 +1,4 @@
-export type UserRole = "USER" | "ADMIN" | "GUEST";
+export type UserRole = "USER" | "MEMELORD" | "ADMIN" | "GUEST";
 
 const ROLE_KEY = "userRole";
 const USERNAME_KEY = "username";
@@ -23,7 +23,7 @@ export function hasSessionMeta(): boolean {
 export function getUserRole(): UserRole | null {
     if (!hasSessionMeta()) return "GUEST";
     const role = sessionStorage.getItem(ROLE_KEY);
-    if (role === "USER" || role === "ADMIN" || role === "GUEST") {
+    if (role === "USER" || role === "MEMELORD" || role === "ADMIN" || role === "GUEST") {
         return role;
     }
     return null;

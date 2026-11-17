@@ -138,7 +138,7 @@ const IdeasPage = () => {
                 onSubmit={onFeedbackSubmit}
             />
             {
-                feedbacks.map(feedback => <FeedbackItem title={feedback.title} description={feedback.description} author={feedback.authorUsername} type={feedback.type} date={formatDate(feedback.addedAt)} likes={feedback.likes} dislikes={feedback.dislikes} answer={feedback.answer} id={feedback.id} key={feedback.id} startExpanded={feedback.id === expandedId} onDelete={(id) => onFeedbackDelete(id)} />)
+                feedbacks.map(feedback => <FeedbackItem title={feedback.title} description={feedback.description} author={feedback.authorUsername} authorUserId={feedback.authorUserId} type={feedback.type} date={formatDate(feedback.addedAt)} likes={feedback.likes} dislikes={feedback.dislikes} answer={feedback.answer} id={feedback.id} key={feedback.id} startExpanded={feedback.id === expandedId} onDelete={(id) => onFeedbackDelete(id)} />)
             }
             { continuation !== null && <Button text="Mehr laden" onClick={() => loadMore()} variant="primary" disabled={continuation === null} /> }
             { feedbacks.length === 0 && <h4 className="no-items-info">Es gibt aktuell keine Beiträge</h4> }

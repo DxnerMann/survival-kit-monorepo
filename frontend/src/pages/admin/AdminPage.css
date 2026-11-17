@@ -298,6 +298,41 @@
     color: var(--color-text-primary);
 }
 
+.role-badge--memelord {
+    background: #b388ff;
+    color: #1a1028;
+}
+
+.role-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.role-picker__option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.75rem 0.8rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.9rem;
+    cursor: pointer;
+}
+
+.role-picker__option--selected {
+    border-color: var(--color-primary-accent);
+}
+
+.role-picker__option strong,
+.role-picker__option span {
+    display: block;
+}
+
+.role-picker__option span span {
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+}
+
 .verified {
     display: inline-flex;
     align-items: center;

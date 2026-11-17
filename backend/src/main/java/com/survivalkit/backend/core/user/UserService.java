@@ -277,11 +277,11 @@ public class UserService implements UserPort {
     public void promote(String userId, RoleLevel role) {
         requireVerification();
 
-        if (role != RoleLevel.USER && role != RoleLevel.ADMIN) {
+        if (role != RoleLevel.USER && role != RoleLevel.MEMELORD && role != RoleLevel.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.NOT_REQUIRED_ROLE.getCode());
         }
 
-        if (role == RoleLevel.USER && userPersistancePort.isLastAdmin(userId)) {
+        if (role != RoleLevel.ADMIN && userPersistancePort.isLastAdmin(userId)) {
             throw new CannotDeleteLastAdminException(ErrorCode.UNABLE_TO_DELETE_LAST_ADMIN.getCode());
         }
 

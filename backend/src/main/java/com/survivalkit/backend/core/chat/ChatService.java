@@ -10,6 +10,8 @@ import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.context.SecurityContext;
+import com.survivalkit.backend.core.rank.XpPort;
+import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.core.security.RateLimitService;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
 import io.viascom.nanoid.NanoId;
@@ -41,15 +43,18 @@ public class ChatService implements ChatPort {
     private final ChatPersistancePort chatPersistancePort;
     private final UserPersistancePort userPersistancePort;
     private final RateLimitService rateLimitService;
+    private final XpPort xpPort;
 
     public ChatService(
             ChatPersistancePort chatPersistancePort,
             UserPersistancePort userPersistancePort,
-            RateLimitService rateLimitService
+            RateLimitService rateLimitService,
+            XpPort xpPort
     ) {
         this.chatPersistancePort = chatPersistancePort;
         this.userPersistancePort = userPersistancePort;
         this.rateLimitService = rateLimitService;
+        this.xpPort = xpPort;
     }
 
     @Override
@@ -182,6 +187,7 @@ public class ChatService implements ChatPort {
                 List.of()
         );
         chatPersistancePort.saveMessage(message);
+        xpPort.award(userId, XpRules.Action.CHAT_MESSAGE);
         chatPersistancePort.linkAttachments(message.id(), userId, normalizedCourse, ids);
         var attachments = chatPersistancePort.findAttachmentsByMessageIds(List.of(message.id()));
         return new ChatMessage(
@@ -230,6 +236,7 @@ public class ChatService implements ChatPort {
                     normalized,
                     Instant.now()
             );
+            xpPort.award(user.userId(), XpRules.Action.CHAT_REACTION);
         } else {
             chatPersistancePort.removeReaction(message.id(), user.userId(), normalized);
         }

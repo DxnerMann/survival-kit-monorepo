@@ -8,12 +8,15 @@ import {snackbarService} from "@/services/snackBarService.tsx";
 import FeedbackAnswerDialog from "@/components/dialog/FeedbackAnswerDialog.tsx";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.tsx";
 import DOMPurify from "dompurify";
+import {api} from "@/services/api.tsx";
+import UserRankHover from "@/components/rank/UserRankHover.tsx";
 
 type FeedbackItemProps = {
     id: string
     title: string,
     description: string,
     author: string,
+    authorUserId?: string | null,
     type: FeedbackType,
     date: string,
     likes: number,
@@ -23,7 +26,7 @@ type FeedbackItemProps = {
     startExpanded?: boolean
 }
 
-const FeedbackItem = ( {id, title, description, author, type, date, likes, dislikes, answer, onDelete, startExpanded = false} : FeedbackItemProps) => {
+const FeedbackItem = ( {id, title, description, author, authorUserId, type, date, likes, dislikes, answer, onDelete, startExpanded = false} : FeedbackItemProps) => {
     const [isExpanded, setIsExpanded] = useState(startExpanded);
     const [showFeedbackAnswerDialog, setShowFeedbackAnswerDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -117,7 +120,16 @@ const FeedbackItem = ( {id, title, description, author, type, date, likes, disli
                     }
                     <h3 className="feedback-item-title">{title}</h3>
                 </div>
-                <h4 className="feedback-item-author">Verfasst von <a className="important-text">{author?.trim() ? author : "Gastbenutzer"}</a> am {date}</h4>
+                <h4 className="feedback-item-author">
+                    Verfasst von{" "}
+                    <UserRankHover userId={authorUserId} username={author?.trim() || "Gastbenutzer"}>
+                        {authorUserId && (
+                            <img className="user-rank-inline-avatar" src={`${api.baseUrl}/profile/img/${authorUserId}`} alt="" />
+                        )}
+                        <a className="important-text">{author?.trim() ? author : "Gastbenutzer"}</a>
+                    </UserRankHover>
+                    {" "}am {date}
+                </h4>
             </div>
             {
                 isExpanded && <div className="feedback-item-expanded">

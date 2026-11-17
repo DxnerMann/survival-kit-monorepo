@@ -16,6 +16,8 @@ import com.survivalkit.backend.core.user.exception.InvalidCredentialsException;
 import com.survivalkit.backend.core.user.exception.UserAlreadyExistsException;
 import com.survivalkit.backend.core.user.exception.UserUnauthorizedException;
 import com.survivalkit.backend.core.email.EmailPort;
+import com.survivalkit.backend.core.rank.XpPort;
+import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.core.security.TokenService;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
@@ -46,8 +48,9 @@ public class AuthService implements AuthPort {
     private final FeedbackPersistancePort feedbackPersistancePort;
     private final FavouritePersistancePort favouritePersistancePort;
     private final SecurityLog securityLog;
+    private final XpPort xpPort;
 
-    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort, FavouritePersistancePort favouritePersistancePort, SecurityLog securityLog) {
+    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort, FavouritePersistancePort favouritePersistancePort, SecurityLog securityLog, XpPort xpPort) {
         this.userPersistancePort = userPersistancePort;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
@@ -60,6 +63,7 @@ public class AuthService implements AuthPort {
         this.feedbackPersistancePort = feedbackPersistancePort;
         this.favouritePersistancePort = favouritePersistancePort;
         this.securityLog = securityLog;
+        this.xpPort = xpPort;
     }
 
     @Override
@@ -183,6 +187,7 @@ public class AuthService implements AuthPort {
         }
 
         securityLog.logInfo(ErrorCode.ErrorCategory.AUTHENTICATION, "Login succeeded for " + existingUser.username());
+        xpPort.award(existingUser.id(), XpRules.Action.LOGGED_IN);
         return new LoginResponse(
                 tokenService.generateToken(existingUser.id(), existingUser.role(), existingUser.email(), existingUser.username()),
                 existingUser.username(),

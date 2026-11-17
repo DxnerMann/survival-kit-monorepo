@@ -13,7 +13,10 @@ import com.survivalkit.backend.core.security.RateLimitService;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.core.user.exception.UserNotFoundException;
 import com.survivalkit.backend.core.websocket.WebSocketPort;
+import com.survivalkit.backend.core.rank.XpPort;
+import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.RoleLevel;
 import com.survivalkit.backend.shared.WebSocketEnvelope;
 import com.survivalkit.backend.shared.WebSocketMessageType;
 import io.viascom.nanoid.NanoId;
@@ -39,6 +42,7 @@ public class MemeService implements MemePort {
     private final ActivityPort activityPort;
     private final WebSocketPort webSocketPort;
     private final ObjectMapper objectMapper;
+    private final XpPort xpPort;
 
     public MemeService(
             MemePersistancePort memePersistancePort,
@@ -47,7 +51,8 @@ public class MemeService implements MemePort {
             StatisticsPort statisticsPort,
             ActivityPort activityPort,
             WebSocketPort webSocketPort,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            XpPort xpPort
     ) {
         this.memePersistancePort = memePersistancePort;
         this.userPersistancePort = userPersistancePort;
@@ -56,6 +61,7 @@ public class MemeService implements MemePort {
         this.activityPort = activityPort;
         this.webSocketPort = webSocketPort;
         this.objectMapper = objectMapper;
+        this.xpPort = xpPort;
     }
 
     @Override
@@ -63,7 +69,9 @@ public class MemeService implements MemePort {
         requireVerification();
 
         var user = SecurityContext.current();
-        rateLimitService.check("meme-upload", user.userId(), 1, Duration.ofMinutes(5), ErrorCode.MEME_UPLOAD_RATE_LIMIT_EXCEEDED);
+        if (!user.role().hasAtLeast(RoleLevel.MEMELORD)) {
+            rateLimitService.check("meme-upload", user.userId(), 1, Duration.ofMinutes(5), ErrorCode.MEME_UPLOAD_RATE_LIMIT_EXCEEDED);
+        }
 
         var course = currentUserCourse();
         var contentType = normalizedContentType(file);
@@ -88,6 +96,7 @@ public class MemeService implements MemePort {
             throw new RuntimeException(ErrorCode.FAILED_TO_READ_MEME_BYTES.getCode());
         }
         statisticsPort.saveTrackAction(TrackAction.Action.MEME_UPLOADED);
+        xpPort.award(user.userId(), XpRules.Action.MEME_UPLOADED);
     }
 
     @Override
@@ -153,6 +162,9 @@ public class MemeService implements MemePort {
         var user = SecurityContext.current();
         var owner = memeInCurrentCourse(id);
         var counted = memePersistancePort.rateMeme(id, upVote, user.userId());
+        if (counted) {
+            xpPort.award(user.userId(), XpRules.Action.MEME_VOTE);
+        }
         if (!counted || !upVote) {
             return;
         }

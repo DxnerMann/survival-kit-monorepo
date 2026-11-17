@@ -17,6 +17,7 @@ public class ActivityService implements ActivityPort {
     static final String FEEDBACK_DELETED = "FEEDBACK_DELETED";
     static final String FEEDBACK_LIKED = "FEEDBACK_LIKED";
     static final String ROLE_CHANGED = "ROLE_CHANGED";
+    static final String RANK_UP = "RANK_UP";
 
     private final UserActivityPersistancePort userActivityPersistancePort;
 
@@ -47,6 +48,11 @@ public class ActivityService implements ActivityPort {
     @Override
     public UserActivity recordRoleChanged(String userId, String role, String actorUsername) {
         return record(userId, ROLE_CHANGED, role, actorUsername, null);
+    }
+
+    @Override
+    public UserActivity recordRankUp(String userId, String rankLabel) {
+        return record(userId, RANK_UP, rankLabel, null, null);
     }
 
     @Override

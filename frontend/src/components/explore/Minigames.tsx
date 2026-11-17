@@ -82,7 +82,7 @@ const resolveFeatures = (context: FeatureContext): FeatureItem[] => {
 
 const Minigames = ({heading, subheading}: MinigamesProps) => {
     const userRole = getUserRole();
-    const showUserCards = userRole === "USER" || userRole === "ADMIN";
+    const showUserCards = userRole === "USER" || userRole === "MEMELORD" || userRole === "ADMIN";
     const [course, setCourse] = useState("");
     const courseName = course.trim();
 

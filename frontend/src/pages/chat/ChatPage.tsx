@@ -12,6 +12,7 @@ import {chatUnread} from "@/services/chatUnread.ts";
 import {websocketService} from "@/services/websocketService.tsx";
 import {WebSocketMessageType} from "@/models/WebSocketEnvelope.tsx";
 import ChatFormattedText, {ChatMentionText, formatMarkers, wrapSelection} from "@/pages/chat/ChatFormattedText.tsx";
+import UserRankHover from "@/components/rank/UserRankHover.tsx";
 import {filterMentionUsernames, mentionQueryAt, type MentionQuery} from "@/pages/chat/chatMentions.ts";
 import {applyEmojiShortcuts, expandEmojiNotation} from "@/pages/chat/chatEmoji.ts";
 import {ChatReactButton, ChatReactionBar, EmojiPicker} from "@/pages/chat/ChatReactions.tsx";
@@ -818,7 +819,11 @@ const ChatPage = () => {
                                 style={{background: message.reply.authorColor || "var(--color-text-primary)"}}
                             />
                             <span className="chat-quote__name" style={{color: quoteColor}}>
-                                {quotingSelf ? "Du" : message.reply.authorUsername}
+                                {quotingSelf ? "Du" : (
+                                    <UserRankHover userId={message.reply.authorUserId} username={message.reply.authorUsername}>
+                                        <span>{message.reply.authorUsername}</span>
+                                    </UserRankHover>
+                                )}
                             </span>
                             <span className="chat-quote__text">
                                 <ChatMentionText text={quoteLine(message.reply.text)} usernames={courseUsernames} />
@@ -828,12 +833,13 @@ const ChatPage = () => {
                     const avatar = (
                         <span className="chat-avatar-slot">
                             {lastInRun && (
-                                <img
-                                    className="chat-avatar"
-                                    style={{borderColor: message.authorColor || (mine ? profileColor : "#ffffff")}}
-                                    src={`${API_URL}/profile/img/${message.authorUserId}`}
-                                    alt=""
-                                />
+                                <UserRankHover userId={message.authorUserId} username={authorLabel}>
+                                    <img
+                                        className="chat-avatar"
+                                        src={`${API_URL}/profile/img/${message.authorUserId}`}
+                                        alt=""
+                                    />
+                                </UserRankHover>
                             )}
                         </span>
                     );
@@ -861,7 +867,9 @@ const ChatPage = () => {
                                 <div className={`chat-emoji${mine ? " chat-emoji--mine" : ""}`}>
                                     {!mine && !continued && (
                                         <span className="chat-emoji-name">
-                                            <span style={{color: authorColor}}>{authorLabel}</span>
+                                            <UserRankHover userId={message.authorUserId} username={authorLabel}>
+                                                <span style={{color: authorColor}}>{authorLabel}</span>
+                                            </UserRankHover>
                                             {replyButton}
                                         </span>
                                     )}
@@ -874,7 +882,9 @@ const ChatPage = () => {
                                 <div className={`chat-bubble${mine ? " chat-bubble--mine" : ""}${lastInRun ? " chat-bubble--tail" : ""}${!mine && continued ? " chat-bubble--reply" : ""}`}>
                                     {!mine && !continued && (
                                         <div className="chat-bubble__header">
-                                            <span className="chat-bubble__author" style={{color: authorColor}}>{authorLabel}</span>
+                                            <UserRankHover userId={message.authorUserId} username={authorLabel}>
+                                                <span className="chat-bubble__author" style={{color: authorColor}}>{authorLabel}</span>
+                                            </UserRankHover>
                                             {replyButton}
                                         </div>
                                     )}
@@ -935,7 +945,11 @@ const ChatPage = () => {
                                 className="chat-reply-draft__name"
                                 style={{color: reply.authorUserId === userId ? "var(--color-text-primary)" : (reply.authorColor || "var(--color-text-primary)")}}
                             >
-                                {reply.authorUserId === userId ? "Du" : reply.authorUsername}
+                                {reply.authorUserId === userId ? "Du" : (
+                                    <UserRankHover userId={reply.authorUserId} username={reply.authorUsername}>
+                                        <span>{reply.authorUsername}</span>
+                                    </UserRankHover>
+                                )}
                             </span>
                             <span className="chat-reply-draft__text">
                                 <ChatMentionText text={quoteLine(reply.text)} usernames={courseUsernames} />

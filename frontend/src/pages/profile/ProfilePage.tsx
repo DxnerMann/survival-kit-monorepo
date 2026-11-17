@@ -1,7 +1,7 @@
 import "@/pages/profile/ProfilePage.css";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import {useEffect, useState} from "react";
-import {LockKeyhole, SettingsIcon, Skull, Upload} from "lucide-react";
+import {LockKeyhole, Medal, SettingsIcon, Skull, Upload} from "lucide-react";
 import Info from "@/components/ui/Info.tsx";
 import CourseSelection from "@/components/ui/CourseSelection.tsx";
 import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
@@ -25,8 +25,80 @@ import ConfirmDialog from "@/components/dialog/ConfirmDialog.tsx";
 import ChangeEmailDialog from "@/components/dialog/ChangeEmailDialog.tsx";
 import {useCountdownTimer} from "@/services/utils.tsx";
 import {applyAccentOverride, readThemeAccent} from "@/services/accentColor.ts";
+import {getMyRank} from "@/services/rankService.tsx";
+import type {UserRank} from "@/models/UserRank.tsx";
+import RankBadge from "@/components/rank/RankBadge.tsx";
+import RankProgress from "@/components/rank/RankProgress.tsx";
 
 const API_URL = api.baseUrl;
+
+const roleLabel = (role: string | null) => {
+    if (role === "ADMIN") return "Administrator";
+    if (role === "MEMELORD") return "Memelord";
+    if (role === "USER") return "Benutzer";
+    return "Gast";
+};
+
+const RankTab = ({userId}: {userId?: string}) => {
+    const [rank, setRank] = useState<UserRank | null | undefined>(undefined);
+
+    useEffect(() => {
+        let cancelled = false;
+        getMyRank()
+            .then(next => {
+                if (!cancelled) {
+                    setRank(next);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setRank(null);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    return (
+        <div className="profile-page-content">
+            <SectionHeading heading={"Rang"} centered={false} />
+            {rank === undefined ? (
+                <p>Rang wird geladen…</p>
+            ) : rank == null ? (
+                <p>Rang konnte nicht geladen werden.</p>
+            ) : (
+                <div className="profile-rank">
+                    <div
+                        className="profile-rank__avatar"
+                        style={{["--rank-color" as string]: rank.color, ["--rank-color-soft" as string]: rank.colorSoft}}
+                    >
+                        {userId && <img src={`${API_URL}/profile/img/${userId}`} alt="" />}
+                    </div>
+                    <div className="profile-rank__copy">
+                        <RankBadge tier={rank.tier} color={rank.color} colorSoft={rank.colorSoft} />
+                        <div>
+                            <h2>{rank.rankLabel}</h2>
+                            <p>{rank.xp} XP</p>
+                        </div>
+                    </div>
+                    <RankProgress
+                        color={rank.color}
+                        colorSoft={rank.colorSoft}
+                        into={rank.xpIntoRank}
+                        span={rank.xpSpan}
+                        complete={rank.nextLabel == null}
+                    />
+                    <p className="profile-rank__need">
+                        {rank.nextLabel
+                            ? `Noch ${rank.xpRemaining} XP bis ${rank.nextLabel}`
+                            : "Du hast den höchsten Rang erreicht."}
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const ProfilePage = () => {
     const [currentTab, setCurrentTab] = useState<string>("PROFILE_SETTINGS")
@@ -64,6 +136,7 @@ const ProfilePage = () => {
 
     const tabs : string[] = [
         "PROFILE_SETTINGS",
+        "RANK",
         "SECURITY",
         "DANGER_ZONE"
     ];
@@ -196,9 +269,9 @@ const ProfilePage = () => {
                             setCurrentTab(tab);
                         }}>
                         {
-                            tab === "PROFILE_SETTINGS" ? <SettingsIcon size={20} /> : tab === "SECURITY" ? < LockKeyhole size={20} /> : < Skull size={20} />
+                            tab === "PROFILE_SETTINGS" ? <SettingsIcon size={20} /> : tab === "RANK" ? <Medal size={20} /> : tab === "SECURITY" ? < LockKeyhole size={20} /> : < Skull size={20} />
                         }
-                        <h3 className="profile-page-sidebar-tab-name">{tab === "PROFILE_SETTINGS" ? "Profileinstellungen" : tab === "SECURITY" ? "Sicherheit" : "Danger Zone"}</h3>
+                        <h3 className="profile-page-sidebar-tab-name">{tab === "PROFILE_SETTINGS" ? "Profileinstellungen" : tab === "RANK" ? "Rang" : tab === "SECURITY" ? "Sicherheit" : "Danger Zone"}</h3>
                     </div>
                 )
             }
@@ -209,6 +282,8 @@ const ProfilePage = () => {
         switch (currentTab) {
             case "PROFILE_SETTINGS":
                 return profileSettings === undefined ? <div className="profile-page-content">Lädt...</div> : Settings();
+            case "RANK":
+                return <RankTab userId={profileSettings?.userId} />;
             case "SECURITY":
                 return profileSettings === undefined ? <div className="profile-page-content">Lädt...</div> : Security();
             case "DANGER_ZONE":
@@ -248,7 +323,7 @@ const ProfilePage = () => {
                         >{`@${profileSettings.username}`}</h3>
                         <h3 className="profile-settings-email">{profileSettings.email}</h3>
                         <h3 className="profile-settings-course">{selectedCourse}</h3>
-                        <h3 className="profile-settings-role">{getUserRole() === "USER" ? "Benutzer" : getUserRole() === "ADMIN" ? "Administrator" : "Gast"}</h3>
+                        <h3 className="profile-settings-role">{roleLabel(getUserRole())}</h3>
                     </div>
                 </div>
                 <Info text={"Dein voller Name sowie deine E-Mail-Adresse sind nur für dich einsehbar. Dein Benutzername sowie dein Profilbild werden ggf. öffentlich angezeigt."} type={"SUCCESS"} />

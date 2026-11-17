@@ -4,13 +4,14 @@ import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import type {QuickLink} from "@/models/QuickLink.tsx";
 import {approveLink, deleteQuickLink, getQuickLinksFiltered} from "@/services/quickLinkService.tsx";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.tsx";
+import Dialog from "@/components/dialog/Dialog.tsx";
+import DialogActions from "@/components/dialog/DialogActions.tsx";
 import Button from "@/components/ui/Button.tsx";
 import {
     AlertOctagon, AlertTriangle,
     BadgeCheck,
     BadgeX, Info,
     ShieldCheck,
-    ShieldMinus,
     SquareTerminal,
     ThumbsDown, Trash2,
     ThumbsUp
@@ -27,11 +28,18 @@ import type {Meme} from "@/models/Meme.tsx";
 import {deleteMeme, getMemesForAdmin} from "@/services/memeService.tsx";
 import FilterDropdown from "@/components/ui/FilterDropdown.tsx";
 import {lectureService} from "@/services/lectureService.tsx";
+import UserRankHover from "@/components/rank/UserRankHover.tsx";
 
 const SWAGGER_PATH = (import.meta.env.VITE_API_BASE_URL || "") + "/swagger-ui/index.html";
 const ADMIN_MEME_PAGE_SIZE = 50;
 const LOG_PAGE_SIZE = 20;
 const INSTALLED_QUICKLINK_PAGE_SIZE = 20;
+
+const ASSIGNABLE_ROLES = [
+    {id: "ADMIN", label: "Administrator", hint: "Voller Zugriff auf die Verwaltung"},
+    {id: "MEMELORD", label: "Memelord", hint: "Kann Memes ohne Limit hochladen"},
+    {id: "USER", label: "Benutzer", hint: "Normales Konto"},
+] as const;
 
 const AdminPage = () => {
 
@@ -46,6 +54,8 @@ const AdminPage = () => {
     const [securityLogs, setSecurityLogs] = useState<SecurityLog[]>([]);
     const [logContinuation, setLogContinuation] = useState<string | null>(null);
     const [users, setUsers] = useState<ProfileSettings[]>([]);
+    const [roleUser, setRoleUser] = useState<ProfileSettings | null>(null);
+    const [nextRole, setNextRole] = useState("USER");
     const [guests, setGuests] = useState<Guest[]>([]);
     const [userContinuation, setUserContinuation] = useState<string | null>(null);
     const [adminMemes, setAdminMemes] = useState<Meme[]>([]);
@@ -124,13 +134,22 @@ const AdminPage = () => {
         "SWAGGER"
     ];
 
-    const handlePromoteUser = async (userId: string, admin: boolean) => {
-        await setUserRole(userId, admin ? "ADMIN" : "USER");
+    const openRoleDialog = (user: ProfileSettings) => {
+        setRoleUser(user);
+        setNextRole(user.role === "ADMIN" || user.role === "MEMELORD" ? user.role : "USER");
+    };
+
+    const handlePromoteUser = async () => {
+        if (!roleUser) {
+            return;
+        }
+        await setUserRole(roleUser.userId, nextRole);
         setUsers(prev =>
             prev.map(user =>
-                user.userId === userId ? { ...user, role: admin ? "ADMIN" : "USER" } : user
+                user.userId === roleUser.userId ? { ...user, role: nextRole } : user
             )
         );
+        setRoleUser(null);
         snackbarService.showSnackbar({ type: "success", text: "Rolle erfolgreich aktualisiert", showIcon: true })
     };
 
@@ -721,7 +740,11 @@ const AdminPage = () => {
                         <tr key={user.userId}>
                             <td>{user.firstname}</td>
                             <td>{user.lastname}</td>
-                            <td className="text-secondary">{user.username}</td>
+                            <td className="text-secondary">
+                                <UserRankHover userId={user.userId} username={user.username}>
+                                    <span>{user.username}</span>
+                                </UserRankHover>
+                            </td>
                             <td className="text-secondary">{user.course === null ? "-" : user.course}</td>
                             <td>
                                 {getRoleBadge(user.role)}
@@ -730,7 +753,7 @@ const AdminPage = () => {
                                 {getVerifiedIndicator(user.isVerified)}
                             </td>
                             <td className="col-action">
-                                {getRoleActionButton(user.role === "ADMIN", () => handlePromoteUser(user.userId, user.role === "USER"))}
+                                {getRoleActionButton(() => openRoleDialog(user))}
                             </td>
                         </tr>
                     ))}
@@ -887,27 +910,58 @@ const AdminPage = () => {
                 {TabBar()}
                 {TabContent()}
             </div>
+            <Dialog
+                isOpen={roleUser != null}
+                title="Rolle ändern"
+                subtitle={roleUser ? roleUser.username : undefined}
+                onClose={() => setRoleUser(null)}
+                footer={
+                    <DialogActions
+                        cancel={{text: "Abbrechen", onClick: () => setRoleUser(null)}}
+                        confirm={{text: "Speichern", onClick: () => void handlePromoteUser(), disabled: roleUser?.role === nextRole}}
+                    />
+                }
+            >
+                <div className="role-picker">
+                    {ASSIGNABLE_ROLES.map(role => (
+                        <label key={role.id} className={`role-picker__option${nextRole === role.id ? " role-picker__option--selected" : ""}`}>
+                            <input
+                                type="radio"
+                                name="user-role"
+                                value={role.id}
+                                checked={nextRole === role.id}
+                                onChange={() => setNextRole(role.id)}
+                            />
+                            <span>
+                                <strong>{role.label}</strong>
+                                <span>{role.hint}</span>
+                            </span>
+                        </label>
+                    ))}
+                </div>
+            </Dialog>
     </div>
 
-    function getRoleActionButton(isAdmin : boolean, onClick : () => void) {
+    function getRoleActionButton(onClick : () => void) {
         return (
             <button
                 type="button"
                 onClick={onClick}
-                title={isAdmin ? "Zum Benutzer machen" : "Zum Admin machen"}
-                aria-label={isAdmin ? "Zum Benutzer machen" : "Zum Admin machen"}
+                title="Rolle ändern"
+                aria-label="Rolle ändern"
                 className="role-action-btn"
             >
-                {isAdmin ? <ShieldMinus size={18} /> : <ShieldCheck size={18} />}
+                <ShieldCheck size={18} />
             </button>
         );
     }
 
     function getRoleBadge(role: string) {
-        const isAdmin = role === "ADMIN";
+        const kind = role === "ADMIN" ? "admin" : role === "MEMELORD" ? "memelord" : "user";
+        const label = role === "ADMIN" ? "Admin" : role === "MEMELORD" ? "Memelord" : "Benutzer";
         return (
-            <span className={`role-badge ${isAdmin ? "role-badge--admin" : "role-badge--user"}`}>
-      {isAdmin ? "Admin" : "Benutzer"}
+            <span className={`role-badge role-badge--${kind}`}>
+      {label}
     </span>
         );
     }

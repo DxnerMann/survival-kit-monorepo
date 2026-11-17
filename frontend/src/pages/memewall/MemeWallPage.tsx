@@ -9,15 +9,12 @@ import type {Meme} from "@/models/Meme.tsx";
 import {isAdmin} from "@/services/tokenService.tsx";
 import {snackbarService} from "@/services/snackBarService.tsx";
 import "@/pages/memewall/MemeWallPage.css";
+import {api} from "@/services/api.tsx";
+import UserRankHover from "@/components/rank/UserRankHover.tsx";
 
 const PAGE_SIZE = 20;
 
 const memeSrc = (meme: Meme) => `data:${meme.contentType};base64,${meme.img}`;
-
-const authorLabel = (meme: Meme) => {
-    const name = meme.authorUsername?.trim();
-    return `erstellt von ${name || "Unbekannt"}`;
-};
 
 const newestMemeId = (memes: Meme[]): string | null => {
     return memes.reduce<Meme | null>((latest, meme) => {
@@ -312,7 +309,19 @@ const MemeWallPage = () => {
                                     <div className="memewall-meme__text">
                                         {meme.title && <h3>{meme.title}</h3>}
                                         {!meme.title && !meme.description && <p>Kein Titel oder Beschreibung vorhanden.</p>}
-                                        <p className="memewall-meme__author">{authorLabel(meme)}</p>
+                                        <p className="memewall-meme__author">
+                                            erstellt von{" "}
+                                            <UserRankHover userId={meme.authorUserId} username={meme.authorUsername?.trim() || "Unbekannt"}>
+                                                {meme.authorUserId && (
+                                                    <img
+                                                        className="user-rank-inline-avatar"
+                                                        src={`${api.baseUrl}/profile/img/${meme.authorUserId}`}
+                                                        alt=""
+                                                    />
+                                                )}
+                                                <span>{meme.authorUsername?.trim() || "Unbekannt"}</span>
+                                            </UserRankHover>
+                                        </p>
                                         {meme.description && <p>{meme.description}</p>}
                                     </div>
                                     {canDeleteMemes && (
