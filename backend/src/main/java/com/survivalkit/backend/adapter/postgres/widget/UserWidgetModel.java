@@ -22,6 +22,7 @@ public record UserWidgetModel(
         COUNTER,
         EMPTY,
         EMPTY_DASHBOARD,
-        LEADERBOARD
+        LEADERBOARD,
+        SECTION_HEADING
     }
 }

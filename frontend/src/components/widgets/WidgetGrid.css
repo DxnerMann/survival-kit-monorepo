@@ -33,6 +33,19 @@
     }
 }
 
+.widget-card--plain {
+    background: transparent;
+}
+
+.widget-card--plain > .react-resizable-handle {
+    display: none;
+}
+
+.widget-card--plain.edit {
+    outline: 1px dashed var(--color-border);
+    outline-offset: -6px;
+}
+
 .widget-card.edit {
     transition: none;
     animation: widget-wiggle 0.85s ease-in-out infinite;

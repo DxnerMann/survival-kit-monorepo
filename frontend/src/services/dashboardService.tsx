@@ -11,6 +11,7 @@ import FavGames from "@/components/widgets/fav-games/FavGames.tsx";
 import Fegefeuer from "@/components/widgets/fegefeuer/Fegefeuer.tsx";
 import Counter from "@/components/widgets/counter/Counter.tsx";
 import Leaderboard from "@/components/widgets/leaderboard/Leaderboard.tsx";
+import SectionHeadingWidget from "@/components/widgets/section-heading/SectionHeadingWidget.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -179,6 +180,15 @@ const getDefaultToolbox = (): UserWidget[] => {
             x: 0,
             y: 0,
             data: ""
+        },
+        {
+            id: "default-section-heading",
+            type: "SECTION_HEADING",
+            height: 1,
+            width: 10,
+            x: 0,
+            y: 0,
+            data: ""
         }
     ]
 }
@@ -216,6 +226,8 @@ const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
             return <Counter {...shared} title={"Zähler"} />
         case "LEADERBOARD":
             return <Leaderboard {...shared} title={"Leaderboard"} />
+        case "SECTION_HEADING":
+            return <SectionHeadingWidget {...shared} title={"Section Heading"} />
     }
 }
 

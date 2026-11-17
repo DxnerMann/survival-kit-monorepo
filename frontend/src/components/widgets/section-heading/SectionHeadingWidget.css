@@ -1,0 +1,98 @@
+.section-heading-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: transparent;
+    padding: 0 0.25rem;
+}
+
+.section-heading-widget .section-heading-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.section-heading-widget .section-heading-left {
+    min-width: 0;
+}
+
+.section-heading-widget .section-heading-heading,
+.section-heading-widget .section-heading-subheading {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.section-heading-widget--preview {
+    height: 100%;
+    align-items: flex-start;
+    padding: 0.7rem 0.8rem;
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.section-heading-widget--preview .section-heading-heading {
+    font-size: 1.05rem;
+}
+
+.section-heading-widget--preview .section-heading-subheading {
+    margin: 0.15rem 0 0;
+    font-size: 0.68rem;
+}
+
+.section-heading-widget__edit {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    opacity: 0;
+    cursor: pointer;
+}
+
+.section-heading-widget:hover .section-heading-widget__edit,
+.section-heading-widget:focus-within .section-heading-widget__edit {
+    opacity: 1;
+}
+
+.section-heading-widget__edit:hover {
+    color: var(--color-primary-accent);
+}
+
+.section-heading-widget__form {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    min-width: 0;
+    padding: 0.7rem 0.85rem;
+    box-sizing: border-box;
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+}
+
+.section-heading-widget__form input {
+    flex: 1;
+    min-width: 0;
+    cursor: text;
+}
+
+.widget-card.edit .section-heading-widget__form input,
+.widget-card.edit .section-heading-widget__form button,
+.widget-card.edit .section-heading-widget__edit {
+    cursor: pointer;
+}
+
+.widget-card.edit .section-heading-widget__form input {
+    cursor: text;
+}

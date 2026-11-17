@@ -33,7 +33,15 @@
       "title": "Leaderboard",
       "items": [
         "Im Dashboard gibt es das Widget Leaderboard. Es zeigt die zehn mit dem meisten XP",
+        "Du kannst es über die ganze Breite des Dashboards ziehen",
         "Unter Sicherheit & Privatsphäre schaltest du „Im Leaderboard anzeigen“ aus, wenn dein Name dort nicht stehen soll"
+      ]
+    },
+    {
+      "title": "Section Heading",
+      "items": [
+        "Neues Dashboard-Widget. Titel und Untertitel stellst du selbst ein",
+        "Es nimmt immer die ganze Breite ein und hat keinen Hintergrund"
       ]
     },
     {
