@@ -1,0 +1,315 @@
+.roomfinder-page {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    padding: calc(var(--header-height) + 1.25rem) 2rem 1.25rem;
+}
+
+.roomfinder-filters,
+.roomfinder-card {
+    background: var(--color-background-primary);
+    border: none;
+    border-radius: var(--border-radius);
+}
+
+.roomfinder-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.25rem 2rem;
+    flex-shrink: 0;
+    padding: 1.25rem 1.5rem;
+}
+
+.roomfinder-filters__action,
+.roomfinder-filters__when {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.roomfinder-filters__action {
+    justify-content: space-between;
+}
+
+.roomfinder-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.roomfinder-mode legend {
+    margin-bottom: 0.15rem;
+    font-weight: 600;
+}
+
+.roomfinder-option {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--color-text-primary);
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.roomfinder-option input[type="radio"] {
+    appearance: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-background-secondary);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.roomfinder-option input[type="radio"]::before {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--color-primary-accent);
+    transform: scale(0);
+    transition: transform 0.15s ease;
+}
+
+.roomfinder-option input[type="radio"]:checked {
+    border-color: var(--color-primary-accent);
+}
+
+.roomfinder-option input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+
+.roomfinder-option input[type="radio"]:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary-accent) 35%, transparent);
+    outline-offset: 2px;
+}
+
+.roomfinder-times {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.roomfinder-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-weight: 600;
+}
+
+.roomfinder-field input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 400;
+}
+
+.roomfinder-hint,
+.roomfinder-placeholder {
+    margin: 0;
+    color: var(--color-text-secondary);
+}
+
+.roomfinder-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 36%);
+    gap: 1rem;
+    align-items: start;
+}
+
+.roomfinder-board:not(.has-plan) .roomfinder-results {
+    max-height: 32rem;
+}
+
+.roomfinder-board.has-plan {
+    align-items: stretch;
+}
+
+.roomfinder-board.has-plan .roomfinder-results {
+    height: 0;
+    min-height: 100%;
+}
+
+.roomfinder-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    min-width: 0;
+    min-height: 0;
+    padding: 1.15rem 1.25rem;
+    overflow: hidden;
+}
+
+.roomfinder-results__header h2,
+.roomfinder-status h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.roomfinder-results__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.roomfinder-results__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+.roomfinder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.roomfinder-room {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0.9rem;
+    border: none;
+    border-radius: calc(var(--border-radius) / 2);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.roomfinder-room.is-selected {
+    box-shadow: inset 0 0 0 2px var(--color-primary-accent);
+}
+
+.roomfinder-room__name {
+    font-weight: 700;
+}
+
+.roomfinder-status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.roomfinder-status.is-free h2 {
+    color: var(--color-success);
+}
+
+.roomfinder-status.is-busy h2 {
+    color: var(--color-error);
+}
+
+.roomfinder-status__window {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.roomfinder-conflicts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.roomfinder-conflicts__title {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.roomfinder-conflicts__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.roomfinder-conflict {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: calc(var(--border-radius) / 2);
+    background: var(--color-background-secondary);
+    border-left: 3px solid var(--color-error);
+}
+
+.roomfinder-conflict__header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.roomfinder-conflict__time {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+}
+
+.roomfinder-conflict__summary {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.roomfinder-conflict__courses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.roomfinder-conflict__course-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-primary-accent) 15%, var(--color-background-primary));
+    color: var(--color-primary-accent);
+    border: 1px solid color-mix(in srgb, var(--color-primary-accent) 30%, transparent);
+}
+
+.roomfinder-plan-card {
+    height: auto;
+    overflow: visible;
+}
+
+@media (max-width: 860px) {
+    .roomfinder-filters,
+    .roomfinder-board {
+        grid-template-columns: 1fr;
+    }
+
+    .roomfinder-board.has-plan .roomfinder-results {
+        height: auto;
+        min-height: 0;
+        max-height: 70vh;
+    }
+}

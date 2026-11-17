@@ -7,6 +7,8 @@ import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.adapter.web.caffeine.CaffeineAddRequest;
 import com.survivalkit.backend.context.SecurityContext;
+import com.survivalkit.backend.core.rank.XpPort;
+import com.survivalkit.backend.core.rank.XpRules;
 import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +39,16 @@ public class CaffeineService implements CaffeinePort {
 
     private final CaffeinePersistancePort caffeinePersistancePort;
     private final UserPersistancePort userPersistancePort;
+    private final XpPort xpPort;
 
-    public CaffeineService(CaffeinePersistancePort caffeinePersistancePort, UserPersistancePort userPersistancePort) {
+    public CaffeineService(
+            CaffeinePersistancePort caffeinePersistancePort,
+            UserPersistancePort userPersistancePort,
+            XpPort xpPort
+    ) {
         this.caffeinePersistancePort = caffeinePersistancePort;
         this.userPersistancePort = userPersistancePort;
+        this.xpPort = xpPort;
     }
 
     @Override
@@ -76,6 +84,7 @@ public class CaffeineService implements CaffeinePort {
                 consumedAt
         );
         caffeinePersistancePort.save(entry);
+        xpPort.award(user.userId(), XpRules.Action.CAFFEINE_LOGGED);
         return entry;
     }
 

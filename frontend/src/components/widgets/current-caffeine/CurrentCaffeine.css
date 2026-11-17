@@ -34,10 +34,11 @@
 .current-caffeine-widget .widget-header-icon {
     cursor: pointer;
     color: var(--color-text-secondary);
+    transition: color var(--dur-2) var(--ease-out);
 }
 
 .current-caffeine-widget .widget-header-icon:hover {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
 }
 
 .current-caffeine-body {
@@ -64,7 +65,7 @@
     font-family: "DigitalNumbers", serif;
     font-size: clamp(2rem, 40cqh, 5rem);
     font-weight: 400;
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
     line-height: 2;
 }
 
@@ -77,16 +78,17 @@
 .current-caffeine__label {
     margin-top: 0.15em;
     font-size: clamp(0.65rem, 6cqh, 0.9rem);
-    color: var(--color-text-secondary);
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
 .current-caffeine__consumed {
     margin-top: 0.5em;
     font-size: clamp(0.65rem, 7cqh, 0.95rem);
-    color: var(--color-text-primary);
-    opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-secondary);
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;

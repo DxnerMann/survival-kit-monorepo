@@ -15,9 +15,12 @@
 
 .profile-page-sidebar {
     width: 30%;
+    padding: 0.35rem;
     background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
     height: fit-content;
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
     position: sticky;
     top: calc(var(--header-height) + 2rem);
 }
@@ -25,7 +28,9 @@
 .profile-page-content {
     width: 68%;
     background: var(--color-background-primary);
-    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
     padding: 2rem;
     height: fit-content;
 }
@@ -33,19 +38,29 @@
 .profile-page-sidebar-tab {
     display: flex;
     flex-direction: row;
+    align-items: center;
     gap: 0.5rem;
-    margin: 1rem;
+    margin: 0.15rem;
+    padding: 0.6rem 0.5rem;
+    border-radius: var(--radius-md);
     color: var(--color-text-secondary);
     text-transform: uppercase;
+    transition:
+        background var(--dur-2) ease,
+        color var(--dur-2) ease,
+        box-shadow var(--dur-2) ease;
 }
 
 .profile-page-sidebar-tab:hover {
-    color: var(--color-secondary-accent);
+    color: var(--color-text-primary);
+    background: var(--surface-hover);
     cursor: pointer;
 }
 
 .profile-page-sidebar-tab.active {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 
 .profile-settings-info-wrapper {
@@ -64,6 +79,11 @@
     flex-direction: row;
     align-items: center;
     gap: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-background-secondary);
+    box-shadow: var(--shadow-highlight);
 }
 
 .profile-rank__details {
@@ -91,7 +111,7 @@
     border-radius: 50%;
     object-fit: cover;
     display: block;
-    border: 3px solid var(--color-background-primary);
+    border: 3px solid var(--color-background-secondary);
 }
 
 .profile-rank__copy {
@@ -106,6 +126,16 @@
     margin: 0;
 }
 
+.profile-rank__copy h2 {
+    color: var(--color-text-primary);
+    letter-spacing: -0.015em;
+}
+
+.profile-rank__copy p {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
 .profile-rank__copy p,
 .profile-rank__need {
     color: var(--color-text-secondary);
@@ -114,11 +144,25 @@
 .profile-settings-img-wrapper {
     aspect-ratio: 1/1;
     height: 10rem;
-    background: var(--color-text-primary);
+    background: var(--color-background-secondary);
     border-radius: 50%;
     position: relative;
     cursor: pointer;
     overflow: hidden;
+    box-shadow:
+        0 0 0 1px var(--line-strong),
+        0 0 0 5px var(--color-background-primary),
+        0 0 0 6px var(--color-border),
+        var(--shadow-md);
+    transition: box-shadow var(--dur-2) var(--ease-out);
+}
+
+.profile-settings-img-wrapper:hover {
+    box-shadow:
+        0 0 0 1px var(--accent-line),
+        0 0 0 5px var(--color-background-primary),
+        0 0 0 6px var(--accent-line),
+        var(--shadow-md);
 }
 
 .profile-settings-img-wrapper img {
@@ -127,7 +171,7 @@
     aspect-ratio: 1/1;
     object-fit: cover;
     display: block;
-    transition: filter 0.2s ease;
+    transition: filter var(--dur-2) ease;
 }
 
 .profile-settings-img-overlay {
@@ -137,7 +181,7 @@
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--dur-2) ease;
     background: var(--color-transparent-primary);
     pointer-events: none;
 }
@@ -145,7 +189,7 @@
 .profile-settings-img-upload-icon {
     width: 50%;
     height: 50%;
-    color: var(--color-text-primary);
+    color: var(--accent-strong);
 }
 
 .profile-settings-img-wrapper:hover .profile-settings-img {
@@ -162,6 +206,11 @@
     margin-left: 1rem;
     height: 10rem;
     justify-content: center;
+}
+
+.profile-settings-full-name {
+    color: var(--color-text-primary);
+    letter-spacing: -0.015em;
 }
 
 .profile-settings-email {
@@ -187,6 +236,7 @@
 .profile-accent-hint {
     margin: 0.75rem 0;
     color: var(--color-text-secondary);
+    line-height: 1.5;
     max-width: 40rem;
 }
 
@@ -196,32 +246,57 @@
 
 .profile-page-subheading {
     margin-bottom: 1rem;
+    color: var(--color-text-primary);
+    letter-spacing: -0.015em;
 }
 
 .profile-page-settings-section input {
     width: 100%;
     padding: 9px 12px;
-    background: var(--color-background-primary);
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--border-radius);
-    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
     accent-color: var(--color-primary-accent);
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
+}
+
+.profile-page-settings-section input:hover {
+    border-color: var(--line-strong);
+}
+
+.profile-page-settings-section input::placeholder {
+    color: var(--text-3);
 }
 
 .profile-page-settings-section input:focus {
     outline: none;
     border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .profile-page-settings-section-security input {
     width: 100%;
     padding: 9px 12px;
-    background: var(--color-background-primary);
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--border-radius);
-    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
     accent-color: var(--color-primary-accent);
     margin-bottom: 0.5rem;
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
+}
+
+.profile-page-settings-section-security input:hover {
+    border-color: var(--line-strong);
+}
+
+.profile-page-settings-section-security input::placeholder {
+    color: var(--text-3);
 }
 
 .profile-page-settings-section-security button {
@@ -236,6 +311,7 @@
 .profile-page-settings-section-security input:focus {
     outline: none;
     border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .not-varified-wrapper {

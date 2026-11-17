@@ -17,17 +17,25 @@ const ICONS: Record<SnackbarType, React.ReactNode> = {
     error:   <XCircle       size={18} />,
 };
 
-const COLORS: Record<SnackbarType, { bg: string; border: string; icon: string }> = {
-    info:    { bg: "#1e293b", border: "#334155", icon: "#60a5fa" },
-    warning: { bg: "#1e293b", border: "#854d0e", icon: "#facc15" },
-    success: { bg: "#1e293b", border: "#166534", icon: "#4ade80" },
-    error:   { bg: "#1e293b", border: "#991b1b", icon: "#f87171" },
+const TONES: Record<SnackbarType, string> = {
+    info:    "var(--color-info)",
+    warning: "var(--color-warning)",
+    success: "var(--color-success)",
+    error:   "var(--color-error)",
+};
+
+const CLASSIC_COLORS: Record<SnackbarType, { border: string; icon: string }> = {
+    info:    { border: "#334155", icon: "#60a5fa" },
+    warning: { border: "#854d0e", icon: "#facc15" },
+    success: { border: "#166534", icon: "#4ade80" },
+    error:   { border: "#991b1b", icon: "#f87171" },
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
 function SnackbarToast({ type, text, showIcon = true, onDone }: SnackbarOptions & { onDone: () => void }) {
     const [visible, setVisible] = useState(false);
-    const colors = COLORS[type];
+    const tone = TONES[type];
+    const classic = CLASSIC_COLORS[type];
 
     useEffect(() => {
         requestAnimationFrame(() => setVisible(true));
@@ -59,14 +67,16 @@ function SnackbarToast({ type, text, showIcon = true, onDone }: SnackbarOptions 
                     display: flex;
                     align-items: center;
                     gap: 10px;
-                    padding: 12px 18px;
-                    border-radius: 10px;
-                    border: 1px solid ${colors.border};
-                    background: ${colors.bg};
-                    color: #f1f5f9;
+                    padding: 12px 18px 12px 16px;
+                    border-radius: var(--radius-md, 14px);
+                    border: 1px solid color-mix(in srgb, ${tone} 30%, var(--line-strong));
+                    background:
+                        linear-gradient(90deg, color-mix(in srgb, ${tone} 12%, transparent), transparent 70%),
+                        var(--color-background-elevated);
+                    color: var(--color-text-primary);
                     font-size: 14px;
                     font-weight: 500;
-                    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+                    box-shadow: var(--shadow-lg), inset 3px 0 0 ${tone};
                     max-width: min(420px, calc(100vw - 48px));
                     white-space: pre-wrap;
                     word-break: break-word;
@@ -78,9 +88,20 @@ function SnackbarToast({ type, text, showIcon = true, onDone }: SnackbarOptions 
                 }
                 .snackbar-icon {
                     flex-shrink: 0;
-                    color: ${colors.icon};
+                    color: ${tone};
                     display: flex;
                     align-items: center;
+                }
+                :root[data-design="classic"] .snackbar-toast {
+                    padding: 12px 18px;
+                    border-radius: 10px;
+                    border: 1px solid ${classic.border};
+                    background: #1e293b;
+                    color: #f1f5f9;
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+                }
+                :root[data-design="classic"] .snackbar-icon {
+                    color: ${classic.icon};
                 }
             `}</style>
             <div className={`snackbar-toast${visible ? " snackbar-visible" : ""}`}>

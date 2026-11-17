@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode} from 'react';
 
 import GridLayout from 'react-grid-layout';
 import type { Layout, LayoutItem } from 'react-grid-layout';
@@ -31,6 +31,40 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
 };
 
 const DROPPING_ID = "__dropping-elem__";
+const GRID_COLS = 10;
+
+class WidgetBoundary extends Component<{children: ReactNode; fallback: ReactNode}, {failed: boolean}> {
+    state = {failed: false};
+
+    static getDerivedStateFromError() {
+        return {failed: true};
+    }
+
+    render() {
+        if (this.state.failed) {
+            return this.props.fallback;
+        }
+        return this.props.children;
+    }
+}
+
+const sameLayout = (left: Layout, right: Layout) => {
+    if (left.length !== right.length) {
+        return false;
+    }
+    return left.every((item, index) => {
+        const other = right[index];
+        return other !== undefined
+            && item.i === other.i
+            && item.x === other.x
+            && item.y === other.y
+            && item.w === other.w
+            && item.h === other.h;
+    });
+};
+
+const finite = (value: number | undefined, fallback: number) =>
+    typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
 type PendingDrop = {
     sourceId: string;
@@ -285,14 +319,28 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             return;
         }
         const constraints = getWidgetConstraints(pending.placed.type);
+        const maxW = Math.min(constraints.maxW ?? GRID_COLS, GRID_COLS);
+        const minW = Math.min(constraints.minW, maxW);
+        let w = Math.min(Math.max(constraints.defaultW, minW), maxW);
+        const minH = constraints.minH;
+        const maxH = constraints.maxH ?? Math.max(minH, constraints.defaultH);
+        const h = Math.min(Math.max(constraints.defaultH, minH), maxH);
+        let x = finite(item.x, 0);
+        const y = Math.max(0, finite(item.y, 0));
+        if (w >= GRID_COLS) {
+            w = GRID_COLS;
+            x = 0;
+        } else {
+            x = Math.max(0, Math.min(x, GRID_COLS - w));
+        }
         const dropped: LayoutItem = {
             i: pending.placed.id,
-            x: item.x,
-            y: item.y,
-            w: constraints.defaultW,
-            h: constraints.defaultH,
-            minW: constraints.minW,
-            minH: constraints.minH,
+            x,
+            y,
+            w,
+            h,
+            minW,
+            minH,
             maxW: constraints.maxW,
             maxH: constraints.maxH,
         };
@@ -304,6 +352,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
 
     return (
         <div ref={ref} className="widget-grid-wrapper">
+            <WidgetBoundary fallback={<p className="widget-error">Das Dashboard konnte nicht angezeigt werden. Lade die Seite neu.</p>}>
             <GridLayout
                 className="widget-grid"
                 layout={layout}
@@ -323,12 +372,25 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                 droppingItem={{i: DROPPING_ID, x: 0, y: 0, w: 2, h: 2}}
                 width={width}
                 autoSize
-                gridConfig={{ cols: 10, rowHeight: width / 10, maxRows: 20 }}
+                gridConfig={{ cols: GRID_COLS, rowHeight: width / GRID_COLS, maxRows: 40 }}
                 onDrop={handleToolboxDrop}
                 onLayoutChange={(next) => {
                     const removed = removedIdsRef.current;
-                    let incoming = next.filter(entry => entry.i && entry.i !== DROPPING_ID && !removed.has(entry.i));
+                    const known = new Set(layoutWidgetsRef.current.map(widget => widget.id));
                     const pendingDrop = acceptedDropRef.current;
+                    if (pendingDrop) {
+                        known.add(pendingDrop.i);
+                    }
+                    let incoming = next.filter(entry =>
+                        entry.i
+                        && entry.i !== DROPPING_ID
+                        && !removed.has(entry.i)
+                        && known.has(entry.i)
+                        && Number.isFinite(entry.x)
+                        && Number.isFinite(entry.y)
+                        && Number.isFinite(entry.w)
+                        && Number.isFinite(entry.h)
+                    );
                     if (pendingDrop && (removed.has(pendingDrop.i) || incoming.some(entry => entry.i === pendingDrop.i))) {
                         acceptedDropRef.current = null;
                     } else if (pendingDrop) {
@@ -337,11 +399,21 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                     }
                     setLayout(prev => {
                         const kept = prev.filter(entry => entry.i && entry.i !== DROPPING_ID && !removed.has(entry.i));
-                        if (incoming.length < kept.length) {
-                            const incomingById = new Map(incoming.map(entry => [entry.i, entry]));
-                            return kept.map(entry => incomingById.get(entry.i) ?? entry);
+                        const seen = new Set<string>();
+                        const merged: LayoutItem[] = [];
+                        for (const entry of incoming) {
+                            if (seen.has(entry.i)) {
+                                continue;
+                            }
+                            seen.add(entry.i);
+                            merged.push(entry);
                         }
-                        return incoming;
+                        for (const entry of kept) {
+                            if (!seen.has(entry.i)) {
+                                merged.push(entry);
+                            }
+                        }
+                        return sameLayout(prev, merged) ? prev : merged;
                     });
                 }}
                 onDragStart={(_layout, widget) => {
@@ -369,6 +441,9 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                 }}
             >
                 {layout.map((l) => {
+                    if (!l?.i) {
+                        return null;
+                    }
                     const widget = findWidget(l.i);
 
                     return (
@@ -376,19 +451,23 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                             key={l.i}
                             className={`widget-card ${editMode ? 'edit' : 'locked'}${widget?.type === "SECTION_HEADING" ? " widget-card--plain" : ""}`}
                         >
-                            {dashboardService.decideOnWidget({
-                                id: widget?.id ?? "",
-                                data: widget?.data ?? "",
-                                width: l.w,
-                                height: l.h,
-                                x: widget?.x ?? 0,
-                                y: widget?.y ?? 0,
-                                type: widget?.type ?? "EMPTY",
-                            }, false)}
+                            <WidgetBoundary fallback={<p className="widget-error">Widget konnte nicht geladen werden.</p>}>
+                                <WidgetSlot
+                                    id={widget?.id ?? ""}
+                                    data={widget?.data ?? ""}
+                                    width={l.w}
+                                    height={l.h}
+                                    x={widget?.x ?? 0}
+                                    y={widget?.y ?? 0}
+                                    type={widget?.type ?? "EMPTY"}
+                                    editable={editMode}
+                                />
+                            </WidgetBoundary>
                         </div>
                     );
                 })}
             </GridLayout>
+            </WidgetBoundary>
 
             <div
                 ref={deleteZoneRef}
@@ -463,6 +542,10 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             </div>
         </div>
     );
+}
+
+function WidgetSlot({id, data, width, height, x, y, type, editable}: UserWidget & {editable: boolean}) {
+    return dashboardService.decideOnWidget({id, data, width, height, x, y, type}, false, editable);
 }
 
 function toGridLayout(widgets: UserWidget[]): Layout {

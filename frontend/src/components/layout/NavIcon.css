@@ -2,27 +2,43 @@
     position: relative;
     background: transparent;
     border: none;
+    border-radius: var(--radius-pill);
     cursor: pointer;
-    color: var(--color-text-primary);
+    color: var(--color-text-secondary);
     z-index: 1;
 
     display: flex;
     align-items: center;
     gap: 0px;
-    padding: 0 8px;
-    height: 50px;
+    padding: 0 12px;
+    height: 42px;
 
     transition:
-            color 0.2s ease,
-            transform 0.1s ease,
-            gap 0.2s ease;
+        color var(--dur-2) ease,
+        background var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        transform var(--dur-1) ease,
+        gap var(--dur-2) ease;
 }
 
-.nav-icon:hover,
-.nav-icon--active {
-    color: var(--color-primary-accent);
+.nav-icon:hover {
+    color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
     gap: 6px;
     z-index: 2;
+}
+
+.nav-icon--active {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent-line);
+    gap: 6px;
+    z-index: 2;
+}
+
+.nav-icon--active:hover {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
 }
 
 .nav-icon--badged {
@@ -38,7 +54,7 @@
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    transition: transform 0.2s ease;
+    transition: transform var(--dur-2) ease;
 }
 
 .nav-icon__badge {
@@ -49,8 +65,9 @@
     height: 1.05rem;
     padding: 0 0.25rem;
     border-radius: 999px;
-    background: #e64545;
-    color: #fff;
+    background: var(--accent-gradient);
+    color: var(--on-accent);
+    box-shadow: 0 0 0 2px var(--color-background-primary);
     font-size: 0.65rem;
     font-weight: 700;
     line-height: 1.05rem;
@@ -59,20 +76,15 @@
     pointer-events: none;
 }
 
-.nav-icon:hover .nav-icon__icon,
-.nav-icon--active .nav-icon__icon {
-    transform: translateX(-2px);
-}
-
 .nav-icon__label {
-    font-size: 1rem;
+    font-size: 0.95rem;
     white-space: nowrap;
     overflow: hidden;
     max-width: 0;
     opacity: 0;
     transition:
-            max-width 0.25s ease,
-            opacity 0.2s ease 0.05s;
+        max-width var(--dur-3) var(--ease-out),
+        opacity var(--dur-2) ease 0.05s;
 }
 
 .nav-icon:hover .nav-icon__label,

@@ -1,0 +1,194 @@
+@import './theme.css';
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Anticyclone', sans-serif;
+    --header-height: 80px;
+    --footer-height: 180px;
+    --widget-header-height: 1rem;
+    --border-radius: 2rem;
+    --dwg-cols: 10;
+    --dwg-gap: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-primary-accent) 70%, transparent)
+        color-mix(in srgb, var(--color-background-secondary) 45%, transparent);
+}
+
+html,
+body,
+#root {
+    min-height: 100vh;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+
+    font-family: 'Anticyclone', sans-serif;
+
+    background-color: var(--color-background-primary);
+    color: var(--color-text-primary);
+
+    transition:
+            background-color 0.2s ease,
+            color 0.2s ease;
+
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    position: relative;
+}
+
+.app-shell {
+    flex: 1 1 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.app-main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+
+    background: linear-gradient(rgba(0, 0, 0, 0.25), var(--color-background-secondary)),
+    url('/images/background.jpg') no-repeat center center;
+    background-size: cover;
+
+    filter: blur(10px);
+    z-index: -1;
+    transform: scale(1.1);
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+@font-face {
+    font-family: 'Anticyclone';
+    src: url('/fonts/Anticyclone.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'FreesentationVF';
+    src: url('/fonts/FreesentationVF.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Midgame';
+    src: url('/fonts/Midgame.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'SuperMindset';
+    src: url('/fonts/SuperMindset.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'DigitalNumbers';
+    src: url('/fonts/DigitalNumbers.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+.important-text {
+    color: var(--color-primary-accent);
+}
+
+.rte-h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.rte-h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.rte-link {
+    color: var(--color-primary-accent);
+    text-decoration: underline;
+}
+
+.survival-kit-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+/* Scrollbars — Chromium / Safari */
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--color-background-secondary) 35%, transparent);
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-primary-accent) 85%, transparent),
+        color-mix(in srgb, var(--color-secondary-accent) 80%, var(--color-primary-accent))
+    );
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary-accent) 25%, transparent);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-accent);
+    background-clip: padding-box;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary-accent) 45%, transparent);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}

@@ -1,0 +1,119 @@
+.fav-games-widget {
+    --fav-games-title-font-size: 1.5rem;
+
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    background: var(--color-background-primary);
+}
+
+.fav-games-grid {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    box-sizing: border-box;
+}
+
+.fav-games-tile {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border: none;
+    border-radius: calc(var(--border-radius) * 0.6);
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--color-background-secondary);
+    transition: transform 0.15s ease;
+}
+
+.fav-games-tile:hover {
+    transform: scale(1.03);
+}
+
+.fav-games-tile-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    z-index: 0;
+}
+
+.fav-games-tile-title {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 30%;
+    min-height: 1.5rem;
+    padding: 0 0.35rem;
+    box-sizing: border-box;
+    background: var(--color-background-secondary);
+    color: var(--color-primary-accent);
+    font-size: var(--fav-games-title-font-size);
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    word-break: break-word;
+    overflow: hidden;
+    text-wrap: nowrap;
+}
+
+.fav-games-tile-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    font-size: 1.25rem;
+    z-index: 0;
+}
+
+.fav-games-preview {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    box-sizing: border-box;
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+}
+
+.fav-games-preview-tile {
+    position: relative;
+    background: var(--color-background-secondary);
+    border-radius: calc(var(--border-radius) * 0.5);
+    overflow: hidden;
+}
+
+.fav-games-preview-tile::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    height: 30%;
+    background: color-mix(in srgb, var(--color-background-primary) 88%, transparent);
+}
+
+.fav-games-grid .widget-status {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+}

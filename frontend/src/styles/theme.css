@@ -1,53 +1,177 @@
 :root {
     --transition-speed: 0.2s;
+
+    --font-display: 'Anticyclone', sans-serif;
+    --font-body: 'Anticyclone', sans-serif;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-md: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.375rem;
+    --text-2xl: 1.75rem;
+    --text-3xl: 2.25rem;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+
+    --radius-xs: 6px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-pill: 999px;
+
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --dur-1: 120ms;
+    --dur-2: 200ms;
+    --dur-3: 320ms;
 }
 
-/* LIGHT THEME */
+/*
+ * Accent system. The user's accent (--color-accent-override) is the only source;
+ * every tint, gradient stop and on-accent color below is derived from it.
+ */
+.light-theme,
+.dark-theme {
+    --color-primary-accent: var(--color-accent-override, var(--color-accent-default));
+    --accent: var(--color-primary-accent);
+
+    --accent-2: color-mix(in oklab, var(--accent) 78%, #ff9a3c);
+    --on-accent: #ffffff;
+
+    --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+    --accent-softer: color-mix(in srgb, var(--accent) 8%, transparent);
+    --accent-line: color-mix(in srgb, var(--accent) 45%, transparent);
+    --accent-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    --accent-gradient-soft: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--accent) 18%, transparent),
+        color-mix(in srgb, var(--accent-2) 10%, transparent)
+    );
+    --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 32%, transparent);
+
+    --color-on-accent: var(--on-accent);
+    --color-accent-hover: color-mix(in oklab, var(--accent) 88%, var(--accent-2));
+
+    --separator-primary: var(--line-strong);
+    --separator-secondary: var(--line);
+}
+
+@supports (color: oklch(from red l c h)) {
+    .light-theme,
+    .dark-theme {
+        --accent-2: oklch(from var(--accent) min(calc(l + 0.07), 0.9) c calc(h + 32));
+        --on-accent: oklch(from var(--accent) clamp(0, calc((0.74 - l) * 1000), 1) 0 0);
+    }
+}
+
+/* Light: "Seminarraum am Morgen" — cool porcelain desk, paper-white cards. */
 
 .light-theme {
-    --color-accent-default: #ff0000;
-    --color-primary-accent: var(--color-accent-override, var(--color-accent-default));
-    --color-secondary-accent: #5e1010;
+    --color-accent-default: #d9152b;
 
-    --color-background-primary: #fff8e6;
-    --color-background-secondary: #c8c8b9;
+    --surface-0: #e7eaf0;
+    --surface-1: #f8f9fb;
+    --surface-2: #eef1f5;
+    --surface-3: #ffffff;
+    --surface-hover: #e8ecf2;
 
-    --color-transparent-primary: rgb(255 248 230 / 0.3);
+    --line: #dde2ea;
+    --line-strong: #c9d0db;
 
-    --color-text-primary: #15283a;
-    --color-text-secondary: #4b5460;
+    --text-1: #151924;
+    --text-2: #545c70;
+    --text-3: #868da0;
 
-    --color-error: #ef4444;
-    --color-warning: #f48a00;
-    --color-info: #686868;
-    --color-success: #33a523;
+    --accent-strong: color-mix(in oklab, var(--accent) 86%, #000);
 
-    --color-border: #d1d5db;
-    --color-shadow: rgba(0, 0, 0, 0.08);
-    --color-favourite: #d4a017;
+    --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --shadow-sm: 0 1px 2px rgba(20, 26, 40, 0.06);
+    --shadow-md: 0 1px 2px rgba(20, 26, 40, 0.05), 0 10px 28px -14px rgba(20, 26, 40, 0.2);
+    --shadow-lg: 0 2px 6px rgba(20, 26, 40, 0.06), 0 28px 60px -24px rgba(20, 26, 40, 0.32);
+    --accent-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 65%, transparent);
+
+    --backdrop: rgb(28 33 46 / 0.32);
+    --page-wash: rgb(231 234 240 / 0.8);
+
+    --color-secondary-accent: var(--accent-strong);
+
+    --color-background-canvas: var(--surface-0);
+    --color-background-primary: var(--surface-1);
+    --color-background-secondary: var(--surface-2);
+    --color-background-elevated: var(--surface-3);
+    --color-transparent-primary: rgb(248 249 251 / 0.78);
+
+    --color-text-primary: var(--text-1);
+    --color-text-secondary: var(--text-2);
+
+    --color-error: #c4323d;
+    --color-warning: #b26a0a;
+    --color-info: #4f6a8f;
+    --color-success: #23804a;
+
+    --color-border: var(--line);
+    --color-shadow: rgba(20, 26, 40, 0.12);
+    --color-favourite: #b48a10;
+
+    color-scheme: light;
 }
 
-/* DARK THEME */
+/* Dark: "Hörsaal nach Mitternacht" — layered ink-blue, never pure black. */
 
 .dark-theme {
-    --color-accent-default: #ff0000;
-    --color-primary-accent: var(--color-accent-override, var(--color-accent-default));
-    --color-secondary-accent: #6a0000;
+    --color-accent-default: #ff3d4f;
 
-    --color-background-primary: #0f111b;
-    --color-background-secondary: #1f2937;
+    --surface-0: #0f1118;
+    --surface-1: #171a24;
+    --surface-2: #1f2330;
+    --surface-3: #272c3b;
+    --surface-hover: #242938;
 
-    --color-transparent-primary: rgb(15 17 27 / 0.5);
+    --line: rgba(255, 255, 255, 0.07);
+    --line-strong: rgba(255, 255, 255, 0.13);
 
-    --color-text-primary: #f9fafb;
-    --color-text-secondary: #bec5d1;
+    --text-1: #eef0f6;
+    --text-2: #a4aabb;
+    --text-3: #6f768a;
 
-    --color-error: #ef4444;
-    --color-warning: #f48a00;
-    --color-info: #686868;
-    --color-success: #33a523;
+    --accent-strong: color-mix(in oklab, var(--accent) 78%, #fff);
 
-    --color-border: #374151;
-    --color-shadow: rgba(0, 0, 0, 0.35);
-    --color-favourite: #f0c040;
+    --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 32px -16px rgba(0, 0, 0, 0.7);
+    --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.35), 0 32px 64px -24px rgba(0, 0, 0, 0.8);
+    --accent-shadow: 0 10px 24px -12px color-mix(in srgb, var(--accent) 80%, transparent);
+
+    --backdrop: rgb(6 8 12 / 0.6);
+    --page-wash: rgb(15 17 24 / 0.86);
+
+    --color-secondary-accent: var(--accent-strong);
+
+    --color-background-canvas: var(--surface-0);
+    --color-background-primary: var(--surface-1);
+    --color-background-secondary: var(--surface-2);
+    --color-background-elevated: var(--surface-3);
+    --color-transparent-primary: rgb(23 26 36 / 0.78);
+
+    --color-text-primary: var(--text-1);
+    --color-text-secondary: var(--text-2);
+
+    --color-error: #ff6b74;
+    --color-warning: #f2a65a;
+    --color-info: #8fb0dc;
+    --color-success: #5fcf8a;
+
+    --color-border: var(--line);
+    --color-shadow: rgba(0, 0, 0, 0.45);
+    --color-favourite: #e8c45a;
+
+    color-scheme: dark;
 }

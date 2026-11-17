@@ -9,7 +9,8 @@ const Separator = ({ width, height, variant }: SeparatorProps) => {
         style={{
             width: width,
             height: height,
-            backgroundColor: `var(--color-background-${variant})`
+            backgroundColor: `var(--separator-${variant}, var(--color-background-${variant}))`,
+            borderRadius: "999px"
         }}
     />
 }

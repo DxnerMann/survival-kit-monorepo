@@ -1,0 +1,82 @@
+.nav-icon {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    padding: 0 8px;
+    height: 50px;
+
+    transition:
+            color 0.2s ease,
+            transform 0.1s ease,
+            gap 0.2s ease;
+}
+
+.nav-icon:hover,
+.nav-icon--active {
+    color: var(--color-primary-accent);
+    gap: 6px;
+    z-index: 2;
+}
+
+.nav-icon--badged {
+    z-index: 3;
+}
+
+.nav-icon:active {
+    transform: scale(0.95);
+}
+
+.nav-icon__icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.nav-icon__badge {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: #e64545;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1.05rem;
+    text-align: center;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.nav-icon:hover .nav-icon__icon,
+.nav-icon--active .nav-icon__icon {
+    transform: translateX(-2px);
+}
+
+.nav-icon__label {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 0;
+    opacity: 0;
+    transition:
+            max-width 0.25s ease,
+            opacity 0.2s ease 0.05s;
+}
+
+.nav-icon:hover .nav-icon__label,
+.nav-icon--active .nav-icon__label {
+    max-width: 80px;
+    opacity: 1;
+}

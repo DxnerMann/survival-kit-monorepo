@@ -1,34 +1,42 @@
 .timewaste-card {
     width: 100%;
     aspect-ratio: 5/1;
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     background: var(--color-background-primary);
     color: var(--color-text-primary);
     margin-bottom: 1vw;
     margin-top: 1vw;
     display: flex;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        transform var(--dur-2) var(--ease-out);
 }
 
 .timewaste-card:hover {
-    transform: scale(1.02);
+    border-color: var(--accent-line);
+    box-shadow: var(--shadow-lg), var(--shadow-highlight);
+    transform: translateY(-2px);
     cursor: pointer;
 }
 
 .timewaste-card-preview.right {
     height: 100%;
     aspect-ratio: 1/1;
-    background: var(--color-text-secondary);
-    border-top-right-radius: var(--border-radius);
-    border-bottom-right-radius: var(--border-radius);
+    background: var(--color-background-secondary);
+    border-top-right-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
 }
 
 .timewaste-card-preview.left {
     height: 100%;
     aspect-ratio: 1/1;
-    background: var(--color-text-secondary);
-    border-top-left-radius: var(--border-radius);
-    border-bottom-left-radius: var(--border-radius);
+    background: var(--color-background-secondary);
+    border-top-left-radius: var(--radius-lg);
+    border-bottom-left-radius: var(--radius-lg);
 }
 
 .timewaste-card-preview img {
@@ -36,10 +44,15 @@
     height: 100%;
     aspect-ratio: 1/1;
     object-fit: cover;
+    transition: filter var(--dur-2) var(--ease-out);
+}
+
+.timewaste-card:hover .timewaste-card-preview img {
+    filter: brightness(1.04) saturate(1.05);
 }
 
 .timewaste-card-info {
-    padding: 1rem;
+    padding: 1.1rem 1.25rem;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -47,8 +60,9 @@
 }
 
 .timewastecard-heading {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
     font-size: 1.5vw;
+    letter-spacing: -0.015em;
     overflow: hidden;
 }
 
@@ -56,6 +70,12 @@
     white-space: pre-line;
     color: var(--color-text-secondary);
     font-size: 1vw;
+    font-weight: 400;
     overflow: hidden;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .timewaste-card:hover {
+        transform: none;
+    }
+}

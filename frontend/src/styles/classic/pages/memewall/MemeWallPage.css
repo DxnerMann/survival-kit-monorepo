@@ -1,0 +1,364 @@
+.memewall-page {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: calc(100vh - var(--footer-height));
+    padding: calc(var(--header-height) + 2rem) 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.memewall-page__top-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    align-items: stretch;
+}
+
+.memewall-card {
+    position: relative;
+    min-height: 220px;
+    padding: 1.75rem;
+    display: flex;
+    gap: 1.25rem;
+    overflow: hidden;
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 2px var(--color-shadow);
+}
+
+.memewall-card__icon {
+    flex: 0 0 auto;
+    width: 3.25rem;
+    height: 3.25rem;
+    display: grid;
+    place-items: center;
+    color: var(--color-primary-accent);
+    background: color-mix(in srgb, var(--color-primary-accent) 12%, transparent);
+    border-radius: calc(var(--border-radius) * 0.65);
+}
+
+.memewall-card__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+}
+
+.memewall-card__content h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: 1.25rem;
+}
+
+.memewall-card__content p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+    font-size: 0.95rem;
+}
+
+.memewall-card__link {
+    color: var(--color-primary-accent);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
+}
+
+.memewall-card__link:hover {
+    color: var(--color-secondary-accent);
+}
+
+.memewall-card__watermark {
+    position: absolute;
+    right: -1rem;
+    bottom: -1.25rem;
+    width: 7rem;
+    height: 7rem;
+    color: color-mix(in srgb, var(--color-primary-accent) 14%, transparent);
+}
+
+.memewall-gallery {
+    width: 100%;
+    column-count: 4;
+    column-gap: 1.25rem;
+    padding-top: 0.5rem;
+}
+
+.memewall-meme {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0 0 1.25rem;
+    break-inside: avoid;
+    border-radius: calc(var(--border-radius) * 0.6);
+    overflow: hidden;
+    transform: rotate(var(--meme-rotate)) translateY(var(--meme-offset));
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--color-shadow) 75%, transparent);
+}
+
+.memewall-meme__media {
+    position: relative;
+}
+
+.memewall-meme:hover {
+    transform: rotate(0deg) translateY(0) scale(1.02);
+    z-index: 2;
+    box-shadow: 0 16px 34px color-mix(in srgb, var(--color-shadow) 95%, transparent);
+}
+
+.memewall-meme__badge {
+    position: absolute;
+    top: 24px;
+    right: -44px;
+    width: 160px;
+    text-align: center;
+    background: #e63946;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 3px 0;
+    transform: rotate(45deg);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.memewall-meme__open {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.memewall-meme__open img {
+    width: 100%;
+    display: block;
+    transition: filter 0.18s ease, transform 0.18s ease;
+}
+
+.memewall-meme__media:hover .memewall-meme__open img,
+.memewall-meme__media:focus-within .memewall-meme__open img {
+    filter: blur(4px) brightness(0.65);
+    transform: scale(1.04);
+}
+
+.memewall-meme__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    background: color-mix(in srgb, var(--color-transparent-primary) 70%, transparent);
+}
+
+.memewall-meme__media:hover .memewall-meme__overlay,
+.memewall-meme__media:focus-within .memewall-meme__overlay {
+    opacity: 1;
+}
+
+.memewall-meme__text {
+    max-width: 100%;
+    color: var(--color-text-primary);
+    text-align: center;
+    word-break: break-word;
+}
+
+.memewall-meme__text h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--color-primary-accent);
+}
+
+.memewall-meme__author {
+    margin: 0.4rem 0 0;
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.35;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    pointer-events: none;
+}
+
+.memewall-meme__media:hover .memewall-meme__author,
+.memewall-meme__media:focus-within .memewall-meme__author {
+    pointer-events: auto;
+}
+
+.memewall-meme__author .user-rank-hover {
+    white-space: nowrap;
+}
+
+.memewall-meme__text p {
+    margin: 0.5rem 0 0;
+    color: var(--color-text-primary);
+    line-height: 1.45;
+}
+
+.memewall-meme__text p.memewall-meme__author {
+    margin-top: 0.4rem;
+    color: var(--color-text-secondary);
+}
+
+.memewall-meme__delete {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 3;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--color-error) 55%, var(--color-border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-error) 18%, var(--color-background-primary));
+    color: var(--color-error);
+}
+
+.memewall-meme__media:hover .memewall-meme__delete,
+.memewall-meme__media:focus-within .memewall-meme__delete {
+    pointer-events: auto;
+}
+
+.memewall-meme__votes {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding: 0.45rem 0.85rem 0.55rem;
+    background: var(--color-background-primary);
+}
+
+.memewall-meme__vote {
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text-primary);
+    font: inherit;
+    padding: 0;
+}
+
+.memewall-meme__vote:hover {
+    color: var(--color-primary-accent);
+}
+
+.memewall-meme__delete:hover {
+    background: var(--color-error);
+    color: var(--color-text-primary);
+}
+
+.memewall-gallery__empty,
+.memewall-gallery__loading {
+    width: 100%;
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: 2rem 0;
+}
+
+.memewall-gallery__sentinel {
+    width: 100%;
+    height: 1px;
+}
+
+.meme-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+    background: color-mix(in srgb, var(--color-background-primary) 28%, rgb(0 0 0 / 0.45));
+    backdrop-filter: blur(16px);
+}
+
+.meme-lightbox__stage {
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meme-lightbox__img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--border-radius);
+}
+
+.meme-lightbox__close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-background-primary) 82%, transparent);
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.meme-lightbox__close:hover {
+    color: var(--color-primary-accent);
+    border-color: var(--color-primary-accent);
+}
+
+@media (max-width: 760px) {
+    .meme-lightbox {
+        padding: 3.5rem 1rem 1rem;
+    }
+}
+
+@media (max-width: 760px) {
+    .memewall-page {
+        padding: calc(var(--header-height) + 1rem) 1rem 1rem;
+    }
+
+    .memewall-page__top-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .memewall-card {
+        min-height: auto;
+        padding: 1.25rem;
+    }
+
+    .memewall-gallery {
+        column-count: 2;
+        column-gap: 0.85rem;
+    }
+}
+
+@media (max-width: 460px) {
+    .memewall-gallery {
+        column-count: 1;
+    }
+}

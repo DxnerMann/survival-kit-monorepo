@@ -806,7 +806,7 @@ const ChatPage = () => {
                     ) : null;
                     const quotingSelf = message.reply?.authorUserId === userId;
                     const quoteColor = quotingSelf && mine
-                        ? "#fff"
+                        ? "var(--on-accent, #fff)"
                         : (message.reply?.authorColor || "var(--color-text-primary)");
                     const quote = message.reply ? (
                         <button

@@ -29,7 +29,9 @@
     position: relative;
     cursor: crosshair;
     touch-action: none;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow:
+        inset 0 1px 3px rgba(0, 0, 0, 0.22),
+        0 0 0 1px var(--color-border);
     user-select: none;
 }
 
@@ -40,21 +42,43 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: white;
-    border: 2px solid rgba(0,0,0,0.25);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    background: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.18);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.12);
     pointer-events: none;
 }
 
 .color-picker__swatch {
     width: 24px;
     height: 24px;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     flex-shrink: 0;
-    border: 1.5px solid var(--color-border);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    border: 1.5px solid var(--line-strong);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--shadow-sm);
     padding: 0;
     cursor: pointer;
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        transform var(--dur-1) var(--ease-out);
+}
+
+.color-picker__swatch:hover {
+    border-color: var(--accent-line);
+}
+
+.color-picker__swatch:active {
+    transform: translateY(1px);
+}
+
+.color-picker__swatch:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.color-picker--open .color-picker__swatch {
+    border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .color-picker__panel {
@@ -62,10 +86,10 @@
     z-index: 2600;
     transform: translateY(calc(-100% - 0.55rem));
     padding: 0.55rem;
-    background: #1b1d24;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 1rem;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
+    background: var(--color-background-elevated);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg), var(--shadow-highlight);
     box-sizing: border-box;
 }
 
@@ -76,7 +100,8 @@
 .color-picker__stage {
     display: flex;
     height: 9.5rem;
-    border-radius: 0.7rem;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 1px var(--color-border);
     overflow: hidden;
 }
 

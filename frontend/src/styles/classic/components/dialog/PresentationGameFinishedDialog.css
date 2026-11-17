@@ -1,0 +1,89 @@
+.presentation-game-finished-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.presentation-game-finished-dialog__points-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1.75rem 1rem;
+    border-radius: calc(var(--border-radius) * 0.75);
+    background: color-mix(in srgb, var(--color-success) 12%, var(--color-background-secondary));
+    border: 1px solid color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+}
+
+.presentation-game-finished-dialog__points-label {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+.presentation-game-finished-dialog__points {
+    margin: 0;
+    font-size: clamp(3.5rem, 12vw, 5.5rem);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
+}
+
+.presentation-game-finished-dialog__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.presentation-game-finished-dialog__stat {
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.presentation-game-finished-dialog__players-title {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+}
+
+.presentation-game-finished-dialog__player-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.presentation-game-finished-dialog__player {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: calc(var(--border-radius) * 0.5);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+}
+
+.presentation-game-finished-dialog__player.is-host {
+    border: 1px solid color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
+    background: color-mix(in srgb, var(--color-warning) 10%, var(--color-background-secondary));
+}
+
+.presentation-game-finished-dialog__host-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-warning);
+}

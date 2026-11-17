@@ -27,6 +27,7 @@ html.calendar-app-active #root {
     gap: 8px;
     padding: 8px 12px 6px;
     min-height: 48px;
+    box-shadow: inset 0 -1px 0 var(--color-border);
 }
 
 .cal-app__heading {
@@ -39,6 +40,7 @@ html.calendar-app-active #root {
     font-size: 16px;
     font-weight: 700;
     line-height: 1.2;
+    letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -49,6 +51,7 @@ html.calendar-app-active #root {
     font-size: 12px;
     line-height: 1.2;
     color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
 }
 
 .cal-app__actions {
@@ -65,16 +68,35 @@ html.calendar-app-active #root {
     width: 32px;
     height: 32px;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--color-background-secondary);
     color: var(--color-text-primary);
+    box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-highlight);
+    transition:
+        background var(--dur-1) ease,
+        color var(--dur-1) ease,
+        box-shadow var(--dur-1) ease;
+}
+
+.cal-app__install:hover,
+.cal-sheet__close:hover {
+    background: var(--surface-hover);
+    color: var(--accent-strong);
+    box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+
+.cal-app__install:focus-visible,
+.cal-sheet__close:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 1px var(--accent-line), var(--focus-ring);
 }
 
 .cal-app__toggle {
     display: flex;
     padding: 2px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--color-background-secondary);
+    box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .cal-app__toggle button {
@@ -85,12 +107,28 @@ html.calendar-app-active #root {
     font-weight: 700;
     line-height: 1;
     padding: 7px 10px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
+    transition:
+        background var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
+}
+
+.cal-app__toggle button:hover:not(.is-active) {
+    color: var(--color-text-primary);
+}
+
+.cal-app__toggle button:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 .cal-app__toggle button.is-active {
-    background: var(--color-primary-accent);
-    color: #fff;
+    background: var(--accent-gradient);
+    color: var(--on-accent);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        var(--accent-shadow);
 }
 
 .cal-app__ios-hint {
@@ -126,6 +164,7 @@ html.calendar-app-active #root {
 .cal-app__link-form label {
     font-size: 13px;
     font-weight: 700;
+    color: var(--color-text-secondary);
 }
 
 .cal-app__link-form input {
@@ -133,23 +172,62 @@ html.calendar-app-active #root {
     border: 1px solid var(--color-border);
     background: var(--color-background-secondary);
     color: var(--color-text-primary);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     padding: 12px 14px;
     font-size: 16px;
+    box-shadow: var(--shadow-highlight);
+    transition:
+        border-color var(--dur-1) ease,
+        box-shadow var(--dur-1) ease;
+}
+
+.cal-app__link-form input:hover {
+    border-color: var(--line-strong);
+}
+
+.cal-app__link-form input:focus,
+.cal-app__link-form input:focus-visible {
+    outline: none;
+    border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .cal-app__link-form button {
     border: 0;
-    border-radius: 999px;
-    background: var(--color-primary-accent);
-    color: #fff;
+    border-radius: var(--radius-pill);
+    background: var(--accent-gradient);
+    color: var(--on-accent);
     font-size: 15px;
     font-weight: 700;
     padding: 12px 16px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        var(--accent-shadow);
+    transition:
+        filter var(--dur-2) var(--ease-out),
+        transform var(--dur-1) var(--ease-out),
+        opacity var(--dur-2) ease;
+}
+
+.cal-app__link-form button:hover:not(:disabled) {
+    filter: brightness(1.06);
+}
+
+.cal-app__link-form button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.cal-app__link-form button:focus-visible {
+    outline: none;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        var(--focus-ring);
 }
 
 .cal-app__link-form button:disabled {
     opacity: 0.45;
+    box-shadow: none;
+    cursor: not-allowed;
 }
 
 .cal-app__message {
@@ -205,6 +283,7 @@ html.calendar-app-active #root {
     padding: 4px 0;
     font-size: 11px;
     font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-text-secondary);
 }
@@ -215,11 +294,15 @@ html.calendar-app-active #root {
 }
 
 .cal-app .fc-day-today {
-    background: var(--color-transparent-primary) !important;
+    background: var(--accent-softer) !important;
+}
+
+.cal-app--day .fc-day-today {
+    background: transparent !important;
 }
 
 .cal-app .fc-col-header-cell.fc-day-today a {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
 }
 
 .cal-app .fc-timegrid-slot {
@@ -236,7 +319,8 @@ html.calendar-app-active #root {
 
 .cal-app .fc-timegrid-slot-label {
     font-size: 10px;
-    color: var(--color-text-secondary);
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
     vertical-align: top;
 }
 
@@ -250,7 +334,7 @@ html.calendar-app-active #root {
     border-width: 0 !important;
     box-shadow: none !important;
     outline: none !important;
-    border-radius: 4px !important;
+    border-radius: var(--radius-xs) !important;
     padding: 0 !important;
     overflow: hidden;
 }
@@ -316,19 +400,25 @@ html.calendar-app-active #root {
     position: fixed;
     inset: 0;
     z-index: 20;
-    background: rgba(0, 0, 0, 0.45);
+    background: var(--backdrop);
     display: flex;
     align-items: flex-end;
+    animation: cal-sheet-fade var(--dur-2) ease-out;
 }
 
 .cal-sheet {
     width: 100%;
     max-height: 80dvh;
     overflow: auto;
-    background: var(--color-background-secondary);
+    background:
+        linear-gradient(var(--line-strong), var(--line-strong)) center 7px / 36px 4px no-repeat,
+        var(--color-background-elevated);
     color: var(--color-text-primary);
-    border-radius: 16px 16px 0 0;
-    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line-strong);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: var(--shadow-lg), var(--shadow-highlight);
+    padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+    animation: cal-sheet-rise var(--dur-3) var(--ease-out);
 }
 
 .cal-sheet__header {
@@ -342,15 +432,17 @@ html.calendar-app-active #root {
     margin: 0 0 8px;
     font-size: 18px;
     line-height: 1.25;
+    letter-spacing: -0.015em;
 }
 
 .cal-sheet__badge {
     display: inline-block;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     font-size: 12px;
     font-weight: 700;
     color: #1a1a1a;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .cal-sheet__badge--lecture {
@@ -422,6 +514,23 @@ html.calendar-app-active #root {
     width: 18px;
     height: 18px;
     accent-color: var(--color-primary-accent);
+}
+
+@keyframes cal-sheet-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes cal-sheet-rise {
+    from { transform: translateY(24px); opacity: 0.6; }
+    to { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cal-sheet-backdrop,
+    .cal-sheet {
+        animation: none;
+    }
 }
 
 @media (min-width: 800px) {

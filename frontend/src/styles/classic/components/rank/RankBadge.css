@@ -1,0 +1,64 @@
+.rank-badge {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    isolation: isolate;
+}
+
+.rank-badge__spin,
+.rank-badge__glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.rank-badge__spin {
+    inset: 8%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0 58%,
+        color-mix(in srgb, var(--rank-color-soft) 85%, white) 74%,
+        transparent 86%
+    );
+    filter: blur(4px);
+    opacity: 0.8;
+    animation: rank-badge-spin 7s linear infinite;
+}
+
+.rank-badge__glow {
+    inset: 22%;
+    background: radial-gradient(circle, var(--rank-color-soft) 0%, var(--rank-color) 46%, transparent 72%);
+    filter: blur(1px);
+    animation: rank-badge-pulse 2.6s ease-in-out infinite;
+}
+
+.rank-badge__crest {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+@keyframes rank-badge-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rank-badge-pulse {
+    0%, 100% { opacity: 0.45; transform: scale(0.88); }
+    50% { opacity: 1; transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rank-badge__spin,
+    .rank-badge__glow {
+        animation: none;
+    }
+
+    .rank-badge__glow {
+        opacity: 0.8;
+    }
+}

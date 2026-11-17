@@ -187,7 +187,9 @@ public class ChatService implements ChatPort {
                 List.of()
         );
         chatPersistancePort.saveMessage(message);
-        xpPort.award(userId, XpRules.Action.CHAT_MESSAGE);
+        if (earnsChatXp(body)) {
+            xpPort.award(userId, XpRules.Action.CHAT_MESSAGE);
+        }
         chatPersistancePort.linkAttachments(message.id(), userId, normalizedCourse, ids);
         var attachments = chatPersistancePort.findAttachmentsByMessageIds(List.of(message.id()));
         return new ChatMessage(
@@ -361,6 +363,14 @@ public class ChatService implements ChatPort {
             case "VIDEO" -> MAX_VIDEO_BYTES;
             default -> MAX_FILE_BYTES;
         };
+    }
+
+    private static boolean earnsChatXp(String body) {
+        if (body == null || body.isBlank()) {
+            return false;
+        }
+        var letters = body.codePoints().filter(Character::isLetter).count();
+        return letters > 3;
     }
 
     private static String sanitizedClientId(String clientId) {

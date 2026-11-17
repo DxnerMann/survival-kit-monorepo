@@ -3,12 +3,23 @@
   "date": "2026-11-17",
   "sections": [
     {
+      "title": "Neues Design",
+      "items": [
+        "Das ganze Survival Kit hat ein neues Design: ruhigere Flächen, klarere Kontraste, einheitliche Buttons, Felder und Dialoge",
+        "Hell und Dunkel sind beide neu gestaltet, Schalter und gespeicherte Auswahl bleiben gleich",
+        "Deine Akzentfarbe gilt weiter überall und wird für Buttons und Hervorhebungen zum Verlauf",
+        "Beim ersten Besuch fragt dich ein Hinweis, ob du das neue Design behalten oder zum alten zurück willst",
+        "In den Profileinstellungen schaltest du unter Design jederzeit zwischen neu und alt um",
+        "Feedback zum neuen Design ist immer erwünscht, am besten im Ideenhub"
+      ]
+    },
+    {
       "title": "Ränge",
       "items": [
         "Im Profil gibt es den Tab Rang, zwischen Profileinstellungen und Sicherheit & Privatsphäre",
         "Von Bronze III über Silber, Gold und Diamond bis Platin. Ring, Wappen und Balken haben die Farbe des Rangs",
         "Im Tab Rang stehen Wappen, Balken und XP rechts neben Bild und Ring",
-        "XP gibt es fürs Mitmachen: anmelden, Memes, Chat, Ideen, Spielevorschläge und das Präsi-Spiel",
+        "XP gibt es fürs Mitmachen: anmelden, Memes, Chat ab 4 Buchstaben, Koffein eintragen, Ideen, Spielevorschläge und das Präsi-Spiel",
         "Steigst du auf, kommt eine Aktivität: „Du bist aufgestiegen“",
         "Im Chat, an Memes, bei Ideen und im Präsi-Spiel steht neben dem Namen das Profilbild. Darüber siehst du Rang und Fortschritt. Der Hinweis bleibt im Bild, auch über der ersten Nachricht",
         "Auf der Memewall bleibt das Profilbild beim Drüberfahren scharf, der Name in einer Zeile"

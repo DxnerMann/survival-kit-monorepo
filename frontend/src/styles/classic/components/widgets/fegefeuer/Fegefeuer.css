@@ -1,0 +1,280 @@
+.fegefeuer-widget {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+}
+
+.fegefeuer-widget .widget-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 0.5rem 1rem 0.5rem 0.5rem;
+    height: var(--widget-header-height);
+    gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+.fegefeuer-widget .widget-header-icon {
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+
+.fegefeuer-widget .widget-header-icon:hover {
+    color: var(--color-primary-accent);
+}
+
+.fegefeuer-face {
+    container-type: size;
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em;
+    padding: 0.2rem 1.8rem 0.7rem;
+    box-sizing: border-box;
+    text-align: center;
+    overflow: hidden;
+}
+
+.fegefeuer-arrow,
+.fegefeuer-pager-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 0.1rem;
+    border-radius: 999px;
+}
+
+.fegefeuer-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.fegefeuer-arrow-left {
+    left: 0.15rem;
+}
+
+.fegefeuer-arrow-right {
+    right: 0.15rem;
+}
+
+.fegefeuer-arrow:hover:not(:disabled),
+.fegefeuer-pager-arrow:hover:not(:disabled) {
+    color: var(--color-primary-accent);
+}
+
+.fegefeuer-arrow:disabled,
+.fegefeuer-pager-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.fegefeuer-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 90%;
+    margin: 1rem;
+}
+
+.fegefeuer-progress-track {
+    flex: 1;
+    height: 1rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-text-secondary) 28%, transparent);
+    overflow: hidden;
+}
+
+.fegefeuer-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-primary-accent);
+}
+
+.fegefeuer-progress-value {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    line-height: 1;
+    color: var(--color-text-secondary);
+}
+
+.fegefeuer-face-progress .fegefeuer-days {
+    font-size: clamp(1.3rem, 20cqmin, 4.6rem);
+}
+
+.fegefeuer-days {
+    font-family: "DigitalNumbers", serif;
+    font-weight: 400;
+    font-size: clamp(1.6rem, 28cqmin, 6.5rem);
+    line-height: 1;
+    color: var(--color-primary-accent);
+    max-width: 100%;
+}
+
+.fegefeuer-caption {
+    max-width: 16rem;
+    font-size: clamp(0.72rem, 7cqmin, 1.15rem);
+    line-height: 1.25;
+    color: var(--color-text-secondary);
+}
+
+.fegefeuer-preview {
+    background: var(--color-background-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    border-radius: var(--border-radius);
+    height: 100%;
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    box-sizing: border-box;
+    text-align: center;
+    overflow: hidden;
+}
+
+.fegefeuer-preview .fegefeuer-days {
+    font-size: 2.6rem;
+}
+
+.fegefeuer-preview .fegefeuer-caption {
+    max-width: 12rem;
+    font-size: 0.75rem;
+}
+
+.fegefeuer-date-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+}
+
+.fegefeuer-input {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    background: var(--color-background-secondary);
+    border: 1.5px solid var(--color-border);
+    border-radius: 0.85rem;
+    color: var(--color-text-primary);
+    accent-color: var(--color-primary-accent);
+    font: inherit;
+}
+
+.fegefeuer-input::placeholder {
+    color: var(--color-text-secondary);
+}
+
+.light-theme .fegefeuer-input {
+    color-scheme: light;
+}
+
+.dark-theme .fegefeuer-input {
+    color-scheme: dark;
+}
+
+.fegefeuer-input:focus {
+    outline: none;
+    border-color: var(--color-primary-accent);
+}
+
+.fegefeuer-input::-webkit-datetime-edit,
+.fegefeuer-input::-webkit-datetime-edit-fields-wrapper,
+.fegefeuer-input::-webkit-datetime-edit-text,
+.fegefeuer-input::-webkit-datetime-edit-month-field,
+.fegefeuer-input::-webkit-datetime-edit-day-field,
+.fegefeuer-input::-webkit-datetime-edit-year-field {
+    color: var(--color-text-primary);
+    background: transparent;
+}
+
+.fegefeuer-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 0.35rem;
+    padding: 0.15rem;
+    opacity: 0.9;
+}
+
+.dark-theme .fegefeuer-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.9);
+}
+
+.fegefeuer-widget .settings-content {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+.fegefeuer-pager {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.fegefeuer-pager-title {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    color: var(--color-text-primary);
+    font-weight: 700;
+}
+
+.fegefeuer-pager-title > span:first-child {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fegefeuer-pager-count {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.fegefeuer-settings-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.fegefeuer-hint,
+.fegefeuer-error {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.fegefeuer-hint {
+    color: var(--color-text-secondary);
+}
+
+.fegefeuer-error {
+    color: var(--color-error);
+    margin-top: 0.6rem;
+}

@@ -34,10 +34,11 @@
 .widget-header-icon {
     cursor: pointer;
     color: var(--color-text-secondary);
+    transition: color var(--dur-2) var(--ease-out);
 }
 
 .widget-header-icon:hover {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
 }
 
 .widget-title {
@@ -81,10 +82,10 @@
     align-items: center;
     gap: 16px;
     padding: 28px 24px;
-    background: var(--color-transparent-primary);
+    background: var(--color-background-secondary);
     border: 1px solid var(--color-border);
-    border-radius: 14px;
-    box-shadow: 0 2px 12px var(--color-shadow);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
 }
 
 .lecture-timer-no-lecture > span {
@@ -94,16 +95,16 @@
     color: var(--color-text-secondary);
     font-size: 14px;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
 .lecture-timer-next-lecture-info {
     width: 100%;
-    background: var(--color-background-primary);
+    background: var(--color-background-secondary);
     border: 1px solid var(--color-border);
-    border-left: 3px solid var(--color-primary-accent);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
+    box-shadow: inset 3px 0 0 var(--color-primary-accent);
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
@@ -113,6 +114,7 @@
 .lecture-timer-next-lecture-info .title {
     font-size: 15px;
     font-weight: 600;
+    letter-spacing: -0.005em;
     color: var(--color-text-primary);
 }
 
@@ -121,24 +123,24 @@
     align-items: center;
     gap: 8px;
     font-size: 13px;
+    font-variant-numeric: tabular-nums;
     color: var(--color-text-secondary);
 }
 
 .lecture-timer-next-lecture-info .badge {
     font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-primary-accent);
-    background: rgb(255 0 0 / 0.08);
-    border-radius: 4px;
-    padding: 2px 7px;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border-radius: var(--radius-pill);
+    padding: 2px 8px;
 }
 
 .lecture-timer-next-lecture-info .rooms {
     font-size: 12px;
-    color: var(--color-text-secondary);
-    opacity: 0.75;
+    color: var(--text-3);
 }
 
 .lecture-timer-no-lecture {
@@ -160,7 +162,7 @@
     color: var(--color-text-secondary);
     font-size: 15px;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     text-align: center;
 }
@@ -173,16 +175,21 @@
     color: var(--color-text-secondary);
 }
 
+.percentage, .countdown {
+    font-variant-numeric: tabular-nums;
+}
+
 .lecture-timer-lecture-title {
     font-weight: bold;
-    color: var(--color-primary-accent);
+    letter-spacing: -0.01em;
+    color: var(--accent-strong);
     margin: 0.5rem;
 }
 
 .lecture-timer-day-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
 }
 
@@ -191,18 +198,25 @@
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
     padding-bottom: 4px;
     width: 100%;
 }
 
 .lecture-timer-next-lecture-info {
     width: 100%;
-    background: transparent;
     padding: 10px 14px;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    box-sizing: border-box;
+    transition:
+        background var(--dur-2) var(--ease-out),
+        border-color var(--dur-2) var(--ease-out);
+}
+
+.lecture-timer-next-lecture-info:hover {
+    background: var(--surface-hover);
 }
 
 .lecture-timer-next-lecture-info .title {
@@ -218,8 +232,7 @@
 
 .lecture-timer-next-lecture-info .rooms {
     font-size: 12px;
-    color: var(--color-text-secondary);
-    opacity: 0.75;
+    color: var(--text-3);
 }
 
 .lecture-timer-current-lectures {
@@ -260,6 +273,10 @@
 
 .progress-bar .RCP {
     position: relative;
+}
+
+.progress-bar .RCP__track {
+    stroke: color-mix(in srgb, var(--color-text-secondary) 18%, var(--color-background-secondary));
 }
 
 .progress-bar-center {

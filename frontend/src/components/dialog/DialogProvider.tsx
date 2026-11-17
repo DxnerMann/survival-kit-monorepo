@@ -10,8 +10,49 @@ import {
 import {Link} from "react-router-dom";
 import Dialog from "@/components/dialog/Dialog";
 import DialogActions from "@/components/dialog/DialogActions";
+import {chooseDesign, hasChosenDesign} from "@/services/designService.ts";
 
 const COOKIE_CONSENT_KEY = "cookie_consent";
+
+const designChoiceDialog = (close: () => void): ActiveDialog => ({
+    id: "design-choice",
+    title: "Neues Design",
+    closeOnOverlayClick: false,
+    content: (
+        <div className="dialog-cookie-body">
+            <p>
+                Das Lecture Survival Kit sieht ab jetzt anders aus: ruhigere Flächen, klarere Kontraste
+                und deine Akzentfarbe als Verlauf. Möchtest du das neue Design behalten oder zum alten zurück?
+            </p>
+            <p>
+                Du kannst das jederzeit in den Profileinstellungen umstellen.
+                Feedback zum neuen Design ist immer erwünscht, am besten im{" "}
+                <Link to="/ideas" onClick={() => {
+                    chooseDesign("modern");
+                    close();
+                }}>Ideenhub</Link>.
+            </p>
+        </div>
+    ),
+    footer: (
+        <DialogActions
+            cancel={{
+                text: "Altes Design verwenden",
+                onClick: () => {
+                    chooseDesign("classic");
+                    close();
+                },
+            }}
+            confirm={{
+                text: "Neues Design behalten",
+                onClick: () => {
+                    chooseDesign("modern");
+                    close();
+                },
+            }}
+        />
+    ),
+});
 
 export type DialogOpenOptions = {
     id?: string;
@@ -58,7 +99,11 @@ export default function DialogProvider({children}: {children: ReactNode}) {
     }, []);
 
     useEffect(() => {
+        const dismiss = () => setActive(null);
+        const askForDesign = () => setActive(hasChosenDesign() ? null : designChoiceDialog(dismiss));
+
         if (localStorage.getItem(COOKIE_CONSENT_KEY)) {
+            askForDesign();
             return;
         }
 
@@ -86,7 +131,7 @@ export default function DialogProvider({children}: {children: ReactNode}) {
                         text: "Verstanden",
                         onClick: () => {
                             localStorage.setItem(COOKIE_CONSENT_KEY, "accepted");
-                            setActive(null);
+                            askForDesign();
                         },
                     }}
                 />

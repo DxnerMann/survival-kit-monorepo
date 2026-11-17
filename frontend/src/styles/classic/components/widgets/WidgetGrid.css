@@ -1,0 +1,255 @@
+.widget-grid {
+    width: 100%;
+    height: fit-content;
+}
+
+.widget-grid-wrapper {
+    position: relative;
+    width: 100%;
+    height: fit-content;
+    padding-bottom: 2rem;
+}
+
+.widget-card {
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius);
+    color: var(--color-text-primary);
+    border: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: all 0.2s ease;
+}
+
+@keyframes widget-wiggle {
+    0%,
+    100% {
+        rotate: -0.18deg;
+    }
+    50% {
+        rotate: 0.18deg;
+    }
+}
+
+.widget-card--plain {
+    background: transparent;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.widget-card--plain > .react-resizable-handle {
+    display: none;
+}
+
+.widget-error {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    color: var(--color-text-secondary);
+}
+
+.widget-card.edit {
+    transition: none;
+    animation: widget-wiggle 0.85s ease-in-out infinite;
+}
+
+.widget-card.widget-card--plain.edit {
+    outline: 1px dashed var(--color-border);
+    outline-offset: -6px;
+    animation: none;
+}
+
+.widget-card.edit:nth-child(2n) {
+    animation-delay: -0.12s;
+}
+
+.widget-card.edit:nth-child(3n) {
+    animation-duration: 1s;
+}
+
+.widget-card.edit.react-draggable-dragging,
+.widget-card.edit.resizing {
+    animation: none;
+}
+
+.widget-card.edit,
+.widget-card.edit * {
+    cursor: grab;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .widget-card.edit {
+        animation: none;
+    }
+}
+
+.widget-card.edit.react-draggable-dragging,
+.widget-card.edit.react-draggable-dragging * {
+    cursor: grabbing;
+}
+
+.widget-card.edit > .react-resizable-handle {
+    cursor: se-resize;
+}
+
+.widget-grid-wrapper {
+    position: relative;
+}
+
+.react-resizable-handle-se {
+    right: -6rem;
+    bottom: -6rem;
+    color: var(--color-text-primary);
+}
+
+.edit-actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.edit-button {
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.edit-button:hover:not(:disabled) {
+    color: var(--color-primary-accent);
+}
+
+.edit-button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.edit-button-content {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+}
+
+.bottom-bar {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+
+    width: 100%;
+    height: 240px;
+    display: flex;
+    flex-direction: column;
+
+    background: color-mix(in srgb, color-mix(in srgb, var(--color-background-primary) 70%, white) 68%, transparent);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -12px 28px color-mix(in srgb, var(--color-shadow) 90%, transparent);
+
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+
+    z-index: 10000;
+}
+
+.react-grid-item.react-grid-placeholder {
+    background: var(--color-transparent-primary);
+    border-radius: var(--border-radius);
+}
+
+.bottom-bar.visible {
+    transform: translateY(0);
+}
+
+.bottom-bar.is-delete-target,
+.bottom-bar.is-delete-target * {
+    pointer-events: none;
+}
+
+.delete-container {
+    position: absolute;
+    inset: 0;
+    z-index: 1001;
+    background: rgb(255 0 0 / 0.3);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    user-select: none;
+}
+
+.delete-container h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.toolbox-hint {
+    margin: 0;
+    padding: 0.85rem 22rem 0 1.5rem;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.35;
+    flex-shrink: 0;
+}
+
+.toolbox-scroll {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    padding: 0.75rem 9rem 1rem 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    box-sizing: border-box;
+}
+
+.toolbox-item,
+.toolbox-item * {
+    cursor: grab;
+}
+
+.toolbox-item:active,
+.toolbox-item:active * {
+    cursor: grabbing;
+}
+
+.toolbox-item {
+    flex: 0 0 220px;
+    width: 220px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow: hidden;
+    user-select: none;
+}
+
+.toolbox-item > :first-child {
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+}
+
+.toolbox-item .widget-title-preview {
+    flex: 0 0 auto;
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.toolbox-item * {
+    pointer-events: none;
+}

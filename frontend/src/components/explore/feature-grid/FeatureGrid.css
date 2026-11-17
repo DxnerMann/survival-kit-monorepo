@@ -3,8 +3,13 @@
     margin-right: -2rem;
     width: calc(100% + 4rem);
     box-sizing: border-box;
-    padding: 1.5rem 2rem 1.75rem;
-    background: color-mix(in srgb, var(--color-background-secondary) 42%, var(--color-background-primary));
+    padding: 1.6rem 2rem 1.85rem;
+    background:
+        linear-gradient(180deg, var(--accent-softer), transparent 55%),
+        color-mix(in srgb, var(--color-background-secondary) 42%, var(--color-background-primary));
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-highlight);
 }
 
 .feature-list {
@@ -24,10 +29,16 @@
     color: inherit;
     text-decoration: none;
     border-bottom: 1px solid var(--color-border);
+    transition: background-color var(--dur-2) var(--ease-out);
 }
 
 .feature-list__item:first-child .feature-list__link {
     border-top: 1px solid var(--color-border);
+}
+
+.feature-list__link:hover,
+.feature-list__link:focus-visible {
+    background-color: var(--accent-softer);
 }
 
 .feature-list__link::before {
@@ -37,10 +48,12 @@
     top: 0.7rem;
     bottom: 0.7rem;
     width: 3px;
-    background: var(--color-primary-accent);
+    border-radius: 0 3px 3px 0;
+    background: var(--accent-gradient);
     transform: scaleY(0);
     transform-origin: center;
-    transition: transform 0.18s ease;
+    transition: transform var(--dur-2) var(--ease-out);
+    pointer-events: none;
 }
 
 .feature-list__link:hover::before,
@@ -49,8 +62,8 @@
 }
 
 .feature-list__link:focus-visible {
-    outline: 2px solid var(--color-primary-accent);
-    outline-offset: 3px;
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--accent-line);
 }
 
 .feature-list__image {
@@ -58,6 +71,15 @@
     height: 6.75rem;
     object-fit: cover;
     display: block;
+    border-radius: var(--radius-md);
+    background: var(--color-background-secondary);
+    box-shadow: 0 0 0 1px var(--color-border), var(--shadow-sm);
+    transition: box-shadow var(--dur-2) var(--ease-out);
+}
+
+.feature-list__link:hover .feature-list__image,
+.feature-list__link:focus-visible .feature-list__image {
+    box-shadow: 0 0 0 1px var(--accent-line), var(--shadow-md);
 }
 
 .feature-list__copy {
@@ -72,15 +94,17 @@
     color: var(--color-text-primary);
     font-size: clamp(1.25rem, 2.2vw, 1.85rem);
     line-height: 1.15;
+    letter-spacing: -0.02em;
+    transition: color var(--dur-2) var(--ease-out);
 }
 
 .feature-list__link:hover .feature-list__title,
 .feature-list__link:focus-visible .feature-list__title {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
 }
 
 .feature-list__description {
-    margin: 0.1rem 0 0;
+    margin: 0.2rem 0 0;
     color: var(--color-text-secondary);
     font-size: 0.95rem;
     line-height: 1.4;
@@ -90,21 +114,24 @@
 }
 
 .feature-list__credit {
-    margin: 0.25rem 0 0;
-    color: var(--color-primary-accent);
+    margin: 0.3rem 0 0;
+    color: var(--accent-strong);
     font-size: 0.85rem;
+    font-weight: 500;
     line-height: 1.3;
 }
 
 .feature-list__arrow {
-    color: var(--color-text-secondary);
-    transition: transform 0.18s ease, color 0.18s ease;
+    color: var(--text-3);
+    transition:
+        transform var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out);
 }
 
 .feature-list__link:hover .feature-list__arrow,
 .feature-list__link:focus-visible .feature-list__arrow {
     transform: translateX(0.3rem);
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
 }
 
 @media (max-width: 640px) {
@@ -116,6 +143,7 @@
     .feature-list__image {
         width: 3.5rem;
         height: 3.5rem;
+        border-radius: var(--radius-sm);
     }
 
     .feature-list__description {
@@ -123,5 +151,17 @@
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .feature-list__link::before,
+    .feature-list__arrow {
+        transition: none;
+    }
+
+    .feature-list__link:hover .feature-list__arrow,
+    .feature-list__link:focus-visible .feature-list__arrow {
+        transform: none;
     }
 }

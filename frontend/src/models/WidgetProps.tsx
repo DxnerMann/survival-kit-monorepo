@@ -5,4 +5,5 @@ export interface WidgetProps {
     isPreview: boolean,
     width?: number,
     height?: number,
+    editable?: boolean,
 }

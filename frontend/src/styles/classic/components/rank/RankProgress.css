@@ -1,0 +1,113 @@
+.rank-progress {
+    position: relative;
+    width: 100%;
+    padding: 0.35rem 0;
+}
+
+.rank-progress__track {
+    position: relative;
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--rank-color) 16%, #24182f);
+    box-shadow:
+        inset 0 1px 3px rgba(0, 0, 0, 0.45),
+        0 0 16px color-mix(in srgb, var(--rank-color) 28%, transparent);
+}
+
+.rank-progress__fill {
+    position: relative;
+    height: 100%;
+    min-width: 18px;
+    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--rank-color) 62%, #2a1438) 0%,
+        var(--rank-color) 55%,
+        var(--rank-color-soft) 100%
+    );
+    box-shadow: 0 0 18px color-mix(in srgb, var(--rank-color) 80%, transparent);
+    overflow: hidden;
+}
+
+.rank-progress__fill::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 18% 50%, rgba(255, 255, 255, 0.55), transparent 28%),
+        radial-gradient(circle at 62% 40%, rgba(255, 255, 255, 0.35), transparent 22%);
+    animation: rank-progress-glow 2.8s ease-in-out infinite;
+}
+
+.rank-progress__fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 15%, rgba(255, 255, 255, 0.55) 48%, transparent 78%);
+    transform: translateX(-70%);
+    animation: rank-progress-shimmer 2.6s ease-in-out infinite;
+}
+
+.rank-progress__knob {
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    box-shadow: 0 0 8px #fff, 0 0 14px var(--rank-color-soft);
+}
+
+.rank-progress__particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--rank-color-soft);
+    box-shadow: 0 0 8px var(--rank-color);
+    opacity: 0.8;
+    animation: rank-progress-float 3.2s ease-in-out infinite;
+}
+
+.rank-progress__particle--a {
+    top: -2px;
+    left: 18%;
+}
+
+.rank-progress__particle--b {
+    bottom: -3px;
+    left: 58%;
+    animation-delay: 0.8s;
+}
+
+.rank-progress__particle--c {
+    top: 0;
+    right: 12%;
+    animation-delay: 1.4s;
+}
+
+@keyframes rank-progress-shimmer {
+    0% { transform: translateX(-80%); }
+    100% { transform: translateX(80%); }
+}
+
+@keyframes rank-progress-glow {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+@keyframes rank-progress-float {
+    0%, 100% { transform: translateY(0); opacity: 0.35; }
+    50% { transform: translateY(-4px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rank-progress__fill::before,
+    .rank-progress__fill::after,
+    .rank-progress__particle {
+        animation: none;
+    }
+}

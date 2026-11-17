@@ -14,18 +14,34 @@
 
 .release-notes-item {
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-lg);
     background: var(--color-background-primary);
     overflow: hidden;
-    box-shadow: 0 1px 3px var(--color-shadow);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
+}
+
+.release-notes-item:hover {
+    border-color: var(--line-strong);
+}
+
+.release-notes-item.open {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-lg), var(--shadow-highlight);
 }
 
 .release-notes-item.latest {
-    border-color: var(--color-primary-accent);
+    border-color: var(--accent-line);
+    background-image: var(--accent-gradient);
+    background-size: 2.5rem 3px;
+    background-position: 1.25rem 0;
+    background-repeat: no-repeat;
 }
 
 .release-notes-item.latest .release-notes-item__title {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
 }
 
 .release-notes-item__header {
@@ -34,16 +50,23 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 1.25rem;
+    padding: 1.05rem 1.25rem;
     border: none;
     background: transparent;
     cursor: pointer;
     text-align: left;
     color: var(--color-text-primary);
+    transition: background var(--dur-2) var(--ease-out);
 }
 
 .release-notes-item__header:hover {
-    background: color-mix(in srgb, var(--color-background-secondary) 35%, transparent);
+    background: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+}
+
+.release-notes-item__header:focus-visible {
+    outline: none;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 2px var(--accent-line);
 }
 
 .release-notes-item__title {
@@ -52,22 +75,31 @@
     gap: 0.2rem;
     font-size: 1.1rem;
     font-weight: 700;
+    letter-spacing: -0.01em;
 }
 
 .release-notes-item__date {
     font-size: 0.85rem;
     font-weight: 400;
+    letter-spacing: 0;
     color: var(--color-text-secondary);
 }
 
 .release-notes-item__chevron {
     flex-shrink: 0;
-    color: var(--color-text-secondary);
-    transition: transform 0.2s ease;
+    color: var(--text-3);
+    transition:
+        transform var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out);
+}
+
+.release-notes-item__header:hover .release-notes-item__chevron {
+    color: var(--color-text-primary);
 }
 
 .release-notes-item.open .release-notes-item__chevron {
     transform: rotate(180deg);
+    color: var(--accent-strong);
 }
 
 .release-notes-item__body {
@@ -76,26 +108,37 @@
 }
 
 .release-notes-section {
-    margin-top: 1rem;
+    margin-top: 1.1rem;
 }
 
 .release-notes-section:first-child {
-    margin-top: 0.75rem;
+    margin-top: 0.9rem;
 }
 
 .release-notes-section__title {
     margin: 0 0 0.5rem;
     font-size: 0.95rem;
-    color: var(--color-primary-accent);
+    letter-spacing: -0.005em;
+    color: var(--accent-strong);
 }
 
 .release-notes-section__list {
     margin: 0;
     padding-left: 1.25rem;
     color: var(--color-text-primary);
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
 .release-notes-section__list li {
     margin-bottom: 0.35rem;
+}
+
+.release-notes-section__list li::marker {
+    color: var(--accent-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .release-notes-item__chevron {
+        transition: color var(--dur-2) var(--ease-out);
+    }
 }

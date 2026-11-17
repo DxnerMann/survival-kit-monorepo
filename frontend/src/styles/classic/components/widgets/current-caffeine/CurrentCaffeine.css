@@ -1,0 +1,116 @@
+.current-caffeine-widget {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+}
+
+.current-caffeine-widget.fullscreen {
+    background: var(--color-background-primary);
+    position: fixed;
+    border-radius: 0;
+    bottom: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 2000;
+}
+
+.current-caffeine-widget .widget-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 0.5rem;
+    padding-right: 1rem;
+    height: var(--widget-header-height);
+    gap: 0.5rem;
+    width: 100%;
+    z-index: 2;
+}
+
+.current-caffeine-widget .widget-header-icon {
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+
+.current-caffeine-widget .widget-header-icon:hover {
+    color: var(--color-primary-accent);
+}
+
+.current-caffeine-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem 1rem;
+    box-sizing: border-box;
+    container-type: size;
+    text-align: center;
+}
+
+.current-caffeine__primary {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.15em;
+    max-width: 100%;
+}
+
+.current-caffeine__blood {
+    font-family: "DigitalNumbers", serif;
+    font-size: clamp(2rem, 40cqh, 5rem);
+    font-weight: 400;
+    color: var(--color-primary-accent);
+    line-height: 2;
+}
+
+.current-caffeine__unit {
+    font-size: clamp(0.75rem, 8cqh, 1.25rem);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.current-caffeine__label {
+    margin-top: 0.15em;
+    font-size: clamp(0.65rem, 6cqh, 0.9rem);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.current-caffeine__consumed {
+    margin-top: 0.5em;
+    font-size: clamp(0.65rem, 7cqh, 0.95rem);
+    color: var(--color-text-primary);
+    opacity: 0.85;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.current-caffeine-preview {
+    background: var(--color-background-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    height: 100%;
+    width: 100%;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+.current-caffeine-preview .current-caffeine__blood {
+    font-size: 1.5rem;
+}
+
+.current-caffeine-preview .current-caffeine__consumed {
+    font-size: 0.75rem;
+}

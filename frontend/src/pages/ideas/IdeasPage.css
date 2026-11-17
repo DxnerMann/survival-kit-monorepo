@@ -4,3 +4,19 @@
     padding: 2rem;
     padding-top: calc(var(--header-height) + 2rem);
 }
+
+.ideas-page > .btn {
+    margin-top: 0.75rem;
+}
+
+.ideas-page .no-items-info {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 3rem 1.5rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    text-align: center;
+    font-weight: 500;
+}

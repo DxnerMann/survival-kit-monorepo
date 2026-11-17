@@ -2,7 +2,7 @@ import {
     createContext,
     type ReactNode,
     useContext,
-    useEffect,
+    useLayoutEffect,
     useState,
 } from 'react'
 
@@ -33,7 +33,7 @@ const getInitialTheme = (): Theme => {
 export const ThemeProvider = ({ children }: Props) => {
     const [theme, setThemeState] = useState<Theme>(getInitialTheme)
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         document.body.classList.remove(
             'light-theme',
             'dark-theme'

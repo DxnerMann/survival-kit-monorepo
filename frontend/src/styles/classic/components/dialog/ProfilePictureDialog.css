@@ -1,0 +1,46 @@
+.profile-picture-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 320px;
+    padding: 1rem;
+}
+
+.profile-picture-upload-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    text-align: center;
+}
+
+.profile-picture-cropper {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background: var(--color-background-primary);
+    overflow: hidden;
+    border-radius: var(--border-radius);
+}
+
+.profile-picture-gif-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    display: block;
+    margin: 0 auto;
+}
+
+.profile-picture-gif-note {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin-top: 0.5rem;
+}
+
+.profile-picture-error {
+    color: var(--color-error);
+    font-size: 0.9rem;
+}

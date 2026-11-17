@@ -9,18 +9,28 @@
 }
 
 .maintenance-info-container {
-    background: var(--color-background-primary);
-    border-radius: var(--border-radius);
+    background-color: var(--color-background-primary);
+    background-image: var(--accent-gradient);
+    background-size: 3rem 3px;
+    background-position: center top;
+    background-repeat: no-repeat;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg), var(--shadow-highlight);
     width: 50%;
     height: fit-content;
-    padding: 2rem;
+    padding: 2.5rem 2.25rem;
 }
 
 .maintenance-info-container h1 {
     color: var(--color-text-primary);
     margin-bottom: 1rem;
+    letter-spacing: -0.025em;
 }
 
 .maintenance-info-container h2 {
     color: var(--color-text-secondary);
+    font-size: var(--text-lg);
+    font-weight: 400;
+    line-height: 1.55;
 }

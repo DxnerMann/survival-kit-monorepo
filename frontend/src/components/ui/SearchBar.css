@@ -5,22 +5,32 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0.85rem 1.15rem;
-    border-radius: var(--border-radius);
-    border: 1.5px solid color-mix(in srgb, var(--color-border) 75%, transparent);
-    background: color-mix(in srgb, var(--color-background-primary) 62%, transparent);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-background-primary) 82%, transparent);
     backdrop-filter: blur(16px);
-    box-shadow: 0 8px 24px var(--color-shadow);
-    transition: border-color 0.18s, box-shadow 0.18s;
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        background var(--dur-2) var(--ease-out);
+}
+
+.search-bar:hover {
+    border-color: var(--line-strong);
 }
 
 .search-bar:focus-within {
     border-color: var(--color-primary-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-accent) 18%, transparent);
+    background: var(--color-background-primary);
+    box-shadow: var(--shadow-md), var(--focus-ring);
 }
 
 .search-bar__icon {
     flex-shrink: 0;
-    color: var(--color-text-secondary);
+    color: var(--text-3);
+    transition: color var(--dur-2) ease;
 }
 
 .search-bar:focus-within .search-bar__icon {
@@ -35,11 +45,17 @@
     background: transparent;
     color: var(--color-text-primary);
     font-size: 1rem;
+    padding: 0;
+    border-radius: 0;
+}
+
+.search-bar__input:focus-visible {
+    box-shadow: none;
 }
 
 .search-bar__input::placeholder {
-    color: var(--color-text-secondary);
-    opacity: 0.75;
+    color: var(--text-3);
+    opacity: 1;
 }
 
 .search-bar__input::-webkit-search-cancel-button {
@@ -51,14 +67,16 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    padding: 0.2rem;
+    padding: 0.25rem;
     border: none;
     border-radius: 999px;
-    background: transparent;
+    background: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
     color: var(--color-text-secondary);
     cursor: pointer;
+    transition: background var(--dur-1) ease, color var(--dur-1) ease;
 }
 
 .search-bar__clear:hover {
-    color: var(--color-primary-accent);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
 }

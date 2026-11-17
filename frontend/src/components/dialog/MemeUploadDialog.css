@@ -3,7 +3,7 @@
     flex-direction: column;
     gap: 1rem;
     min-width: 320px;
-    padding: 1rem;
+    padding: 1.25rem;
 }
 
 .meme-upload-area {
@@ -11,20 +11,30 @@
     align-items: center;
     justify-content: center;
     min-height: 240px;
-    border: 1.5px dashed var(--color-border);
-    border-radius: var(--border-radius);
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--radius-lg);
     background: var(--color-background-secondary);
     color: var(--color-text-secondary);
+    font-weight: 500;
     cursor: pointer;
     text-align: center;
     overflow: hidden;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        background-color var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
 }
 
 .meme-upload-area:hover,
 .meme-upload-area--dragging {
     border-color: var(--color-primary-accent);
     background: color-mix(in srgb, var(--color-primary-accent) 8%, var(--color-background-secondary));
+    color: var(--accent-strong);
+}
+
+.meme-upload-area--dragging {
+    box-shadow: var(--focus-ring);
 }
 
 .meme-upload-preview {

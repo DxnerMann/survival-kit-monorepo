@@ -32,10 +32,12 @@
     padding: 0;
     cursor: pointer;
     color: var(--color-text-secondary);
+    transition: color var(--dur-2) var(--ease-out);
 }
 
-.counter-widget .widget-header-icon:hover {
-    color: var(--color-primary-accent);
+.counter-widget .widget-header-icon:hover,
+.counter-settings:hover {
+    color: var(--accent-strong);
 }
 
 .counter-face,
@@ -67,6 +69,9 @@
     cursor: pointer;
     padding: 0.1rem;
     border-radius: 999px;
+    transition:
+        background var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out);
 }
 
 .counter-arrow {
@@ -86,7 +91,14 @@
 
 .counter-arrow:hover:not(:disabled),
 .counter-pager-arrow:hover:not(:disabled) {
-    color: var(--color-primary-accent);
+    background: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+    color: var(--color-text-primary);
+}
+
+.counter-arrow:focus-visible,
+.counter-pager-arrow:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 .counter-arrow:disabled,
@@ -100,7 +112,7 @@
     font-weight: 400;
     font-size: clamp(1.2rem, 24cqmin, 5.2rem);
     line-height: 1;
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
     max-width: 100%;
 }
 
@@ -131,31 +143,55 @@
     justify-content: center;
     min-width: 4.2rem;
     padding: 0.38rem 0.85rem;
-    border: 1.5px solid var(--color-border);
-    border-radius: 999px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius-pill);
     background: var(--color-background-secondary);
     color: var(--color-text-primary);
+    box-shadow: var(--shadow-highlight);
     font: inherit;
     font-weight: 700;
     font-size: clamp(0.78rem, 8cqmin, 1.05rem);
+    font-variant-numeric: tabular-nums;
     line-height: 1;
     cursor: pointer;
+    transition:
+        background var(--dur-2) var(--ease-out),
+        border-color var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        filter var(--dur-2) ease,
+        transform var(--dur-1) var(--ease-out);
 }
 
 button.counter-step:hover {
-    border-color: var(--color-primary-accent);
-    color: var(--color-primary-accent);
+    background: var(--surface-hover);
+    border-color: var(--accent-line);
+    color: var(--accent-strong);
+}
+
+button.counter-step:active {
+    transform: translateY(1px);
+}
+
+button.counter-step:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 .counter-step-up {
-    background: var(--color-primary-accent);
-    border-color: var(--color-primary-accent);
-    color: #fff;
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: var(--on-accent);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        var(--accent-shadow);
 }
 
 button.counter-step-up:hover {
-    color: #fff;
-    filter: brightness(1.08);
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: var(--on-accent);
+    filter: brightness(1.06);
 }
 
 .counter-preview {
@@ -190,6 +226,10 @@ button.counter-step-up:hover {
     cursor: default;
 }
 
+.counter-preview .counter-step-up {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
 .counter-widget .settings-content {
     flex: 1;
     height: auto;
@@ -213,6 +253,7 @@ button.counter-step-up:hover {
     gap: 0.1rem;
     color: var(--color-text-primary);
     font-weight: 700;
+    letter-spacing: -0.005em;
 }
 
 .counter-pager-title > span:first-child {
@@ -225,7 +266,8 @@ button.counter-step-up:hover {
 .counter-pager-count {
     font-size: 0.72rem;
     font-weight: 500;
-    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-3);
 }
 
 .counter-settings-fields {
@@ -251,14 +293,21 @@ button.counter-step-up:hover {
     padding: 0.65rem 0.85rem;
     background: var(--color-background-secondary);
     border: 1.5px solid var(--color-border);
-    border-radius: 0.85rem;
+    border-radius: var(--radius-md);
     color: var(--color-text-primary);
     accent-color: var(--color-primary-accent);
     font: inherit;
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
+}
+
+.counter-input:hover {
+    border-color: var(--line-strong);
 }
 
 .counter-input::placeholder {
-    color: var(--color-text-secondary);
+    color: var(--text-3);
 }
 
 .light-theme .counter-input {
@@ -272,6 +321,7 @@ button.counter-step-up:hover {
 .counter-input:focus {
     outline: none;
     border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .counter-hint,
@@ -288,4 +338,7 @@ button.counter-step-up:hover {
 .counter-error {
     color: var(--color-error);
     margin-top: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
 }

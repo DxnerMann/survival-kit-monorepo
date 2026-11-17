@@ -5,8 +5,22 @@
     <link rel="icon" type="image/png" href="/images/icon2.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Lecture Survival Kit</title>
+    <script>
+      try {
+        document.documentElement.dataset.design = localStorage.getItem('design') === 'classic' ? 'classic' : 'modern';
+      } catch {
+        document.documentElement.dataset.design = 'modern';
+      }
+    </script>
   </head>
   <body>
+    <script>
+      try {
+        document.body.classList.add(localStorage.getItem('theme') === 'light' ? 'light-theme' : 'dark-theme');
+      } catch {
+        document.body.classList.add('dark-theme');
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

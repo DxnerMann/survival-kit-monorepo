@@ -12,15 +12,22 @@
 
 .widget-card {
     background: var(--color-background-primary);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-lg);
     color: var(--color-text-primary);
-    border: none;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    transition: all 0.2s ease;
+    transition:
+        border-color var(--dur-2) ease,
+        box-shadow var(--dur-2) ease;
+}
+
+.widget-card:not(.widget-card--plain):hover {
+    border-color: var(--line-strong);
 }
 
 @keyframes widget-wiggle {
@@ -35,20 +42,33 @@
 
 .widget-card--plain {
     background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    overflow: hidden;
+    min-width: 0;
 }
 
 .widget-card--plain > .react-resizable-handle {
     display: none;
 }
 
-.widget-card--plain.edit {
-    outline: 1px dashed var(--color-border);
-    outline-offset: -6px;
+.widget-error {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    color: var(--color-text-secondary);
 }
 
 .widget-card.edit {
     transition: none;
+    border-color: var(--accent-line);
     animation: widget-wiggle 0.85s ease-in-out infinite;
+}
+
+.widget-card.widget-card--plain.edit {
+    border-color: transparent;
+    outline: 1px dashed var(--accent-line);
+    outline-offset: -6px;
+    animation: none;
 }
 
 .widget-card.edit:nth-child(2n) {
@@ -108,12 +128,14 @@
 .edit-button {
     background: transparent;
     border: none;
-    color: var(--color-text-primary);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
     cursor: pointer;
+    transition: color var(--dur-2) ease, background var(--dur-2) ease;
 }
 
 .edit-button:hover:not(:disabled) {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
 }
 
 .edit-button:disabled {
@@ -138,20 +160,23 @@
     display: flex;
     flex-direction: column;
 
-    background: color-mix(in srgb, color-mix(in srgb, var(--color-background-primary) 70%, white) 68%, transparent);
-    backdrop-filter: blur(12px);
-    border-top: 1px solid var(--color-border);
-    box-shadow: 0 -12px 28px color-mix(in srgb, var(--color-shadow) 90%, transparent);
+    background: color-mix(in srgb, var(--color-background-primary) 84%, transparent);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    border-top: 1px solid var(--line-strong);
+    box-shadow: 0 -18px 40px -16px var(--color-shadow);
 
     transform: translateY(100%);
-    transition: transform 0.3s ease;
+    transition: transform var(--dur-3) var(--ease-out);
 
     z-index: 10000;
 }
 
 .react-grid-item.react-grid-placeholder {
-    background: var(--color-transparent-primary);
-    border-radius: var(--border-radius);
+    background: var(--accent-soft) !important;
+    border: 1px dashed var(--accent-line);
+    border-radius: var(--radius-lg);
+    opacity: 1 !important;
 }
 
 .bottom-bar.visible {
@@ -167,7 +192,8 @@
     position: absolute;
     inset: 0;
     z-index: 1001;
-    background: rgb(255 0 0 / 0.3);
+    background: color-mix(in srgb, var(--color-error) 22%, transparent);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-error) 55%, transparent);
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -233,12 +259,26 @@
     overflow: hidden;
 }
 
+.toolbox-item > :first-child {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--dur-2) ease, transform var(--dur-2) var(--ease-out);
+}
+
+.toolbox-item:hover > :first-child {
+    border-color: var(--accent-line);
+    transform: translateY(-2px);
+}
+
 .toolbox-item .widget-title-preview {
     flex: 0 0 auto;
-    margin: 0.35rem 0 0;
+    margin: 0.45rem 0 0;
+    padding-left: 0.15rem;
     font-size: 0.8rem;
     font-weight: 600;
     line-height: 1.2;
+    color: var(--color-text-secondary);
 }
 
 .toolbox-item * {

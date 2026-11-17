@@ -1,5 +1,7 @@
 footer {
-    background: var(--color-background-secondary);
+    position: relative;
+    background: var(--color-background-primary);
+    border-top: 1px solid var(--color-border);
     min-height: var(--footer-height);
     width: 100%;
     display: flex;
@@ -11,10 +13,27 @@ footer {
     flex-shrink: 0;
 }
 
+footer::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--color-primary-accent) 55%, transparent) 30%,
+        color-mix(in srgb, var(--accent-2) 55%, transparent) 70%,
+        transparent
+    );
+    pointer-events: none;
+}
+
 .footer-info {
     display: flex;
     flex-direction: row;
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
 .footer-info .footer-info-img {
@@ -35,7 +54,8 @@ footer {
     flex-direction: column;
     justify-content: space-between;
     color: var(--color-text-secondary);
-    font-size: 0.8vw;
+    font-size: clamp(0.7rem, 0.8vw, 0.85rem);
+    line-height: 1.6;
 }
 
 .footer-links {
@@ -46,7 +66,7 @@ footer {
 .footer-links a {
     text-decoration: none;
     color: var(--color-text-primary);
-    font-size: 0.8vw;
+    font-size: clamp(0.7rem, 0.8vw, 0.85rem);
 }
 
 .footer-links {
@@ -54,13 +74,14 @@ footer {
     flex-direction: column;
     justify-content: space-between;
     text-align: right;
-    color: var(--color-secondary-accent);
+    color: var(--color-text-secondary);
 }
 
 .footer-links a {
-    color: var(--color-primary-accent);
+    color: var(--color-text-secondary);
+    transition: color var(--dur-2) ease;
 }
 
 .footer-links a:hover {
-    color: var(--color-secondary-accent);
+    color: var(--accent-strong);
 }

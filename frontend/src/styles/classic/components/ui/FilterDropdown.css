@@ -1,0 +1,116 @@
+.filter-dropdown {
+    position: relative;
+    display: inline-block;
+    font-family: inherit;
+    z-index: 3000;
+}
+
+.filter-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border: none;
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+            border-color 0.2s ease,
+            color 0.2s ease,
+            background 0.2s ease;
+}
+
+.filter-dropdown-trigger:hover {
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-primary);
+}
+
+.filter-dropdown-trigger.active {
+    border-color: var(--color-primary-accent);
+    color: var(--color-text-primary);
+}
+
+.filter-dropdown-icon {
+    flex-shrink: 0;
+    color: var(--color-primary-accent);
+}
+
+.filter-dropdown-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.filter-dropdown-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.filter-dropdown-clear:hover {
+    color: var(--color-error);
+}
+
+.filter-dropdown-arrow {
+    color: var(--color-text-secondary);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.filter-dropdown-arrow.open {
+    transform: rotate(180deg);
+}
+
+.filter-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    min-width: 220px;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px var(--color-shadow);
+    z-index: 50000;
+}
+
+.filter-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    color: var(--color-text-primary);
+    font-size: 0.9rem;
+}
+
+.filter-dropdown-item:hover {
+    background: var(--color-background-primary);
+}
+
+.filter-dropdown-item input[type="checkbox"] {
+    accent-color: var(--color-primary-accent);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.filter-dropdown-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.filter-dropdown-menu::-webkit-scrollbar-track {
+    background: var(--color-background-secondary);
+    border-radius: 999px;
+}
+
+.filter-dropdown-menu::-webkit-scrollbar-thumb {
+    background: var(--color-secondary-accent);
+    border-radius: 999px;
+}

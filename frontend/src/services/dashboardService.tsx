@@ -193,7 +193,7 @@ const getDefaultToolbox = (): UserWidget[] => {
     ]
 }
 
-const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
+const decideOnWidget = (widget: UserWidget, isPreview: boolean, editable = false) => {
     const shared = {
         title: "",
         data: widget.data,
@@ -227,7 +227,7 @@ const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
         case "LEADERBOARD":
             return <Leaderboard {...shared} title={"Leaderboard"} />
         case "SECTION_HEADING":
-            return <SectionHeadingWidget {...shared} title={"Section Heading"} />
+            return <SectionHeadingWidget {...shared} title={"Section Heading"} editable={editable} />
     }
 }
 

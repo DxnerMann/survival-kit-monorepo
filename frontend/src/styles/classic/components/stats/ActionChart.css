@@ -1,0 +1,17 @@
+.action-chart {
+    width: 100%;
+    margin-bottom: 2rem;
+    padding: 1.25rem 1rem 1rem;
+    background-color: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px var(--color-shadow);
+    margin-top: 0.5rem;
+}
+
+.action-chart__title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}

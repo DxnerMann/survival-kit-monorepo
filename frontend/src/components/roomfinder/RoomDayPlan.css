@@ -15,6 +15,7 @@
 .roomfinder-day-plan__header h2 {
     margin: 0;
     font-size: 1.35rem;
+    letter-spacing: -0.015em;
 }
 
 .roomfinder-day-plan__header p {
@@ -38,7 +39,7 @@
 }
 
 .roomfinder-day-plan__calendar .fc-timegrid-col.fc-day-today {
-    background: var(--color-transparent-primary);
+    background: transparent;
 }
 
 .roomfinder-day-plan__calendar .fc-timegrid-slot {
@@ -53,25 +54,26 @@
     padding: 6px 0;
     font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-text-secondary);
 }
 
 .roomfinder-day-plan__calendar .fc-col-header-cell a {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
     text-decoration: none;
 }
 
 .roomfinder-day-plan__calendar .fc-timegrid-slot-label {
     font-size: 0.75rem;
-    color: var(--color-text-secondary);
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
 }
 
 .roomfinder-day-plan__calendar .fc-timegrid-event {
     border: none;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px var(--color-shadow);
+    border-radius: var(--radius-xs);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
 }
 
@@ -128,8 +130,8 @@
     line-height: 1.1;
     padding: 1px 4px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.22);
-    color: #fff;
+    background: color-mix(in srgb, var(--on-accent) 20%, transparent);
+    color: var(--on-accent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -137,13 +139,15 @@
 }
 
 .roomfinder-day-plan__occupied {
-    background: var(--color-primary-accent) !important;
+    background: var(--accent-gradient) !important;
     border: none !important;
-    color: #fff !important;
+    color: var(--on-accent) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--shadow-sm) !important;
 }
 
 .roomfinder-day-plan__window {
-    background: color-mix(in srgb, var(--color-primary-accent) 28%, transparent) !important;
+    background: color-mix(in srgb, var(--color-primary-accent) 22%, transparent) !important;
+    box-shadow: inset 0 0 0 1px var(--accent-line);
     opacity: 1 !important;
 }
 
@@ -167,19 +171,24 @@
 .roomfinder-day-plan__swatch {
     width: 0.9rem;
     height: 0.9rem;
-    border-radius: 0.2rem;
+    border-radius: var(--radius-xs);
 }
 
 .roomfinder-day-plan__swatch--busy {
-    background: var(--color-primary-accent);
+    background: var(--accent-gradient);
 }
 
 .roomfinder-day-plan__swatch--window {
-    background: color-mix(in srgb, var(--color-primary-accent) 28%, var(--color-background-primary));
-    box-shadow: inset 0 0 0 1px var(--color-primary-accent);
+    background: color-mix(in srgb, var(--color-primary-accent) 22%, var(--color-background-primary));
+    box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 
 .roomfinder-day-plan__empty {
     margin: 0;
-    color: var(--color-text-secondary);
+    padding: 0.65rem 0.8rem;
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-success) 10%, transparent);
+    color: var(--color-success);
+    font-weight: 600;
+    text-align: center;
 }

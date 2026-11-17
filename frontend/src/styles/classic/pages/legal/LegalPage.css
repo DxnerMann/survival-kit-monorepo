@@ -1,0 +1,8 @@
+.legal-page {
+    padding: calc(var(--header-height) + 2rem) 2rem 2rem;
+    box-sizing: border-box;
+    width: 100%;
+}
+.legal-section {
+    padding: 1rem;
+}

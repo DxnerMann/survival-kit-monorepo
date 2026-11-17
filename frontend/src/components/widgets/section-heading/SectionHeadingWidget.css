@@ -1,7 +1,6 @@
 .section-heading-widget {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
     width: 100%;
     height: 100%;
     min-width: 0;
@@ -10,13 +9,11 @@
     padding: 0 0.25rem;
 }
 
-.section-heading-widget .section-heading-wrapper {
+.section-heading-widget .section-heading-wrapper,
+.section-heading-widget .section-heading-left {
     flex: 1;
     min-width: 0;
-}
-
-.section-heading-widget .section-heading-left {
-    min-width: 0;
+    width: 100%;
 }
 
 .section-heading-widget .section-heading-heading,
@@ -44,55 +41,37 @@
     font-size: 0.68rem;
 }
 
-.section-heading-widget__edit {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
+.section-heading-widget__field {
+    display: block;
+    width: 100%;
+    margin: 0;
     padding: 0;
     border: none;
-    border-radius: 999px;
+    outline: none;
+    border-radius: 0;
     background: transparent;
-    color: var(--color-text-secondary);
-    opacity: 0;
-    cursor: pointer;
-}
-
-.section-heading-widget:hover .section-heading-widget__edit,
-.section-heading-widget:focus-within .section-heading-widget__edit {
-    opacity: 1;
-}
-
-.section-heading-widget__edit:hover {
-    color: var(--color-primary-accent);
-}
-
-.section-heading-widget__form {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    width: 100%;
+    box-shadow: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    text-align: inherit;
+    text-transform: inherit;
+    caret-color: var(--color-primary-accent);
     min-width: 0;
-    padding: 0.7rem 0.85rem;
-    box-sizing: border-box;
-    background: var(--color-background-primary);
-    border-radius: var(--border-radius);
-}
-
-.section-heading-widget__form input {
-    flex: 1;
-    min-width: 0;
+    appearance: none;
     cursor: text;
 }
 
-.widget-card.edit .section-heading-widget__form input,
-.widget-card.edit .section-heading-widget__form button,
-.widget-card.edit .section-heading-widget__edit {
-    cursor: pointer;
+.section-heading-widget__field::placeholder {
+    color: var(--text-3);
 }
 
-.widget-card.edit .section-heading-widget__form input {
+.section-heading-widget__field::selection {
+    background: var(--accent-soft);
+    color: inherit;
+}
+
+.widget-card.edit .section-heading-widget__field {
     cursor: text;
 }

@@ -13,9 +13,16 @@
     margin-right: auto;
 }
 
+.caffeine-calc-controls,
+.caffeine-calc-entries,
+.caffeine-calc-chart-wrap {
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
+}
+
 .caffeine-calc-controls {
     background: var(--color-background-primary);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
@@ -25,6 +32,7 @@
 .caffeine-calc-label {
     color: var(--color-text-secondary);
     font-size: 0.9rem;
+    font-weight: 600;
 }
 
 .caffeine-calc-select,
@@ -32,17 +40,34 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0.75rem 1rem;
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
     background: var(--color-background-secondary, var(--color-background-primary));
     color: var(--color-text-primary);
     font-size: 1rem;
+    box-shadow: var(--shadow-highlight);
+    transition:
+        border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        background var(--dur-2) var(--ease-out);
+}
+
+.caffeine-calc-select:hover,
+.caffeine-calc-input:hover {
+    border-color: var(--line-strong);
+}
+
+.caffeine-calc-picker-trigger:hover {
+    background: var(--surface-hover);
 }
 
 .caffeine-calc-select:focus,
-.caffeine-calc-input:focus {
+.caffeine-calc-input:focus,
+.caffeine-calc-select:focus-visible,
+.caffeine-calc-input:focus-visible {
     outline: none;
     border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .caffeine-calc-picker {
@@ -58,6 +83,22 @@
     text-align: left;
 }
 
+.caffeine-calc-picker-trigger svg {
+    flex-shrink: 0;
+    color: var(--text-3);
+    transition: transform var(--dur-2) var(--ease-out), color var(--dur-2) ease;
+}
+
+.caffeine-calc-picker-trigger[aria-expanded="true"] {
+    border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
+}
+
+.caffeine-calc-picker-trigger[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+    color: var(--color-primary-accent);
+}
+
 .caffeine-calc-picker-menu {
     position: absolute;
     z-index: 20;
@@ -67,12 +108,13 @@
     margin: 0;
     padding: 0.35rem;
     list-style: none;
-    background: var(--color-background-primary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    background: var(--color-background-elevated);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
     max-height: 18rem;
     overflow-y: auto;
+    animation: caffeine-picker-pop var(--dur-2) var(--ease-out);
 }
 
 .caffeine-calc-picker-menu li {
@@ -85,13 +127,14 @@
     min-width: 0;
     padding: 0.7rem 0.85rem;
     border: none;
-    border-radius: calc(var(--border-radius) - 2px);
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--color-text-primary);
     font: inherit;
     font-size: 1rem;
     text-align: left;
     cursor: pointer;
+    transition: background var(--dur-1) ease, color var(--dur-1) ease;
 }
 
 .caffeine-calc-picker-actions {
@@ -100,10 +143,21 @@
     flex-shrink: 0;
 }
 
-.caffeine-calc-picker-option:hover,
-.caffeine-calc-picker-option--selected {
-    background: var(--color-background-secondary, transparent);
-    color: var(--color-primary-accent);
+.caffeine-calc-picker-option:hover {
+    background: var(--accent-softer);
+    color: var(--color-text-primary);
+}
+
+.caffeine-calc-picker-option--selected,
+.caffeine-calc-picker-option--selected:hover {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 600;
+}
+
+.caffeine-calc-picker-option:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--accent-line);
 }
 
 .caffeine-calc-custom {
@@ -117,6 +171,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .caffeine-calc-meta p {
@@ -125,7 +180,7 @@
 
 .caffeine-calc-entries {
     background: var(--color-background-primary);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
 }
 
@@ -133,11 +188,16 @@
     margin: 0 0 1rem;
     color: var(--color-text-primary);
     font-size: 1.1rem;
+    letter-spacing: -0.01em;
 }
 
 .caffeine-calc-entries-empty {
     margin: 0;
+    padding: 1.25rem 1rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-md);
     color: var(--color-text-secondary);
+    text-align: center;
 }
 
 .caffeine-calc-entries-list {
@@ -156,7 +216,14 @@
     gap: 1rem;
     padding: 0.85rem 1rem;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-md);
+    background: var(--color-background-secondary);
+    transition: background var(--dur-1) ease, border-color var(--dur-1) ease;
+}
+
+.caffeine-calc-entry:hover {
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
 }
 
 .caffeine-calc-entry-info {
@@ -174,6 +241,7 @@
 .caffeine-calc-entry-meta {
     color: var(--color-text-secondary);
     font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .caffeine-calc-entry-delete {
@@ -185,12 +253,18 @@
     color: var(--color-text-secondary);
     cursor: pointer;
     padding: 0.4rem;
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-sm);
+    transition: background var(--dur-1) ease, color var(--dur-1) ease;
 }
 
 .caffeine-calc-entry-delete:hover:not(:disabled) {
-    color: var(--color-primary-accent);
-    background: var(--color-background-secondary, transparent);
+    color: var(--accent-strong);
+    background: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+}
+
+.caffeine-calc-entry-delete:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 .caffeine-calc-entry-delete:disabled {
@@ -201,12 +275,29 @@
 .caffeine-calc-chart-wrap {
     min-width: 0;
     background: var(--color-background-primary);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
 }
 
 .caffeine-calc-footnote {
     margin-top: 0.75rem;
-    color: var(--color-text-secondary);
+    color: var(--text-3);
     font-size: 0.85rem;
+}
+
+@keyframes caffeine-picker-pop {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .caffeine-calc-picker-menu {
+        animation: none;
+    }
 }

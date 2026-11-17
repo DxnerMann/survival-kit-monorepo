@@ -14,16 +14,36 @@
 .widget-status__icon {
     color: var(--color-error);
     flex-shrink: 0;
+    padding: 0.5rem;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-error) 12%, transparent);
 }
 
 .widget-status__text {
     margin: 0;
     color: var(--color-text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.4;
+    font-size: 0.9rem;
+    line-height: 1.45;
     max-width: 18rem;
+}
+
+.widget-status--loading .widget-status__text {
+    animation: widget-status-pulse 1.4s ease-in-out infinite;
 }
 
 .widget-status--error .widget-status__text {
     color: var(--color-text-primary);
+}
+
+@keyframes widget-status-pulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .widget-status--loading .widget-status__text {
+        animation: none;
+    }
 }

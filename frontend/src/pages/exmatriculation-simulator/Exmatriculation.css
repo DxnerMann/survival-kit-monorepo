@@ -19,13 +19,20 @@
     align-items: center;
 }
 
+.exmat-simulator-wrapper > :not(.exmat-page) {
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
+}
+
 /* Jede "Seite" im DIN-A4-Verhältnis */
 .exmat-page {
     background: white;
     padding: 2rem 2.5rem;
     border: 1px solid #aaa;
     margin-bottom: 4rem;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.04),
+        var(--shadow-lg);
     aspect-ratio: 210 / 297;
     width: 60rem;
     min-width: 300px;
@@ -201,4 +208,5 @@
     width: 60vw;
     word-break: break-word;
     color: var(--color-text-primary);
+    font-family: var(--font-body);
 }

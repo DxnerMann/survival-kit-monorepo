@@ -6,3 +6,47 @@
 .legal-section {
     padding: 1rem;
 }
+
+.legal-section + .legal-section {
+    border-top: 1px solid var(--color-border);
+}
+
+.legal-subheading {
+    margin-bottom: 0.55rem;
+    color: var(--color-text-primary);
+    font-size: var(--text-xl);
+    letter-spacing: -0.015em;
+}
+
+.legal-label {
+    margin-bottom: 0.4rem;
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.legal-text {
+    color: var(--color-text-secondary);
+    line-height: 1.65;
+}
+
+.legal-text + .legal-text {
+    margin-top: 0.75rem;
+}
+
+.legal-link {
+    margin-inline: 0.25em;
+    color: var(--accent-strong);
+    text-decoration-line: underline;
+    text-decoration-color: var(--accent-line);
+    text-underline-offset: 3px;
+    transition: text-decoration-color var(--dur-2) var(--ease-out);
+}
+
+.legal-link:hover {
+    text-decoration-color: currentColor;
+}
+
+.legal-meta {
+    color: var(--text-3);
+    font-size: var(--text-sm);
+}

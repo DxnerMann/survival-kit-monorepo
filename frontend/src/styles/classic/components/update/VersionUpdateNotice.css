@@ -1,0 +1,32 @@
+.version-update {
+    position: fixed;
+    left: 50%;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: min(420px, calc(100vw - 32px));
+    padding: 12px 12px 12px 18px;
+    border-radius: 10px;
+    border: 1px solid #854d0e;
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.version-update button {
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: #facc15;
+    color: #1e293b;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}

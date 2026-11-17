@@ -15,6 +15,7 @@ public final class XpRules {
         MEME_VOTE(4, 25),
         CHAT_MESSAGE(3, 25),
         CHAT_REACTION(1, 20),
+        CAFFEINE_LOGGED(6, 8),
         IDEA_SUBMITTED(30, 3),
         FEEDBACK_VOTE(3, 20),
         GAME_SUGGESTED(25, 2),

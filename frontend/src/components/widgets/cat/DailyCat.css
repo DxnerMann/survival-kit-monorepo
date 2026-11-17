@@ -41,14 +41,28 @@
     flex: 0 0 auto;
     border: none;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--color-background-primary) 78%, transparent);
+    background: color-mix(in srgb, var(--color-background-elevated) 82%, transparent);
+    box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-sm);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     pointer-events: auto;
     cursor: pointer;
     color: var(--color-text-secondary);
+    transition:
+        background var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
 }
 
 .daily-cat-widget .widget-header-icon:hover {
-    color: var(--color-primary-accent);
+    background: var(--color-background-elevated);
+    color: var(--accent-strong);
+    box-shadow: 0 0 0 1px var(--accent-line), var(--shadow-sm);
+}
+
+.daily-cat-widget .widget-header-icon:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--accent-line), var(--focus-ring);
 }
 
 .daily-cat-img-wrapper {
@@ -77,7 +91,7 @@
     height: 100%;
     overflow: hidden;
     border-radius: var(--border-radius);
-    background: var(--color-background-primary);
+    background: var(--color-background-secondary);
 }
 
 .daily-cat-preview img {

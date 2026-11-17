@@ -27,6 +27,7 @@ import ConfirmDialog from "@/components/dialog/ConfirmDialog.tsx";
 import ChangeEmailDialog from "@/components/dialog/ChangeEmailDialog.tsx";
 import {useCountdownTimer} from "@/services/utils.tsx";
 import {applyAccentOverride, readThemeAccent} from "@/services/accentColor.ts";
+import {chooseDesign, getDesign} from "@/services/designService.ts";
 import {getMyRank} from "@/services/rankService.tsx";
 import type {UserRank} from "@/models/UserRank.tsx";
 import RankBadge from "@/components/rank/RankBadge.tsx";
@@ -115,6 +116,7 @@ const ProfilePage = () => {
     const [accentColor, setAccentColor] = useState<string | null>(null);
     const [username, setUsername] = useState("");
     const [showInLeaderboard, setShowInLeaderboardState] = useState(true);
+    const [modernDesign, setModernDesign] = useState(() => getDesign() === "modern");
     const [newPassword, setNewPassword] = useState("");
     const [oldPassword, setOldPassword] = useState("");
     const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
@@ -379,6 +381,20 @@ const ProfilePage = () => {
                             applyAccentOverride(null);
                         }}
                     />
+                </div>
+                <div className="profile-page-settings-section">
+                    <h2 className="profile-page-subheading">Design</h2>
+                    <Toggle
+                        checked={modernDesign}
+                        label="Neues Design verwenden"
+                        onChange={(enabled) => {
+                            setModernDesign(enabled);
+                            chooseDesign(enabled ? "modern" : "classic");
+                        }}
+                    />
+                    <p className="profile-accent-hint">
+                        Gilt sofort auf diesem Gerät. Feedback zum neuen Design ist immer erwünscht, am besten im Ideenhub.
+                    </p>
                 </div>
                 < Button text={"Speichern"} onClick={() => handleSave()} />
             </div>

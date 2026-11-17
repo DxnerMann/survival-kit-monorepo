@@ -17,13 +17,15 @@ function shadeAccent(hex: string, amount: number): string {
     return `#${channels.join("")}`;
 }
 
+// The modern design derives its tints in theme.css; only the classic design reads --color-accent-shade.
 export function applyAccentOverride(color: string | null | undefined) {
     const body = document.body;
+    body.style.removeProperty("--color-secondary-accent");
     if (!color) {
         body.style.removeProperty("--color-accent-override");
-        body.style.removeProperty("--color-secondary-accent");
+        body.style.removeProperty("--color-accent-shade");
         return;
     }
     body.style.setProperty("--color-accent-override", color);
-    body.style.setProperty("--color-secondary-accent", shadeAccent(color, 0.42));
+    body.style.setProperty("--color-accent-shade", shadeAccent(color, 0.42));
 }

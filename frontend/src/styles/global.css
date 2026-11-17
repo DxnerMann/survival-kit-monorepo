@@ -4,16 +4,16 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Anticyclone', sans-serif;
+    font-family: var(--font-body, 'Anticyclone', sans-serif);
     --header-height: 80px;
     --footer-height: 180px;
     --widget-header-height: 1rem;
-    --border-radius: 2rem;
+    --border-radius: var(--radius-lg);
+    --radius-control: var(--radius-md);
     --dwg-cols: 10;
     --dwg-gap: 0.5rem;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--color-primary-accent) 70%, transparent)
-        color-mix(in srgb, var(--color-background-secondary) 45%, transparent);
+    scrollbar-color: color-mix(in srgb, var(--color-text-secondary) 45%, transparent) transparent;
 }
 
 html,
@@ -28,20 +28,26 @@ body,
 }
 
 body {
-
-    font-family: 'Anticyclone', sans-serif;
-
-    background-color: var(--color-background-primary);
+    background-color: var(--color-background-canvas);
     color: var(--color-text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 
     transition:
-            background-color 0.2s ease,
-            color 0.2s ease;
+        background-color var(--dur-2) ease,
+        color var(--dur-2) ease;
 
     margin: 0;
     padding: 0;
     min-height: 100vh;
     position: relative;
+}
+
+::selection {
+    background: color-mix(in srgb, var(--color-primary-accent) 30%, transparent);
+    color: var(--color-text-primary);
 }
 
 .app-shell {
@@ -59,21 +65,42 @@ body {
     width: 100%;
 }
 
+/* Campus photo as a quiet, blurred ambient layer under the canvas wash. */
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100vw;
     height: 100vh;
 
-    background: linear-gradient(rgba(0, 0, 0, 0.25), var(--color-background-secondary)),
-    url('/images/background.jpg') no-repeat center center;
+    background:
+        radial-gradient(
+            120% 80% at 50% -10%,
+            color-mix(in srgb, var(--color-primary-accent) 10%, transparent),
+            transparent 60%
+        ),
+        linear-gradient(var(--page-wash), var(--page-wash)),
+        url('/images/background.jpg') no-repeat center center;
     background-size: cover;
 
-    filter: blur(10px);
+    filter: blur(18px) saturate(0.8);
     z-index: -1;
     transform: scale(1.1);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    text-wrap: balance;
+}
+
+h1 {
+    letter-spacing: -0.02em;
+}
+
+p {
+    text-wrap: pretty;
 }
 
 button,
@@ -85,6 +112,46 @@ select {
 
 button {
     cursor: pointer;
+}
+
+/* Zero-specificity base for native controls; component classes always win. */
+:where(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="button"], [type="submit"], [type="reset"]),
+    textarea,
+    select
+) {
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    transition:
+        border-color var(--dur-1) ease,
+        box-shadow var(--dur-1) ease,
+        background var(--dur-1) ease;
+}
+
+:where(input, textarea)::placeholder {
+    color: var(--text-3);
+    opacity: 1;
+}
+
+:where(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+    textarea,
+    select
+):focus-visible {
+    outline: none;
+    border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
+}
+
+:where(button, a, [role="button"], summary):focus-visible {
+    outline: 2px solid var(--color-primary-accent);
+    outline-offset: 2px;
+}
+
+:where(input[type="checkbox"], input[type="radio"], input[type="range"], progress) {
+    accent-color: var(--color-primary-accent);
 }
 
 a {
@@ -132,8 +199,18 @@ a {
     font-display: swap;
 }
 
+/* The one signature treatment: highlighted headline words carry the accent gradient. */
 .important-text {
     color: var(--color-primary-accent);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .important-text {
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 }
 
 .rte-h1 {
@@ -149,8 +226,10 @@ a {
 }
 
 .rte-link {
-    color: var(--color-primary-accent);
+    color: var(--accent-strong);
     text-decoration: underline;
+    text-decoration-color: var(--accent-line);
+    text-underline-offset: 3px;
 }
 
 .survival-kit-page {
@@ -167,28 +246,30 @@ a {
 }
 
 *::-webkit-scrollbar-track {
-    background: color-mix(in srgb, var(--color-background-secondary) 35%, transparent);
-    border-radius: 999px;
+    background: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--color-primary-accent) 85%, transparent),
-        color-mix(in srgb, var(--color-secondary-accent) 80%, var(--color-primary-accent))
-    );
+    background: color-mix(in srgb, var(--color-text-secondary) 38%, transparent);
     border-radius: 999px;
-    border: 2px solid transparent;
+    border: 3px solid transparent;
     background-clip: padding-box;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary-accent) 25%, transparent);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primary-accent);
+    background: color-mix(in srgb, var(--color-primary-accent) 65%, var(--color-text-secondary));
     background-clip: padding-box;
-    box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary-accent) 45%, transparent);
 }
 
 *::-webkit-scrollbar-corner {
     background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

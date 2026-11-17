@@ -10,8 +10,9 @@
 .roomfinder-filters,
 .roomfinder-card {
     background: var(--color-background-primary);
-    border: none;
-    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md), var(--shadow-highlight);
 }
 
 .roomfinder-filters {
@@ -46,6 +47,7 @@
 .roomfinder-mode legend {
     margin-bottom: 0.15rem;
     font-weight: 600;
+    color: var(--color-text-primary);
 }
 
 .roomfinder-option {
@@ -62,14 +64,21 @@
     width: 1.15rem;
     height: 1.15rem;
     margin: 0;
-    border: 2px solid var(--color-border);
+    border: 2px solid var(--line-strong);
     border-radius: 50%;
     background: var(--color-background-secondary);
     display: grid;
     place-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition:
+        border-color var(--dur-1) ease,
+        background var(--dur-1) ease,
+        box-shadow var(--dur-1) ease;
+}
+
+.roomfinder-option:hover input[type="radio"]:not(:checked) {
+    border-color: var(--accent-line);
 }
 
 .roomfinder-option input[type="radio"]::before {
@@ -77,13 +86,14 @@
     width: 0.55rem;
     height: 0.55rem;
     border-radius: 50%;
-    background: var(--color-primary-accent);
+    background: var(--accent-gradient);
     transform: scale(0);
-    transition: transform 0.15s ease;
+    transition: transform var(--dur-2) var(--ease-spring);
 }
 
 .roomfinder-option input[type="radio"]:checked {
     border-color: var(--color-primary-accent);
+    background: var(--accent-softer);
 }
 
 .roomfinder-option input[type="radio"]:checked::before {
@@ -91,8 +101,8 @@
 }
 
 .roomfinder-option input[type="radio"]:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-primary-accent) 35%, transparent);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 .roomfinder-times {
@@ -106,6 +116,8 @@
     flex-direction: column;
     gap: 0.3rem;
     font-weight: 600;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
 }
 
 .roomfinder-field input {
@@ -113,17 +125,42 @@
     width: 100%;
     padding: 0.55rem 0.7rem;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-md);
     background: var(--color-background-secondary);
     color: var(--color-text-primary);
+    box-shadow: var(--shadow-highlight);
     font: inherit;
+    font-size: var(--text-md);
     font-weight: 400;
+    transition:
+        border-color var(--dur-1) ease,
+        box-shadow var(--dur-1) ease;
+}
+
+.roomfinder-field input:hover {
+    border-color: var(--line-strong);
+}
+
+.roomfinder-field input:focus,
+.roomfinder-field input:focus-visible {
+    outline: none;
+    border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .roomfinder-hint,
 .roomfinder-placeholder {
     margin: 0;
     color: var(--color-text-secondary);
+}
+
+.roomfinder-hint {
+    font-size: var(--text-sm);
+}
+
+.roomfinder-placeholder {
+    padding: 1.5rem 0.5rem;
+    text-align: center;
 }
 
 .roomfinder-board {
@@ -160,6 +197,7 @@
 .roomfinder-status h2 {
     margin: 0;
     font-size: 1.25rem;
+    letter-spacing: -0.015em;
 }
 
 .roomfinder-results__header {
@@ -190,18 +228,55 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.75rem 0.9rem;
-    border: none;
-    border-radius: calc(var(--border-radius) / 2);
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     background: var(--color-background-secondary);
     color: var(--color-text-primary);
     font: inherit;
     text-align: left;
     cursor: pointer;
+    transition:
+        background-color var(--dur-1) ease,
+        border-color var(--dur-1) ease,
+        box-shadow var(--dur-1) ease,
+        color var(--dur-1) ease;
+}
+
+.roomfinder-room::after {
+    content: "›";
+    color: var(--text-3);
+    font-size: 1.15rem;
+    line-height: 1;
+    pointer-events: none;
+    transition: color var(--dur-1) ease, transform var(--dur-2) var(--ease-out);
+}
+
+.roomfinder-room:hover {
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
+}
+
+.roomfinder-room:hover::after {
+    color: var(--accent-strong);
+    transform: translateX(2px);
+}
+
+.roomfinder-room:focus-visible {
+    outline: none;
+    border-color: var(--color-primary-accent);
+    box-shadow: var(--focus-ring);
 }
 
 .roomfinder-room.is-selected {
-    box-shadow: inset 0 0 0 2px var(--color-primary-accent);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px var(--accent-line);
+    color: var(--accent-strong);
+}
+
+.roomfinder-room.is-selected::after {
+    color: var(--accent-strong);
 }
 
 .roomfinder-room__name {
@@ -226,6 +301,7 @@
     margin: 0;
     color: var(--color-text-secondary);
     font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .roomfinder-conflicts {
@@ -256,8 +332,15 @@
     flex-direction: column;
     gap: 0.35rem;
     padding: 0.65rem 0.8rem;
-    border-radius: calc(var(--border-radius) / 2);
-    background: var(--color-background-secondary);
+    border-radius: var(--radius-md);
+    background:
+        linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--color-error) 8%, transparent),
+            transparent 65%
+        ),
+        var(--color-background-secondary);
+    border: 1px solid var(--color-border);
     border-left: 3px solid var(--color-error);
 }
 
@@ -272,6 +355,7 @@
     font-weight: 700;
     font-size: 0.9rem;
     color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
 }
 
 .roomfinder-conflict__summary {
@@ -289,11 +373,11 @@
 .roomfinder-conflict__course-tag {
     font-size: 0.7rem;
     font-weight: 600;
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--color-primary-accent) 15%, var(--color-background-primary));
-    color: var(--color-primary-accent);
-    border: 1px solid color-mix(in srgb, var(--color-primary-accent) 30%, transparent);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    border: 1px solid var(--accent-line);
 }
 
 .roomfinder-plan-card {

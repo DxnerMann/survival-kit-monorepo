@@ -1,0 +1,101 @@
+.release-notes-page {
+    box-sizing: border-box;
+    width: 100%;
+    padding: calc(var(--header-height) + 2rem) 2rem 2rem;
+    margin: 0 auto;
+}
+
+.release-notes-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.release-notes-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-background-primary);
+    overflow: hidden;
+    box-shadow: 0 1px 3px var(--color-shadow);
+}
+
+.release-notes-item.latest {
+    border-color: var(--color-primary-accent);
+}
+
+.release-notes-item.latest .release-notes-item__title {
+    color: var(--color-primary-accent);
+}
+
+.release-notes-item__header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    color: var(--color-text-primary);
+}
+
+.release-notes-item__header:hover {
+    background: color-mix(in srgb, var(--color-background-secondary) 35%, transparent);
+}
+
+.release-notes-item__title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.release-notes-item__date {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+}
+
+.release-notes-item__chevron {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.release-notes-item.open .release-notes-item__chevron {
+    transform: rotate(180deg);
+}
+
+.release-notes-item__body {
+    padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.release-notes-section {
+    margin-top: 1rem;
+}
+
+.release-notes-section:first-child {
+    margin-top: 0.75rem;
+}
+
+.release-notes-section__title {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    color: var(--color-primary-accent);
+}
+
+.release-notes-section__list {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--color-text-primary);
+    line-height: 1.5;
+}
+
+.release-notes-section__list li {
+    margin-bottom: 0.35rem;
+}
