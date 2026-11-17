@@ -152,6 +152,14 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public void updateShowInLeaderboard(String userId, boolean showInLeaderboard) {
+        jdbcClient.sql(Statements.UPDATE_SHOW_IN_LEADERBOARD.sql)
+                .paramSource(new MapSqlParameterSource("showInLeaderboard", showInLeaderboard)
+                        .addValue("id", userId)
+                ).update();
+    }
+
+    @Override
     public void updateAccentColor(String userId, String accentColor) {
         jdbcClient.sql(Statements.UPDATE_ACCENT_COLOR.sql)
                 .paramSource(new MapSqlParameterSource()
@@ -339,7 +347,7 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         USER_PROFILE(
         """
-                SELECT firstname, lastname, course, role, email, username, color, accentColor, id as userId, isverified FROM users WHERE id = :id;
+                SELECT firstname, lastname, course, role, email, username, color, accentColor, id as userId, isverified, showInLeaderboard FROM users WHERE id = :id;
             """
         ),
         // language=sql
@@ -364,6 +372,12 @@ public class UserRepository implements UserPersistancePort {
         UPDATE_ACCENT_COLOR(
         """
                 UPDATE users SET accentColor = :accentColor WHERE id = :id
+            """
+        ),
+        // language=sql
+        UPDATE_SHOW_IN_LEADERBOARD(
+        """
+                UPDATE users SET showInLeaderboard = :showInLeaderboard WHERE id = :id
             """
         ),
         // language=sql
@@ -393,7 +407,7 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         GET_USERS(
                 """
-                        SELECT firstname, lastname, course, role, email, username, color, accentColor, id as userId, isverified
+                        SELECT firstname, lastname, course, role, email, username, color, accentColor, id as userId, isverified, showInLeaderboard
                         FROM users
                         WHERE (:continuation::TEXT IS NULL OR id > :continuation)
                         ORDER BY id

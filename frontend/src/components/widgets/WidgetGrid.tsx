@@ -25,6 +25,7 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
     FAV_GAMES: { minW: 2, minH: 2, maxW: 10, defaultW: 2, defaultH: 2 },
     FEGEFEUER: { minW: 2, minH: 1, maxW: 5, maxH: 5, defaultW: 4, defaultH: 2 },
     COUNTER: { minW: 2, minH: 2, maxW: 6, maxH: 5, defaultW: 4, defaultH: 3 },
+    LEADERBOARD: { minW: 2, minH: 3, maxW: 6, maxH: 8, defaultW: 3, defaultH: 4 },
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 

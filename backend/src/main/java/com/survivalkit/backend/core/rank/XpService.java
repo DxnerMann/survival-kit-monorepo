@@ -73,6 +73,14 @@ public class XpService implements XpPort {
     }
 
     @Override
+    public List<UserRankView> leaderboard(int limit) {
+        var size = Math.max(1, Math.min(limit, 20));
+        return xpRepository.leaderboard(size).stream()
+                .map(row -> UserRankView.of(row.userId(), row.username(), row.xp()))
+                .toList();
+    }
+
+    @Override
     public List<UserRankView> findByUsers(Collection<String> userIds) {
         return xpRepository.findByUsers(userIds).stream()
                 .map(row -> UserRankView.of(row.userId(), row.username(), row.xp()))

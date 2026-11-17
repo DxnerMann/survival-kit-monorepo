@@ -21,6 +21,7 @@ public record UserWidgetModel(
         FEGEFEUER,
         COUNTER,
         EMPTY,
-        EMPTY_DASHBOARD
+        EMPTY_DASHBOARD,
+        LEADERBOARD
     }
 }

@@ -10,6 +10,7 @@ import CurrentCaffeine from "@/components/widgets/current-caffeine/CurrentCaffei
 import FavGames from "@/components/widgets/fav-games/FavGames.tsx";
 import Fegefeuer from "@/components/widgets/fegefeuer/Fegefeuer.tsx";
 import Counter from "@/components/widgets/counter/Counter.tsx";
+import Leaderboard from "@/components/widgets/leaderboard/Leaderboard.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -169,6 +170,15 @@ const getDefaultToolbox = (): UserWidget[] => {
             x: 0,
             y: 0,
             data: ""
+        },
+        {
+            id: "default-leaderboard",
+            type: "LEADERBOARD",
+            height: 4,
+            width: 3,
+            x: 0,
+            y: 0,
+            data: ""
         }
     ]
 }
@@ -204,6 +214,8 @@ const decideOnWidget = (widget: UserWidget, isPreview: boolean) => {
             return <Fegefeuer {...shared} title={"Fegefeuer"} />
         case "COUNTER":
             return <Counter {...shared} title={"Zähler"} />
+        case "LEADERBOARD":
+            return <Leaderboard {...shared} title={"Leaderboard"} />
     }
 }
 

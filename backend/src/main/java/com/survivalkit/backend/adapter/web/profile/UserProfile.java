@@ -12,6 +12,7 @@ public record UserProfile(
         String color,
         String accentColor,
         String userId,
-        Boolean isVerified
+        Boolean isVerified,
+        boolean showInLeaderboard
 ) {
 }

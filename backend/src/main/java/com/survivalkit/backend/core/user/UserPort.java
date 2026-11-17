@@ -18,6 +18,7 @@ public interface UserPort {
     void updateUsername(String newUsername);
     void updateColor(String newColor);
     void updateAccentColor(String newColor);
+    void updateShowInLeaderboard(boolean showInLeaderboard);
     Page<UserProfile> getUsers(Integer pageSize, String continuation);
     void promote(String userId, RoleLevel role);
 }

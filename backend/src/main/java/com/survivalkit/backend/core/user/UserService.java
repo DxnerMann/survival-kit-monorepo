@@ -252,6 +252,13 @@ public class UserService implements UserPort {
     }
 
     @Override
+    public void updateShowInLeaderboard(boolean showInLeaderboard) {
+        requireVerification();
+        var user = SecurityContext.current();
+        userPersistancePort.updateShowInLeaderboard(user.userId(), showInLeaderboard);
+    }
+
+    @Override
     public void updateAccentColor(String newColor) {
         requireVerification();
         var user = SecurityContext.current();

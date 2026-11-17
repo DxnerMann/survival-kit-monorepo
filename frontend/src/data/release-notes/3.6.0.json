@@ -5,11 +5,13 @@
     {
       "title": "Ränge",
       "items": [
-        "Im Profil gibt es den Tab Rang, zwischen Profileinstellungen und Sicherheit",
+        "Im Profil gibt es den Tab Rang, zwischen Profileinstellungen und Sicherheit & Privatsphäre",
         "Von Bronze III über Silber, Gold und Diamond bis Platin. Ring, Wappen und Balken haben die Farbe des Rangs",
+        "Im Tab Rang stehen Wappen, Balken und XP rechts neben Bild und Ring",
         "XP gibt es fürs Mitmachen: anmelden, Memes, Chat, Ideen, Spielevorschläge und das Präsi-Spiel",
         "Steigst du auf, kommt eine Aktivität: „Du bist aufgestiegen“",
-        "Im Chat, an Memes, bei Ideen und im Präsi-Spiel steht neben dem Namen das Profilbild. Darüber siehst du Rang und Fortschritt"
+        "Im Chat, an Memes, bei Ideen und im Präsi-Spiel steht neben dem Namen das Profilbild. Darüber siehst du Rang und Fortschritt. Der Hinweis bleibt im Bild, auch über der ersten Nachricht",
+        "Auf der Memewall bleibt das Profilbild beim Drüberfahren scharf, der Name in einer Zeile"
       ]
     },
     {
@@ -25,6 +27,13 @@
       "items": [
         "Jede Meldung ist eine eigene Karte, mit Icon und kurzer Animation",
         "Neu dabei: jemand bewertet deine Idee, ein Admin löscht sie, deine Rolle ändert sich, du steigst im Rang auf"
+      ]
+    },
+    {
+      "title": "Leaderboard",
+      "items": [
+        "Im Dashboard gibt es das Widget Leaderboard. Es zeigt die zehn mit dem meisten XP",
+        "Unter Sicherheit & Privatsphäre schaltest du „Im Leaderboard anzeigen“ aus, wenn dein Name dort nicht stehen soll"
       ]
     },
     {

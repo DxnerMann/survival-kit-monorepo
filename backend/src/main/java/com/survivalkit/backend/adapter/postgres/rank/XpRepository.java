@@ -49,6 +49,23 @@ public class XpRepository {
         return Optional.of(new XpGrant(previous.get(), previous.get() + amount));
     }
 
+    public List<XpRow> leaderboard(int limit) {
+        return jdbcClient.sql("""
+                SELECT id, username, COALESCE(xp, 0) AS xp
+                FROM users
+                WHERE showInLeaderboard IS TRUE
+                ORDER BY xp DESC, username ASC
+                LIMIT :limit
+                """)
+                .param("limit", limit)
+                .query((rs, rowNum) -> new XpRow(
+                        rs.getString("id"),
+                        rs.getString("username"),
+                        rs.getInt("xp")
+                ))
+                .list();
+    }
+
     public List<XpRow> findByUsers(Collection<String> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return List.of();

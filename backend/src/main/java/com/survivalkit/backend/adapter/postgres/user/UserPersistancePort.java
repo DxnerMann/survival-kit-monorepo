@@ -22,6 +22,7 @@ public interface UserPersistancePort {
     Optional<ImgWrapper> getProfilePicture(String userId);
     void updateProfileColor(String userId, String color);
     void updateAccentColor(String userId, String accentColor);
+    void updateShowInLeaderboard(String userId, boolean showInLeaderboard);
     void updatePassword(String userId, String newPassword);
     void deleteUser(String userId);
     boolean isLastAdmin(String userId);

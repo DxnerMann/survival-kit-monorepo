@@ -35,6 +35,13 @@ export async function fetchProfileSettings(): Promise<ProfileSettings> {
     return response.json();
 }
 
+export async function setShowInLeaderboard(visible: boolean): Promise<void> {
+    const response = await apiFetch(`${API_URL}/profile/leaderboard?visible=${visible}`, {
+        method: "PUT",
+    });
+    await checkResponse(response);
+}
+
 export async function setUserCourse(course: string): Promise<void> {
     const response = await apiFetch(`${API_URL}/profile/course?course=${course}`, {
         method: 'POST',

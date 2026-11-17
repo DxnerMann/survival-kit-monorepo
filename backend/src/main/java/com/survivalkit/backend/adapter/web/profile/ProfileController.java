@@ -42,6 +42,19 @@ public class ProfileController {
         return ResponseEntity.ok(xpPort.mine());
     }
 
+    @Role(RoleLevel.GUEST)
+    @GetMapping("leaderboard")
+    public ResponseEntity<List<UserRankView>> leaderboard() {
+        return ResponseEntity.ok(xpPort.leaderboard(10));
+    }
+
+    @Role(RoleLevel.USER)
+    @PutMapping("leaderboard")
+    public ResponseEntity<Void> updateLeaderboardVisibility(@RequestParam boolean visible) {
+        userPort.updateShowInLeaderboard(visible);
+        return ResponseEntity.ok().build();
+    }
+
     @Role(RoleLevel.USER)
     @GetMapping("ranks")
     public ResponseEntity<List<UserRankView>> ranks(@RequestParam List<String> userIds) {

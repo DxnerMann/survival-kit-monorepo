@@ -9,4 +9,5 @@ export type ProfileSettings = {
     accentColor?: string | null,
     userId: string
     isVerified: boolean,
+    showInLeaderboard?: boolean,
 }

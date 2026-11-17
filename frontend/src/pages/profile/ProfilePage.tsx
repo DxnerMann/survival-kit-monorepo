@@ -8,6 +8,7 @@ import type {ProfileSettings} from "@/models/ProfileSettings.tsx";
 import {getUserRole} from "@/services/tokenService.tsx";
 import {
     fetchProfileSettings,
+    setShowInLeaderboard,
     setUserCourse,
     updateUsernameAndColor,
     uploadProfileImage
@@ -18,6 +19,7 @@ import ProfilePictureDialog from "@/components/dialog/ProfilePictureDialog.tsx";
 import ColorPicker from "@/components/ui/ColorPicker.tsx";
 import Button from "@/components/ui/Button.tsx";
 import Separator from "@/components/ui/Separator.tsx";
+import Toggle from "@/components/ui/Toggle.tsx";
 import {authService, validatePassword} from "@/services/authService.tsx";
 import {snackbarService} from "@/services/snackBarService.tsx";
 import {useNavigate} from "react-router-dom";
@@ -75,25 +77,27 @@ const RankTab = ({userId}: {userId?: string}) => {
                     >
                         {userId && <img src={`${API_URL}/profile/img/${userId}`} alt="" />}
                     </div>
-                    <div className="profile-rank__copy">
-                        <RankBadge tier={rank.tier} color={rank.color} colorSoft={rank.colorSoft} />
-                        <div>
-                            <h2>{rank.rankLabel}</h2>
-                            <p>{rank.xp} XP</p>
+                    <div className="profile-rank__details">
+                        <div className="profile-rank__copy">
+                            <RankBadge tier={rank.tier} color={rank.color} colorSoft={rank.colorSoft} />
+                            <div>
+                                <h2>{rank.rankLabel}</h2>
+                                <p>{rank.xp} XP</p>
+                            </div>
                         </div>
+                        <RankProgress
+                            color={rank.color}
+                            colorSoft={rank.colorSoft}
+                            into={rank.xpIntoRank}
+                            span={rank.xpSpan}
+                            complete={rank.nextLabel == null}
+                        />
+                        <p className="profile-rank__need">
+                            {rank.nextLabel
+                                ? `Noch ${rank.xpRemaining} XP bis ${rank.nextLabel}`
+                                : "Du hast den höchsten Rang erreicht."}
+                        </p>
                     </div>
-                    <RankProgress
-                        color={rank.color}
-                        colorSoft={rank.colorSoft}
-                        into={rank.xpIntoRank}
-                        span={rank.xpSpan}
-                        complete={rank.nextLabel == null}
-                    />
-                    <p className="profile-rank__need">
-                        {rank.nextLabel
-                            ? `Noch ${rank.xpRemaining} XP bis ${rank.nextLabel}`
-                            : "Du hast den höchsten Rang erreicht."}
-                    </p>
                 </div>
             )}
         </div>
@@ -110,6 +114,7 @@ const ProfilePage = () => {
     const [profileColor, setProfileColor] = useState("");
     const [accentColor, setAccentColor] = useState<string | null>(null);
     const [username, setUsername] = useState("");
+    const [showInLeaderboard, setShowInLeaderboardState] = useState(true);
     const [newPassword, setNewPassword] = useState("");
     const [oldPassword, setOldPassword] = useState("");
     const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
@@ -130,6 +135,7 @@ const ProfilePage = () => {
             applyAccentOverride(profileSettings.accentColor);
             setUsername(profileSettings.username);
             setIsVerified(profileSettings.isVerified);
+            setShowInLeaderboardState(profileSettings.showInLeaderboard !== false);
         }
         fetchData();
     }, []);
@@ -271,7 +277,7 @@ const ProfilePage = () => {
                         {
                             tab === "PROFILE_SETTINGS" ? <SettingsIcon size={20} /> : tab === "RANK" ? <Medal size={20} /> : tab === "SECURITY" ? < LockKeyhole size={20} /> : < Skull size={20} />
                         }
-                        <h3 className="profile-page-sidebar-tab-name">{tab === "PROFILE_SETTINGS" ? "Profileinstellungen" : tab === "RANK" ? "Rang" : tab === "SECURITY" ? "Sicherheit" : "Danger Zone"}</h3>
+                        <h3 className="profile-page-sidebar-tab-name">{tab === "PROFILE_SETTINGS" ? "Profileinstellungen" : tab === "RANK" ? "Rang" : tab === "SECURITY" ? "Sicherheit & Privatsphäre" : "Danger Zone"}</h3>
                     </div>
                 )
             }
@@ -391,7 +397,29 @@ const ProfilePage = () => {
         }
 
         return <div className="profile-page-content">
-            <SectionHeading heading={"Sicherheit"} centered={false} />
+            <SectionHeading heading={"Sicherheit & Privatsphäre"} centered={false} />
+            <div className="profile-page-settings-section-security">
+                <h2 className="profile-page-subheading">Leaderboard</h2>
+                <Toggle
+                    checked={showInLeaderboard}
+                    label="Im Leaderboard anzeigen"
+                    onChange={(visible) => {
+                        const previous = showInLeaderboard;
+                        setShowInLeaderboardState(visible);
+                        setShowInLeaderboard(visible)
+                            .then(() => {
+                                setprofileSettings(current => current ? {...current, showInLeaderboard: visible} : current);
+                            })
+                            .catch(() => {
+                                setShowInLeaderboardState(previous);
+                                snackbarService.showSnackbar({type: "error", text: "Einstellung konnte nicht gespeichert werden", showIcon: true});
+                            });
+                    }}
+                />
+                <Info text={"Ausgeschaltet erscheint dein Name nicht in der Rangliste."} type={"INFO"} />
+            </div>
+            <br />
+            <Separator width={"100%"} height={"2px"} variant="secondary" />
             <div className="profile-page-settings-section-security">
                 <h2 className="profile-page-subheading">Passwort ändern</h2>
                 <input placeholder="altes Passwort" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} />

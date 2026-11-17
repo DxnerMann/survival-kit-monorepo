@@ -10,4 +10,6 @@ public interface XpPort {
     UserRankView mine();
 
     List<UserRankView> findByUsers(Collection<String> userIds);
+
+    List<UserRankView> leaderboard(int limit);
 }

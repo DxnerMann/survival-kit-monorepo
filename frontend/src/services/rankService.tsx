@@ -11,6 +11,15 @@ export const getMyRank = async (): Promise<UserRank | null> => {
     return response.json() as Promise<UserRank>;
 };
 
+export const getLeaderboard = async (): Promise<UserRank[]> => {
+    const response = await apiFetch(`${API_URL}/profile/leaderboard`);
+    if (!response.ok) {
+        return [];
+    }
+    const body = await response.json() as UserRank[];
+    return Array.isArray(body) ? body : [];
+};
+
 export const getRanks = async (userIds: string[]): Promise<UserRank[]> => {
     const ids = [...new Set(userIds.map(id => id.trim()).filter(Boolean))].slice(0, 80);
     if (ids.length === 0) {

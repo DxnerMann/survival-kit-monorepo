@@ -138,14 +138,14 @@
     cursor: pointer;
 }
 
-.memewall-meme img {
+.memewall-meme__open img {
     width: 100%;
     display: block;
     transition: filter 0.18s ease, transform 0.18s ease;
 }
 
-.memewall-meme__media:hover img,
-.memewall-meme__media:focus-within img {
+.memewall-meme__media:hover .memewall-meme__open img,
+.memewall-meme__media:focus-within .memewall-meme__open img {
     filter: blur(4px) brightness(0.65);
     transform: scale(1.04);
 }
@@ -187,6 +187,21 @@
     color: var(--color-text-secondary);
     font-size: 0.85rem;
     line-height: 1.35;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    pointer-events: none;
+}
+
+.memewall-meme__media:hover .memewall-meme__author,
+.memewall-meme__media:focus-within .memewall-meme__author {
+    pointer-events: auto;
+}
+
+.memewall-meme__author .user-rank-hover {
+    white-space: nowrap;
 }
 
 .memewall-meme__text p {
