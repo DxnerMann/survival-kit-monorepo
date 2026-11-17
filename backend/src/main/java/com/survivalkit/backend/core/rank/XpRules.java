@@ -51,7 +51,10 @@ public final class XpRules {
         DIAMOND_III("Diamond III", "DIAMOND", "III", 5400, "#6ec6ff", "#e7f7ff"),
         DIAMOND_II("Diamond II", "DIAMOND", "II", 7200, "#6ec6ff", "#e7f7ff"),
         DIAMOND_I("Diamond I", "DIAMOND", "I", 9500, "#6ec6ff", "#e7f7ff"),
-        PLATIN("Platin", "PLATIN", "", 12500, "#b388ff", "#f6edff");
+        PLATIN_III("Platin III", "PLATIN", "III", 12500, "#b388ff", "#f6edff"),
+        PLATIN_II("Platin II", "PLATIN", "II", 16500, "#b388ff", "#f6edff"),
+        PLATIN_I("Platin I", "PLATIN", "I", 22000, "#b388ff", "#f6edff"),
+        GRANDMASTER("Grandmaster of Prokrastination", "GRANDMASTER", "", 29000, "#ff3d4f", "#ff9a3c");
 
         private final String label;
         private final String tier;

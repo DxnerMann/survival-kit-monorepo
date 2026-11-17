@@ -1,6 +1,7 @@
 package com.survivalkit.backend.adapter.web.profile;
 
 import com.survivalkit.backend.core.course.CoursePort;
+import com.survivalkit.backend.core.rank.RankThreshold;
 import com.survivalkit.backend.core.rank.UserRankView;
 import com.survivalkit.backend.core.rank.XpPort;
 import com.survivalkit.backend.core.user.UserPort;
@@ -40,6 +41,12 @@ public class ProfileController {
     @GetMapping("rank")
     public ResponseEntity<UserRankView> myRank() {
         return ResponseEntity.ok(xpPort.mine());
+    }
+
+    @Role(RoleLevel.USER)
+    @GetMapping("rank-ladder")
+    public ResponseEntity<List<RankThreshold>> rankLadder() {
+        return ResponseEntity.ok(RankThreshold.all());
     }
 
     @Role(RoleLevel.GUEST)
