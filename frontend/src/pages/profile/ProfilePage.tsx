@@ -45,28 +45,6 @@ const roleLabel = (role: string | null) => {
 
 const formatXp = (xp: number) => new Intl.NumberFormat("de-DE").format(xp);
 
-const tierName = (step: RankThreshold) =>
-    step.division ? step.label.slice(0, step.label.length - step.division.length).trim() : step.label;
-
-const groupLadder = (steps: RankThreshold[]) => {
-    const groups: {tier: string; name: string; color: string; colorSoft: string; steps: RankThreshold[]}[] = [];
-    for (const step of steps) {
-        const last = groups[groups.length - 1];
-        if (!last || last.tier !== step.tier) {
-            groups.push({
-                tier: step.tier,
-                name: tierName(step),
-                color: step.color,
-                colorSoft: step.colorSoft,
-                steps: [step],
-            });
-        } else {
-            last.steps.push(step);
-        }
-    }
-    return groups;
-};
-
 const RankTab = ({userId}: {userId?: string}) => {
     const [rank, setRank] = useState<UserRank | null | undefined>(undefined);
     const [ladder, setLadder] = useState<RankThreshold[]>([]);
@@ -142,35 +120,26 @@ const RankTab = ({userId}: {userId?: string}) => {
                 <section className="profile-rank-ladder" aria-label="Alle Ränge">
                     <h3 className="profile-page-subheading">Alle Ränge</h3>
                     <ol>
-                        {groupLadder(ladder).map(group => (
-                            <li
-                                key={group.tier}
-                                className={group.steps.length === 1 ? "profile-rank-ladder__tier profile-rank-ladder__tier--solo" : "profile-rank-ladder__tier"}
-                                style={{["--rank-color" as string]: group.color, ["--rank-color-soft" as string]: group.colorSoft}}
-                            >
-                                <RankBadge tier={group.tier} color={group.color} colorSoft={group.colorSoft} size={group.steps.length === 1 ? 52 : 40} />
-                                <span className="profile-rank-ladder__name">{group.name}</span>
-                                <span className="profile-rank-ladder__divisions">
-                                    {group.steps.map(step => {
-                                        const current = rank?.rankId === step.id;
-                                        const reached = rank != null && rank.xp >= step.minXp;
-                                        const state = current ? "current" : reached ? "reached" : rank ? "ahead" : "";
-                                        return (
-                                            <span
-                                                key={step.id}
-                                                className={`profile-rank-ladder__step${state ? ` profile-rank-ladder__step--${state}` : ""}`}
-                                                aria-current={current ? "true" : undefined}
-                                            >
-                                                {step.division && <span className="profile-rank-ladder__division">{step.division}</span>}
-                                                <span className="profile-rank-ladder__xp">
-                                                    {step.minXp === 0 ? "0 XP" : `ab ${formatXp(step.minXp)} XP`}
-                                                </span>
-                                            </span>
-                                        );
-                                    })}
-                                </span>
-                            </li>
-                        ))}
+                        {ladder.map(step => {
+                            const current = rank?.rankId === step.id;
+                            const reached = rank != null && rank.xp >= step.minXp;
+                            const state = current ? "current" : reached ? "reached" : rank ? "ahead" : "";
+                            const solo = step.division === "";
+                            return (
+                                <li
+                                    key={step.id}
+                                    className={`profile-rank-ladder__row${solo ? " profile-rank-ladder__row--solo" : ""}${state ? ` profile-rank-ladder__row--${state}` : ""}`}
+                                    style={{["--rank-color" as string]: step.color, ["--rank-color-soft" as string]: step.colorSoft}}
+                                    aria-current={current ? "true" : undefined}
+                                >
+                                    <RankBadge tier={step.tier} color={step.color} colorSoft={step.colorSoft} size={32} />
+                                    <span className="profile-rank-ladder__name">{step.label}</span>
+                                    <span className="profile-rank-ladder__xp">
+                                        {step.minXp === 0 ? "0 XP" : `ab ${formatXp(step.minXp)} XP`}
+                                    </span>
+                                </li>
+                            );
+                        })}
                     </ol>
                 </section>
             )}

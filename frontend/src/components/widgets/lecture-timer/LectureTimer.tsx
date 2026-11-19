@@ -1,7 +1,7 @@
 import "@/components/widgets/lecture-timer/LectureTimer.css";
 import {dashboardService} from "@/services/dashboardService.tsx";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
-import {type RefObject, useEffect, useRef, useState} from "react";
+import {type CSSProperties, type RefObject, useEffect, useId, useRef, useState} from "react";
 import {Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "@/services/tokenService.tsx";
@@ -24,6 +24,84 @@ const defaultData : LectureTimerData = {
     showPercentage: true,
     showCountdown: true
 }
+
+const lectureLabel = (title: string) => {
+    const short = title.replace(/\s*<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    return short || title;
+};
+
+type LectureTimerRingProps = {
+    progress: number;
+    strokeColor: string;
+    ringStyle: CSSProperties;
+    showPercentage: boolean;
+    showCountdown: boolean;
+    percentage: number;
+    countdown: string;
+};
+
+const LectureTimerRing = ({
+    progress,
+    strokeColor,
+    ringStyle,
+    showPercentage,
+    showCountdown,
+    percentage,
+    countdown,
+}: LectureTimerRingProps) => {
+    const slotRef = useRef<HTMLDivElement>(null);
+    const [available, setAvailable] = useState(0);
+
+    useEffect(() => {
+        const element = slotRef.current;
+        if (!element) {
+            return;
+        }
+        const measure = (entry: ResizeObserverEntry) => {
+            const box = entry.contentRect;
+            setAvailable(Math.max(0, Math.floor(Math.min(box.width, box.height))));
+        };
+        const observer = new ResizeObserver(([entry]) => measure(entry));
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, []);
+
+    const stroke = Math.min(34, Math.max(8, available * 0.07));
+    const track = stroke * 0.84;
+    const radius = Math.max(0, (available - stroke * 2) / 2);
+
+    return (
+        <div className="lecture-timer-ring-slot" ref={slotRef}>
+            {radius > 8 && (
+                <div className="lecture-timer-ring" style={ringStyle}>
+                    <ProgressBar
+                        className="progress-bar"
+                        radius={radius}
+                        strokeWidth={stroke}
+                        trackStrokeWidth={track}
+                        pointerRadius={0}
+                        pointerStrokeWidth={0}
+                        progress={progress}
+                        strokeColor={strokeColor}
+                    >
+                        <div className="progress-bar-center">
+                            {showPercentage && (
+                                <div className="percentage" style={{fontSize: Math.max(13, available * 0.09)}}>
+                                    {Math.floor(percentage)}%
+                                </div>
+                            )}
+                            {showCountdown && (
+                                <div className="countdown" style={{fontSize: Math.max(12, available * 0.062)}}>
+                                    {countdown}
+                                </div>
+                            )}
+                        </div>
+                    </ProgressBar>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
 
@@ -54,6 +132,18 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
     const { current, next, loading, error } = lectureService.useCurrentAndNextLecture(isPreview ? null : course);
 
     const containerRef = useRef<HTMLDivElement>(null);
+    const gradientId = `lecture-ring-${useId().replace(/:/g, "")}`;
+    const ringStyle = {"--lecture-timer-stroke": `url(#${gradientId})`} as CSSProperties;
+    const accentGradient = (
+        <svg className="lecture-timer-gradient-def" aria-hidden="true" focusable="false">
+            <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--accent-2)" />
+                </linearGradient>
+            </defs>
+        </svg>
+    );
     const useContainerSize = (ref: RefObject<HTMLElement | null>, dep?: unknown) => {
         const [size, setSize] = useState(0);
 
@@ -145,14 +235,17 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
     if (isPreview) {
         return <>
             <div className="lecture-timer-widget-preview" ref={containerRef}>
-                <ProgressBar
-                    className="progress-bar"
-                    radius={inFullscreen ? (size / 5) : (size / 3)}
-                    strokeWidth={inFullscreen ? 50 : 25}
-                    trackStrokeWidth={inFullscreen ? 45 : 20}
-                    progress={0}
-                    strokeColor={decodedData.strokeColor}
-                />
+                {accentGradient}
+                <div className="lecture-timer-ring" style={ringStyle}>
+                    <ProgressBar
+                        className="progress-bar"
+                        radius={inFullscreen ? (size / 5) : (size / 3)}
+                        strokeWidth={inFullscreen ? 50 : 25}
+                        trackStrokeWidth={inFullscreen ? 45 : 20}
+                        progress={0}
+                        strokeColor={decodedData.strokeColor}
+                    />
+                </div>
             </div>
             <h3 className="widget-title-preview">{title}</h3>
         </>
@@ -161,6 +254,7 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
 
     const getWidgetContent = () => (
         <div className={`lecture-timer-widget ${inFullscreen ? "fullscreen" : ""}`} ref={containerRef} >
+            {accentGradient}
             <div className="widget-header">
                 {!inSettings && <Settings
                      className="widget-header-icon"
@@ -208,33 +302,20 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
                                         ? <div className={`lecture-timer-current-lectures${current.length > 1 ? " multiple" : ""}`}>
                                             {current.map(lecture => {
                                                 const {percentage, countdown} = lectureProgress(lecture);
-                                                const compact = current.length > 1;
-                                                const titleSize = compact ? (inFullscreen ? size / 48 : size / 22) : (inFullscreen ? size / 30 : size / 15);
-                                                const infoSize = compact ? (inFullscreen ? size / 56 : size / 28) : (inFullscreen ? size / 35 : size / 20);
-                                                const radius = compact ? (inFullscreen ? size / 8 : size / 5) : (inFullscreen ? size / 5 : size / 3);
-                                                const strokeWidth = compact ? (inFullscreen ? 28 : 16) : (inFullscreen ? 50 : 25);
-                                                const trackStrokeWidth = compact ? (inFullscreen ? 24 : 12) : (inFullscreen ? 45 : 20);
+                                                const label = lectureLabel(lecture.title);
                                                 return <div key={`${lecture.title}-${lecture.startTime}`} className="lecture-timer-current-lecture">
-                                                    <div className="lecture-timer-lecture-title" style={{ fontSize: titleSize }}> {lecture.title}</div>
-                                                    <div className="lecture-timer-lecture-info" style={{ fontSize: infoSize }}> {lecture.lecturer}</div>
-                                                    <div className="lecture-timer-lecture-info" style={{ fontSize: infoSize }}> {lecture.rooms.join(", ")}</div>
-                                                    <ProgressBar
-                                                        className="progress-bar"
-                                                        radius={radius}
-                                                        strokeWidth={strokeWidth}
-                                                        trackStrokeWidth={trackStrokeWidth}
+                                                    <div className="lecture-timer-lecture-title" title={lecture.title}>{label}</div>
+                                                    <div className="lecture-timer-lecture-info" title={lecture.lecturer}>{lecture.lecturer}</div>
+                                                    <div className="lecture-timer-lecture-info">{lecture.rooms.join(", ")}</div>
+                                                    <LectureTimerRing
                                                         progress={percentage}
                                                         strokeColor={decodedData.strokeColor}
-                                                    >
-                                                        <div className="progress-bar-center">
-                                                            {decodedData.showPercentage && (
-                                                                <div className="percentage" style={{ fontSize: titleSize }}>{Math.floor(percentage)}%</div>
-                                                            )}
-                                                            {decodedData.showCountdown && (
-                                                                <div className="countdown" style={{ fontSize: infoSize }}>{countdown}</div>
-                                                            )}
-                                                        </div>
-                                                    </ProgressBar>
+                                                        ringStyle={ringStyle}
+                                                        showPercentage={decodedData.showPercentage}
+                                                        showCountdown={decodedData.showCountdown}
+                                                        percentage={percentage}
+                                                        countdown={countdown}
+                                                    />
                                                 </div>;
                                             })}
                                         </div>
@@ -246,7 +327,7 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
                                                         <span className="day-label">{label}</span>
                                                         {lectures.map(lecture => (
                                                             <div key={lecture.title + "-" + lecture.startTime} className="lecture-timer-next-lecture-info">
-                                                                <span className="title">{lecture.title}</span>
+                                                                <span className="title" title={lecture.title}>{lectureLabel(lecture.title)}</span>
                                                                 <div className="meta">
                                                                     {lecture.startTime} – {lecture.endTime}
                                                                 </div>

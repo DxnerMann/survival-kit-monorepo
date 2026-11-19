@@ -10,15 +10,15 @@ public final class XpRules {
     private XpRules() {}
 
     public enum Action {
-        LOGGED_IN(10, 1),
-        MEME_UPLOADED(40, 6),
-        MEME_VOTE(4, 25),
-        CHAT_MESSAGE(3, 25),
+        LOGGED_IN(15, 1),
+        MEME_UPLOADED(60, 6),
+        MEME_VOTE(5, 25),
+        CHAT_MESSAGE(5, 25),
         CHAT_REACTION(1, 20),
-        CAFFEINE_LOGGED(6, 8),
-        IDEA_SUBMITTED(30, 3),
-        FEEDBACK_VOTE(3, 20),
-        GAME_SUGGESTED(25, 2),
+        CAFFEINE_LOGGED(15, 8),
+        IDEA_SUBMITTED(40, 3),
+        FEEDBACK_VOTE(5, 20),
+        GAME_SUGGESTED(30, 2),
         PRESENTATION_GAME(15, 4);
 
         private final int xp;
