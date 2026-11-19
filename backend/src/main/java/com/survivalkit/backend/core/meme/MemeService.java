@@ -16,6 +16,8 @@ import com.survivalkit.backend.core.websocket.WebSocketPort;
 import com.survivalkit.backend.core.rank.XpPort;
 import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.UserVote;
+import com.survivalkit.backend.shared.VoteUpdate;
 import com.survivalkit.backend.shared.RoleLevel;
 import com.survivalkit.backend.shared.WebSocketEnvelope;
 import com.survivalkit.backend.shared.WebSocketMessageType;
@@ -28,6 +30,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import static com.survivalkit.backend.context.SecurityContext.requireVerification;
@@ -156,20 +159,20 @@ public class MemeService implements MemePort {
     }
 
     @Override
-    public void rateMeme(String id, boolean upVote) {
+    public VoteUpdate rateMeme(String id, boolean upVote) {
         requireVerification();
 
         var user = SecurityContext.current();
         var owner = memeInCurrentCourse(id);
-        var counted = memePersistancePort.rateMeme(id, upVote, user.userId());
-        if (counted) {
+        var update = memePersistancePort.castMemeVote(id, upVote, user.userId());
+        if (update.awardXp()) {
             xpPort.award(user.userId(), XpRules.Action.MEME_VOTE);
         }
-        if (!counted || !upVote) {
-            return;
-        }
-        if (owner.authorUserId() == null || owner.authorUserId().isBlank() || owner.authorUserId().equals(user.userId())) {
-            return;
+        if (!update.notifyLike()
+                || owner.authorUserId() == null
+                || owner.authorUserId().isBlank()
+                || owner.authorUserId().equals(user.userId())) {
+            return update;
         }
 
         var activity = activityPort.recordMemeLiked(owner.authorUserId(), owner.title(), user.username());
@@ -182,6 +185,13 @@ public class MemeService implements MemePort {
                                 .put("id", activity.id())
                 )
         );
+        return update;
+    }
+
+    @Override
+    public List<UserVote> myVotes() {
+        var user = SecurityContext.current();
+        return memePersistancePort.findVotesByUser(user.userId(), currentUserCourse());
     }
 
     @Override

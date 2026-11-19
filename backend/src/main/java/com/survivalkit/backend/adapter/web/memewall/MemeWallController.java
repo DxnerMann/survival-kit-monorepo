@@ -1,8 +1,10 @@
 package com.survivalkit.backend.adapter.web.memewall;
 
 import com.survivalkit.backend.adapter.postgres.memewall.Meme;
+import com.survivalkit.backend.adapter.web.VoteResponse;
 import com.survivalkit.backend.core.meme.MemePort;
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.UserVote;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 @Tag(name = "Meme-Wall")
@@ -70,12 +73,17 @@ public class MemeWallController {
 
     @Role(RoleLevel.USER)
     @PatchMapping("rate")
-    public ResponseEntity<Void> rateMeme(
+    public ResponseEntity<VoteResponse> rateMeme(
             @RequestParam String id,
             @RequestParam boolean upVote
     ) {
-        memePort.rateMeme(id, upVote);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(VoteResponse.from(memePort.rateMeme(id, upVote)));
+    }
+
+    @Role(RoleLevel.USER)
+    @GetMapping("votes")
+    public ResponseEntity<List<UserVote>> myVotes() {
+        return ResponseEntity.ok(memePort.myVotes());
     }
 
     @Role(RoleLevel.USER)

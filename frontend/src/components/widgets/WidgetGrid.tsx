@@ -32,6 +32,7 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
 
 const DROPPING_ID = "__dropping-elem__";
 const GRID_COLS = 10;
+const canRepeat = (type: string | undefined) => type === "SECTION_HEADING";
 
 class WidgetBoundary extends Component<{children: ReactNode; fallback: ReactNode}, {failed: boolean}> {
     state = {failed: false};
@@ -114,7 +115,8 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
         );
         const seen = new Set<string>();
         return toolboxPool.filter(w => {
-            if (layoutTypes.has(w.type) || seen.has(w.type)) return false;
+            if (seen.has(w.type)) return false;
+            if (!canRepeat(w.type) && layoutTypes.has(w.type)) return false;
             seen.add(w.type);
             return true;
         });
@@ -167,7 +169,8 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
 
             const seen = new Set<string>();
             const pool = [...defaultToolbox, ...defaultLayout].filter(w => {
-                if (storedTypes.has(w.type) || seen.has(w.type)) return false;
+                if (seen.has(w.type)) return false;
+                if (!canRepeat(w.type) && storedTypes.has(w.type)) return false;
                 seen.add(w.type);
                 return true;
             });
@@ -240,7 +243,11 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             const remaining = layoutWidgetsRef.current.filter(widget => widget.id !== id);
             layoutWidgetsRef.current = remaining;
             setLayoutWidgets(remaining);
-            setToolboxPool(prev => prev.some(widget => widget.id === deleted.id) ? prev : [...prev, deleted]);
+            setToolboxPool(prev => {
+                if (prev.some(widget => widget.id === deleted.id)) return prev;
+                if (canRepeat(deleted.type) && prev.some(widget => widget.type === deleted.type)) return prev;
+                return [...prev, deleted];
+            });
         }
         setLayout(prev => prev.filter(item => item.i !== id));
     }, []);
@@ -259,8 +266,12 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
         setLayoutWidgets([]);
         setLayout([]);
         setToolboxPool(prev => {
-            const existing = new Set(prev.map(widget => widget.id));
-            return [...prev, ...placed.filter(widget => !existing.has(widget.id))];
+            const existingIds = new Set(prev.map(widget => widget.id));
+            const existingTypes = new Set(prev.map(widget => widget.type));
+            return [...prev, ...placed.filter(widget => {
+                if (existingIds.has(widget.id)) return false;
+                return !(canRepeat(widget.type) && existingTypes.has(widget.type));
+            })];
         });
     };
 
@@ -346,7 +357,9 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
         };
         acceptedDropRef.current = dropped;
         setLayout(prev => [...prev.filter(entry => entry.i !== dropped.i && entry.i !== DROPPING_ID), dropped]);
-        setToolboxPool(prev => prev.filter(entry => entry.id !== pending.sourceId));
+        setToolboxPool(prev => canRepeat(pending.placed.type)
+            ? prev
+            : prev.filter(entry => entry.id !== pending.sourceId));
         setLayoutWidgets(prev => [...prev.filter(entry => entry.id !== pending.placed.id), pending.placed]);
     };
 

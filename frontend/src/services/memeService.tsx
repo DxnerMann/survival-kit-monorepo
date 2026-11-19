@@ -1,4 +1,5 @@
 import {api, apiFetch, checkResponse} from "@/services/api.tsx";
+import type {UserVote, VoteResult} from "@/models/Vote.tsx";
 import type {Meme} from "@/models/Meme.tsx";
 import type {Page} from "@/models/Page.tsx";
 
@@ -73,13 +74,21 @@ export async function uploadMeme(data: {
     await checkResponse(response);
 }
 
-export async function rateMeme(id: string, upVote: boolean): Promise<void> {
+export async function rateMeme(id: string, upVote: boolean): Promise<VoteResult> {
     const params = new URLSearchParams({id, upVote: String(upVote)});
     const response = await apiFetch(`${API_URL}/memes/rate?${params.toString()}`, {
         method: "PATCH",
     });
 
     await checkResponse(response);
+    return response.json();
+}
+
+export async function getMyMemeVotes(): Promise<UserVote[]> {
+    const response = await apiFetch(`${API_URL}/memes/votes`);
+    await checkResponse(response);
+    const body = await response.json() as UserVote[];
+    return Array.isArray(body) ? body : [];
 }
 
 export async function hasAlreadyVotedMeme(id: string): Promise<boolean> {

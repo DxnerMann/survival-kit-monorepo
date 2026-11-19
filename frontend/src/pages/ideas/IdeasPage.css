@@ -9,6 +9,40 @@
     margin-top: 0.75rem;
 }
 
+.ideas-archive {
+    margin-top: 1.75rem;
+}
+
+.ideas-archive__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.ideas-archive__toggle svg {
+    transition: transform var(--dur-2) var(--ease-out);
+}
+
+.ideas-archive__toggle.is-open svg {
+    transform: rotate(180deg);
+}
+
+.ideas-archive__count {
+    margin-left: auto;
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
 .ideas-page .no-items-info {
     width: 100%;
     margin-top: 1rem;

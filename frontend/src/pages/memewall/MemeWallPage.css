@@ -320,7 +320,8 @@
         transform var(--dur-1) var(--ease-out);
 }
 
-.memewall-meme__vote:hover {
+.memewall-meme__vote:hover,
+.memewall-meme__vote.is-selected {
     color: var(--accent-strong);
     background: var(--accent-softer);
 }

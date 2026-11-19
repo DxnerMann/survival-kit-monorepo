@@ -259,7 +259,8 @@
     padding: 0;
 }
 
-.memewall-meme__vote:hover {
+.memewall-meme__vote:hover,
+.memewall-meme__vote.is-selected {
     color: var(--color-primary-accent);
 }
 

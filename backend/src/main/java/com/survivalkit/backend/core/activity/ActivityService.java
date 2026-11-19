@@ -15,6 +15,7 @@ public class ActivityService implements ActivityPort {
     static final String MEME_DELETED = "MEME_DELETED";
     static final String MEME_LIKED = "MEME_LIKED";
     static final String FEEDBACK_DELETED = "FEEDBACK_DELETED";
+    static final String FEEDBACK_RESOLVED = "FEEDBACK_RESOLVED";
     static final String FEEDBACK_LIKED = "FEEDBACK_LIKED";
     static final String ROLE_CHANGED = "ROLE_CHANGED";
     static final String RANK_UP = "RANK_UP";
@@ -38,6 +39,11 @@ public class ActivityService implements ActivityPort {
     @Override
     public UserActivity recordFeedbackDeleted(String userId, String title, String actorUsername) {
         return record(userId, FEEDBACK_DELETED, title, actorUsername, null);
+    }
+
+    @Override
+    public UserActivity recordFeedbackResolved(String userId, String title, String actorUsername, String feedbackId) {
+        return record(userId, FEEDBACK_RESOLVED, title, actorUsername, feedbackId);
     }
 
     @Override

@@ -9,7 +9,8 @@ export type Feedback = {
     dislikes: number,
     answer: string,
     addedAt: string,
-    lastUpdated: string
+    lastUpdated: string,
+    resolvedAt?: string | null
 }
 
 export type FeedbackType = "FEEDBACK" | "BUG" | "IDEA" | "OTHER";

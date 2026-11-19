@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState, type ReactNode} from "react";
 import {createPortal} from "react-dom";
 import {useNavigate} from "react-router-dom";
-import {Bell, Heart, Medal, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
+import {Bell, CircleCheck, Heart, Medal, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
 import {getMyActivities} from "@/services/activityService.tsx";
 import {getAnsweredFeedback} from "@/services/feedbackService.tsx";
 import {getUsername} from "@/services/userService.tsx";
@@ -53,6 +53,7 @@ const markSeen = (seen: SeenMap, ids: string[]): SeenMap => {
 type ActivityKind =
     | "FEEDBACK_ANSWERED"
     | "FEEDBACK_DELETED"
+    | "FEEDBACK_RESOLVED"
     | "FEEDBACK_LIKED"
     | "MEME_DELETED"
     | "MEME_LIKED"
@@ -61,6 +62,7 @@ type ActivityKind =
 
 const STORED_KINDS = new Set<ActivityKind>([
     "FEEDBACK_DELETED",
+    "FEEDBACK_RESOLVED",
     "FEEDBACK_LIKED",
     "MEME_DELETED",
     "MEME_LIKED",
@@ -96,6 +98,9 @@ const noticeText = (item: ActivityNotice) => {
     if (item.kind === "FEEDBACK_DELETED") {
         return `Dein Feedback${quoted(item.title)} wurde von einem Admin bearbeitet und gelöscht.`;
     }
+    if (item.kind === "FEEDBACK_RESOLVED") {
+        return `Dein Feedback${quoted(item.title)} wurde als erledigt markiert.`;
+    }
     if (item.kind === "FEEDBACK_LIKED") {
         const user = item.actorUsername?.trim() || "Jemand";
         return `${user} gefällt dein Feedback${quoted(item.title)}.`;
@@ -127,6 +132,9 @@ const noticeIcon = (kind: ActivityKind): ReactNode => {
     }
     if (kind === "FEEDBACK_DELETED") {
         return <MessageSquareX size={18} />;
+    }
+    if (kind === "FEEDBACK_RESOLVED") {
+        return <CircleCheck size={18} />;
     }
     if (kind === "ROLE_CHANGED") {
         return <Shield size={18} />;
@@ -254,6 +262,10 @@ const Notifications = () => {
         }
         if (item.kind === "FEEDBACK_DELETED") {
             navigate("/ideas");
+            return;
+        }
+        if (item.kind === "FEEDBACK_RESOLVED" && item.subjectId) {
+            navigate(`/ideas?feedback=${encodeURIComponent(item.subjectId)}`);
             return;
         }
         const feedbackId = item.subjectId || item.id;

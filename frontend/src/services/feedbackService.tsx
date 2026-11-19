@@ -1,5 +1,6 @@
 import {api, apiFetch, checkResponse} from "@/services/api.tsx";
 import type {Feedback, FeedbackType} from "@/models/Feedback.tsx";
+import type {UserVote, VoteResult} from "@/models/Vote.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -35,8 +36,34 @@ export const getFeedback = async (
     return response.json();
 }
 
-export const rateFeedback = async (id: string, upVote: boolean): Promise<void> => {
+export const rateFeedback = async (id: string, upVote: boolean): Promise<VoteResult> => {
     const response = await apiFetch(`${API_URL}/feedback/rate?id=${id}&upVote=${upVote}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+
+    await checkResponse(response);
+    return response.json();
+}
+
+export const getMyFeedbackVotes = async (): Promise<UserVote[]> => {
+    const response = await apiFetch(`${API_URL}/feedback/votes`);
+    await checkResponse(response);
+    const body = await response.json() as UserVote[];
+    return Array.isArray(body) ? body : [];
+}
+
+export const getArchivedFeedback = async (): Promise<Feedback[]> => {
+    const response = await apiFetch(`${API_URL}/feedback/archive`);
+    await checkResponse(response);
+    const body = await response.json() as Feedback[];
+    return Array.isArray(body) ? body : [];
+}
+
+export const resolveFeedback = async (id: string): Promise<void> => {
+    const response = await apiFetch(`${API_URL}/feedback/resolve?id=${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',

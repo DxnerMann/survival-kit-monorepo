@@ -4,6 +4,8 @@ import com.survivalkit.backend.adapter.postgres.logs.Log;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.UserVote;
+import com.survivalkit.backend.shared.VoteUpdate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -70,17 +72,92 @@ public class FeedbackRepository implements FeedbackPersistancePort {
 
     @Override
     @Transactional
-    public void rateFeedback(String id, Boolean upVote, String userId) {
-        jdbcClient.sql(Statements.UPDATE_RATING.sql)
-                .paramSource(new MapSqlParameterSource("id", id)
-                    .addValue("upVote", upVote)
-                    .addValue("currentTime", toTimestamp(Instant.now())))
-                .update();
+    public VoteUpdate castFeedbackVote(String id, boolean upVote, String userId) {
+        var existing = findVote(id, userId);
+        if (existing.isEmpty()) {
+            jdbcClient.sql(Statements.INSERT_RATING.sql)
+                    .paramSource(new MapSqlParameterSource("feedbackId", id)
+                            .addValue("userId", userId)
+                            .addValue("upVote", upVote))
+                    .update();
+            shiftCounts(id, upVote ? 1 : 0, upVote ? 0 : 1);
+            var awarded = jdbcClient.sql(Statements.INSERT_AWARD.sql)
+                    .paramSource(new MapSqlParameterSource("feedbackId", id).addValue("userId", userId))
+                    .update() > 0;
+            var counts = readCounts(id);
+            return new VoteUpdate(upVote, counts.likes(), counts.dislikes(), awarded, upVote);
+        }
 
-        jdbcClient.sql(Statements.INSERT_RATING.sql)
+        var previous = existing.get().upVote();
+        if (previous == null) {
+            jdbcClient.sql(Statements.SET_VOTE.sql)
+                    .paramSource(new MapSqlParameterSource("feedbackId", id)
+                            .addValue("userId", userId)
+                            .addValue("upVote", upVote))
+                    .update();
+            var counts = readCounts(id);
+            return new VoteUpdate(upVote, counts.likes(), counts.dislikes(), false, false);
+        }
+        if (previous == upVote) {
+            jdbcClient.sql(Statements.DELETE_USER_VOTE.sql)
+                    .paramSource(new MapSqlParameterSource("feedbackId", id).addValue("userId", userId))
+                    .update();
+            shiftCounts(id, upVote ? -1 : 0, upVote ? 0 : -1);
+            var counts = readCounts(id);
+            return new VoteUpdate(null, counts.likes(), counts.dislikes(), false, false);
+        }
+
+        jdbcClient.sql(Statements.SET_VOTE.sql)
                 .paramSource(new MapSqlParameterSource("feedbackId", id)
-                    .addValue("userId", userId))
+                        .addValue("userId", userId)
+                        .addValue("upVote", upVote))
                 .update();
+        shiftCounts(id, upVote ? 1 : -1, upVote ? -1 : 1);
+        var counts = readCounts(id);
+        return new VoteUpdate(upVote, counts.likes(), counts.dislikes(), false, upVote);
+    }
+
+    @Override
+    public List<UserVote> findVotesByUser(String userId) {
+        return jdbcClient.sql(Statements.FIND_VOTES_BY_USER.sql)
+                .param("userId", userId)
+                .query((rs, rowNum) -> new UserVote(rs.getString("id"), readNullableBoolean(rs, "upVote")))
+                .list();
+    }
+
+    private Optional<StoredVote> findVote(String feedbackId, String userId) {
+        return jdbcClient.sql(Statements.FIND_VOTE.sql)
+                .paramSource(new MapSqlParameterSource("feedbackId", feedbackId).addValue("userId", userId))
+                .query((rs, rowNum) -> new StoredVote(readNullableBoolean(rs, "upVote")))
+                .optional();
+    }
+
+    private void shiftCounts(String id, int likeDelta, int dislikeDelta) {
+        jdbcClient.sql(Statements.SHIFT_RATING.sql)
+                .paramSource(new MapSqlParameterSource("id", id)
+                        .addValue("likeDelta", likeDelta)
+                        .addValue("dislikeDelta", dislikeDelta)
+                        .addValue("currentTime", toTimestamp(Instant.now())))
+                .update();
+    }
+
+    private Counts readCounts(String id) {
+        return jdbcClient.sql(Statements.READ_COUNTS.sql)
+                .param("id", id)
+                .query((rs, rowNum) -> new Counts(rs.getInt("likes"), rs.getInt("dislikes")))
+                .optional()
+                .orElse(new Counts(0, 0));
+    }
+
+    private static Boolean readNullableBoolean(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
+        var value = rs.getObject(column);
+        return value == null ? null : rs.getBoolean(column);
+    }
+
+    private record Counts(int likes, int dislikes) {
+    }
+
+    private record StoredVote(Boolean upVote) {
     }
 
     @Override
@@ -88,13 +165,33 @@ public class FeedbackRepository implements FeedbackPersistancePort {
     public void deleteFeedback(String id) {
         jdbcClient.sql(Statements.DELETE_VOTES.sql).paramSource(new MapSqlParameterSource("id", id))
                 .update();
+        jdbcClient.sql(Statements.DELETE_AWARDS.sql).paramSource(new MapSqlParameterSource("id", id))
+                .update();
         jdbcClient.sql(Statements.DELETE.sql).paramSource(new MapSqlParameterSource("id", id))
                 .update();
     }
 
     @Override
+    public boolean resolveFeedback(String id) {
+        return jdbcClient.sql(Statements.RESOLVE.sql)
+                .paramSource(new MapSqlParameterSource("id", id)
+                        .addValue("currentTime", toTimestamp(Instant.now())))
+                .update() > 0;
+    }
+
+    @Override
+    public List<Feedback> findArchived() {
+        return jdbcClient.sql(Statements.FIND_ARCHIVED.sql)
+                .query(Feedback.class)
+                .list();
+    }
+
+    @Override
     public void deleteAllVotes(String userId) {
         jdbcClient.sql(Statements.DELETE_ALL_VOTES.sql)
+                .paramSource(new MapSqlParameterSource("userId", userId))
+                .update();
+        jdbcClient.sql(Statements.DELETE_ALL_AWARDS.sql)
                 .paramSource(new MapSqlParameterSource("userId", userId))
                 .update();
     }
@@ -164,28 +261,69 @@ public class FeedbackRepository implements FeedbackPersistancePort {
 
         // language=sql
         GET("""
-            SELECT * FROM feedback WHERE (:continuation::TEXT IS NULL OR id > :continuation) ORDER BY id LIMIT :pageSize
+            SELECT * FROM feedback
+            WHERE resolvedAt IS NULL
+              AND (:continuation::TEXT IS NULL OR id > :continuation)
+            ORDER BY id
+            LIMIT :pageSize
         """),
 
         // language=sql
-        UPDATE_RATING("""
+        INSERT_RATING("""
+            INSERT INTO feedbackVotes (feedbackId, userId, upVote)
+            VALUES (:feedbackId, :userId, :upVote)
+        """),
+
+        SET_VOTE("""
+            UPDATE feedbackVotes SET upVote = :upVote WHERE feedbackId = :feedbackId AND userId = :userId
+        """),
+
+        DELETE_USER_VOTE("""
+            DELETE FROM feedbackVotes WHERE feedbackId = :feedbackId AND userId = :userId
+        """),
+
+        INSERT_AWARD("""
+            INSERT INTO feedbackVoteAwards (feedbackId, userId)
+            VALUES (:feedbackId, :userId)
+            ON CONFLICT (feedbackId, userId) DO NOTHING
+        """),
+
+        SHIFT_RATING("""
             UPDATE feedback
             SET
-                likes    = likes    + CASE WHEN :upVote THEN 1 ELSE 0 END,
-                dislikes = dislikes + CASE WHEN :upVote THEN 0 ELSE 1 END,
+                likes = GREATEST(0, COALESCE(likes, 0) + :likeDelta),
+                dislikes = GREATEST(0, COALESCE(dislikes, 0) + :dislikeDelta),
                 lastUpdated = :currentTime
-            WHERE id = :id;
+            WHERE id = :id
         """),
-        // language=sql
-        INSERT_RATING("""
-            INSERT INTO feedbackVotes (feedbackId, userId)
-            VALUES (:feedbackId, :userId)
-            ON CONFLICT (feedbackid, userId) DO NOTHING
+
+        READ_COUNTS("""
+            SELECT likes, dislikes FROM feedback WHERE id = :id
+        """),
+
+        FIND_VOTE("""
+            SELECT upVote FROM feedbackVotes WHERE feedbackId = :feedbackId AND userId = :userId
+        """),
+
+        FIND_VOTES_BY_USER("""
+            SELECT feedbackId AS id, upVote FROM feedbackVotes WHERE userId = :userId
         """),
 
         // language=sql
         DELETE("""
             DELETE FROM feedback WHERE id = :id
+        """),
+
+        RESOLVE("""
+            UPDATE feedback
+            SET resolvedAt = :currentTime, lastUpdated = :currentTime
+            WHERE id = :id AND resolvedAt IS NULL
+        """),
+
+        FIND_ARCHIVED("""
+            SELECT * FROM feedback
+            WHERE resolvedAt IS NOT NULL
+            ORDER BY resolvedAt DESC, id DESC
         """),
 
         // language=sql
@@ -202,6 +340,14 @@ public class FeedbackRepository implements FeedbackPersistancePort {
         // language=sql
         DELETE_ALL_VOTES("""
             DELETE FROM feedbackVotes WHERE userId = :userId
+        """),
+
+        DELETE_AWARDS("""
+            DELETE FROM feedbackVoteAwards WHERE feedbackId = :id
+        """),
+
+        DELETE_ALL_AWARDS("""
+            DELETE FROM feedbackVoteAwards WHERE userId = :userId
         """),
         // language=sql
         ANSWER("""

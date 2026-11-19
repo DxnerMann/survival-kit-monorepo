@@ -59,6 +59,7 @@
 .feedback-item-buttons {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 1rem;
     justify-content: flex-end;
     margin-right: 2rem;
@@ -73,7 +74,8 @@
     gap: 0.5rem;
 }
 
-.feedback-item-rateing-button:hover {
+.feedback-item-rateing-button:hover,
+.feedback-item-rateing-button.is-selected {
     color: var(--color-primary-accent);
 }
 

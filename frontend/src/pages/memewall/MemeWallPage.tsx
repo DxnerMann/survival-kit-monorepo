@@ -3,10 +3,11 @@ import {createPortal} from "react-dom";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import Button from "@/components/ui/Button.tsx";
 import MemeUploadDialog from "@/components/dialog/MemeUploadDialog.tsx";
-import {deleteMeme, getMemes, hasAlreadyVotedMeme, rateMeme, uploadMeme} from "@/services/memeService.tsx";
+import {deleteMeme, getMemes, getMyMemeVotes, rateMeme, uploadMeme} from "@/services/memeService.tsx";
 import {ExternalLink, ImagePlus, ThumbsDown, ThumbsUp, Trash2, Upload, X} from "lucide-react";
 import type {Meme} from "@/models/Meme.tsx";
-import {isAdmin} from "@/services/tokenService.tsx";
+import {applyLocalVote, type VoteMark} from "@/models/Vote.tsx";
+import {getUserRole, isAdmin} from "@/services/tokenService.tsx";
 import {snackbarService} from "@/services/snackBarService.tsx";
 import "@/pages/memewall/MemeWallPage.css";
 import {api} from "@/services/api.tsx";
@@ -127,7 +128,8 @@ const MemeWallPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedMeme, setSelectedMeme] = useState<Meme | null>(null);
     const sentinelRef = useRef<HTMLDivElement | null>(null);
-    const votedIds = useRef(new Set<string>());
+    const pendingVotes = useRef(new Set<string>());
+    const [myVotes, setMyVotes] = useState<Record<string, boolean | null>>({});
     const canDeleteMemes = isAdmin();
 
     const loadFirstPage = useCallback(async () => {
@@ -138,6 +140,14 @@ const MemeWallPage = () => {
             setMemes(page.data);
             setContinuation(page.continuation);
             setHasMore(Boolean(page.continuation));
+            if (getUserRole() !== "GUEST") {
+                try {
+                    const votes = await getMyMemeVotes();
+                    setMyVotes(Object.fromEntries(votes.map(vote => [vote.id, vote.upVote])));
+                } catch {
+                    setMyVotes({});
+                }
+            }
         } finally {
             setIsLoading(false);
         }
@@ -191,37 +201,36 @@ const MemeWallPage = () => {
     const newestId = newestMemeId(memes);
 
     const handleRate = async (id: string, like: boolean) => {
-        if (votedIds.current.has(id)) {
+        if (pendingVotes.current.has(id)) {
             return;
         }
-        votedIds.current.add(id);
-
-        let counted = false;
-        try {
-            if (await hasAlreadyVotedMeme(id)) {
-                return;
-            }
-            counted = true;
-            setMemes((current) => current.map((meme) => meme.id === id
-                ? {
-                    ...meme,
-                    likes: (meme.likes ?? 0) + (like ? 1 : 0),
-                    dislikes: (meme.dislikes ?? 0) + (like ? 0 : 1),
+        pendingVotes.current.add(id);
+        const meme = memes.find(item => item.id === id);
+        const currentVote: VoteMark = Object.prototype.hasOwnProperty.call(myVotes, id) ? myVotes[id] : undefined;
+        const previousLikes = meme?.likes ?? 0;
+        const previousDislikes = meme?.dislikes ?? 0;
+        const next = applyLocalVote(currentVote, like, previousLikes, previousDislikes);
+        const writeVote = (vote: VoteMark, likes: number, dislikes: number) => {
+            setMyVotes(prev => {
+                const updated = {...prev};
+                if (vote === undefined || vote === null) {
+                    delete updated[id];
+                } else {
+                    updated[id] = vote;
                 }
-                : meme));
-            await rateMeme(id, like);
+                return updated;
+            });
+            setMemes(current => current.map(item => item.id === id ? {...item, likes, dislikes} : item));
+        };
+        writeVote(next.vote, next.likes, next.dislikes);
+        try {
+            const result = await rateMeme(id, like);
+            writeVote(result.upVote, result.likes, result.dislikes);
         } catch {
-            votedIds.current.delete(id);
-            if (counted) {
-                setMemes((current) => current.map((meme) => meme.id === id
-                    ? {
-                        ...meme,
-                        likes: (meme.likes ?? 0) - (like ? 1 : 0),
-                        dislikes: (meme.dislikes ?? 0) - (like ? 0 : 1),
-                    }
-                    : meme));
-            }
+            writeVote(currentVote, previousLikes, previousDislikes);
             snackbarService.showSnackbar({type: "error", text: "Abstimmung fehlgeschlagen.", showIcon: true});
+        } finally {
+            pendingVotes.current.delete(id);
         }
     };
 
@@ -342,18 +351,20 @@ const MemeWallPage = () => {
                             <div className="memewall-meme__votes">
                                 <button
                                     type="button"
-                                    className="memewall-meme__vote"
+                                    className={`memewall-meme__vote${myVotes[meme.id] === true ? " is-selected" : ""}`}
                                     onClick={() => void handleRate(meme.id, true)}
                                     aria-label="Gefällt mir"
+                                    aria-pressed={myVotes[meme.id] === true}
                                 >
                                     <ThumbsUp size={20} />
                                     <h5>{meme.likes ?? 0}</h5>
                                 </button>
                                 <button
                                     type="button"
-                                    className="memewall-meme__vote"
+                                    className={`memewall-meme__vote${myVotes[meme.id] === false ? " is-selected" : ""}`}
                                     onClick={() => void handleRate(meme.id, false)}
                                     aria-label="Gefällt mir nicht"
+                                    aria-pressed={myVotes[meme.id] === false}
                                 >
                                     <ThumbsDown size={20} />
                                     <h5>{meme.dislikes ?? 0}</h5>

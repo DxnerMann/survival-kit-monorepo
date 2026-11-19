@@ -2,8 +2,10 @@ package com.survivalkit.backend.adapter.web.feedback;
 
 import com.survivalkit.backend.adapter.postgres.feedback.AnsweredFeedbackNotice;
 import com.survivalkit.backend.adapter.postgres.feedback.Feedback;
+import com.survivalkit.backend.adapter.web.VoteResponse;
 import com.survivalkit.backend.core.feedback.FeedbackPort;
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.UserVote;
 import com.survivalkit.backend.shared.Role;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,12 +52,17 @@ public class FeedbackController {
 
     @Role(RoleLevel.USER)
     @PatchMapping("/rate")
-    public ResponseEntity<Void> rateFeedback(
+    public ResponseEntity<VoteResponse> rateFeedback(
             @RequestParam String id,
             @RequestParam Boolean upVote
     ) {
-        feedbackPort.rateFeedback(id, upVote);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(VoteResponse.from(feedbackPort.rateFeedback(id, upVote)));
+    }
+
+    @Role(RoleLevel.USER)
+    @GetMapping("/votes")
+    public ResponseEntity<List<UserVote>> myVotes() {
+        return ResponseEntity.ok(feedbackPort.myVotes());
     }
 
     @Role(RoleLevel.USER)
@@ -70,6 +77,21 @@ public class FeedbackController {
             @RequestParam String id
     ) {
         return ResponseEntity.ok(feedbackPort.hasVoted(id));
+    }
+
+    @Role(RoleLevel.GUEST)
+    @GetMapping("/archive")
+    public ResponseEntity<List<Feedback>> archivedFeedback() {
+        return ResponseEntity.ok(feedbackPort.archivedFeedback());
+    }
+
+    @Role(RoleLevel.ADMIN)
+    @PatchMapping("/resolve")
+    public ResponseEntity<Void> resolveFeedback(
+            @RequestParam String id
+    ) {
+        feedbackPort.resolveFeedback(id);
+        return ResponseEntity.ok().build();
     }
 
     @Role(RoleLevel.ADMIN)

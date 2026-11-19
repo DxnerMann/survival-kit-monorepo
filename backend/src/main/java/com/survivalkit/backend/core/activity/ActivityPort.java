@@ -11,6 +11,7 @@ public interface ActivityPort {
     UserActivity recordMemeLiked(String userId, String title, String actorUsername);
 
     UserActivity recordFeedbackDeleted(String userId, String title, String actorUsername);
+    UserActivity recordFeedbackResolved(String userId, String title, String actorUsername, String feedbackId);
 
     UserActivity recordFeedbackLiked(String userId, String title, String actorUsername, String feedbackId);
 

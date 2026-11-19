@@ -1,9 +1,10 @@
 import "@/components/feedback/FeedbackItem.css";
 import type {FeedbackType} from "@/models/Feedback.tsx";
-import {useEffect, useState} from "react";
-import {Bug, Info, Lightbulb, MessageSquareText, PencilLine, ThumbsDown, ThumbsUp, Trash} from "lucide-react";
+import {useEffect, useRef, useState} from "react";
+import {Bug, CircleCheck, Info, Lightbulb, MessageSquareText, PencilLine, ThumbsDown, ThumbsUp, Trash} from "lucide-react";
 import {getUserRole} from "@/services/tokenService.tsx";
-import {answerFeedback, deleteFeedback, hasAlreadyVoted, rateFeedback} from "@/services/feedbackService.tsx";
+import {answerFeedback, deleteFeedback, rateFeedback, resolveFeedback} from "@/services/feedbackService.tsx";
+import {applyLocalVote, type VoteMark, type VoteResult} from "@/models/Vote.tsx";
 import {snackbarService} from "@/services/snackBarService.tsx";
 import FeedbackAnswerDialog from "@/components/dialog/FeedbackAnswerDialog.tsx";
 import ConfirmDialog from "@/components/dialog/ConfirmDialog.tsx";
@@ -23,13 +24,20 @@ type FeedbackItemProps = {
     dislikes: number,
     answer: string,
     onDelete: (id: string) => void
+    onResolve?: (id: string) => void
+    archived?: boolean
+    currentVote?: VoteMark
+    onVoted?: (id: string, result: VoteResult) => void
     startExpanded?: boolean
 }
 
-const FeedbackItem = ( {id, title, description, author, authorUserId, type, date, likes, dislikes, answer, onDelete, startExpanded = false} : FeedbackItemProps) => {
+const FeedbackItem = ( {id, title, description, author, authorUserId, type, date, likes, dislikes, answer, onDelete, onResolve, archived = false, currentVote, onVoted, startExpanded = false} : FeedbackItemProps) => {
     const [isExpanded, setIsExpanded] = useState(startExpanded);
     const [showFeedbackAnswerDialog, setShowFeedbackAnswerDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [showResolveDialog, setShowResolveDialog] = useState(false);
+    const [vote, setVote] = useState<VoteMark>(currentVote);
+    const pendingVote = useRef(false);
     const [feedbackAnswer, setFeedbackAnswer] = useState(answer);
     const [localLikes, setLocalLikes] = useState(likes);
     const [localDislikes, setLocalDislikes] = useState(dislikes);
@@ -43,6 +51,17 @@ const FeedbackItem = ( {id, title, description, author, authorUserId, type, date
             snackbarService.showSnackbar({ type: "success",   text: "Antwort gesendet", showIcon: true });
         } finally {
             setShowFeedbackAnswerDialog(false);
+        }
+    }
+
+    const onFeedbackResolve = async () => {
+        try {
+            await resolveFeedback(id);
+            onResolve?.(id);
+            setShowResolveDialog(false);
+            snackbarService.showSnackbar({ type: "success", text: "Als erledigt markiert", showIcon: true });
+        } finally {
+            setShowResolveDialog(false);
         }
     }
 
@@ -97,15 +116,35 @@ const FeedbackItem = ( {id, title, description, author, authorUserId, type, date
         }
     }, [startExpanded]);
 
+    useEffect(() => {
+        setVote(currentVote);
+    }, [currentVote]);
+
     const onRatingClicked = async (like: boolean) => {
-        if (await hasAlreadyVoted(id)) {
+        if (id === "local-id" || pendingVote.current) {
             return;
         }
-        rateFeedback(id, like);
-        if (like) {
-            setLocalLikes(prev => prev + 1);
-        } else {
-            setLocalDislikes(prev => prev + 1);
+        pendingVote.current = true;
+        const previousVote = vote;
+        const previousLikes = localLikes;
+        const previousDislikes = localDislikes;
+        const next = applyLocalVote(vote, like, localLikes, localDislikes);
+        setVote(next.vote);
+        setLocalLikes(next.likes);
+        setLocalDislikes(next.dislikes);
+        try {
+            const result = await rateFeedback(id, like);
+            setVote(result.upVote);
+            setLocalLikes(result.likes);
+            setLocalDislikes(result.dislikes);
+            onVoted?.(id, result);
+        } catch {
+            setVote(previousVote);
+            setLocalLikes(previousLikes);
+            setLocalDislikes(previousDislikes);
+            snackbarService.showSnackbar({type: "error", text: "Abstimmung fehlgeschlagen.", showIcon: true});
+        } finally {
+            pendingVote.current = false;
         }
     }
 
@@ -149,15 +188,17 @@ const FeedbackItem = ( {id, title, description, author, authorUserId, type, date
         {
             isExpanded && getUserRole() !== "GUEST" && <div className="feedback-item-buttons">
                 <div
-                    className={id === "local-id" ? "feedback-item-rateing-button deactivated" : "feedback-item-rateing-button"}
+                    className={`feedback-item-rateing-button${id === "local-id" ? " deactivated" : ""}${vote === true ? " is-selected" : ""}`}
                     onClick={() => onRatingClicked(true)}
+                    aria-pressed={vote === true}
                 >
                     <ThumbsUp size={20} />
                     <h5>{localLikes}</h5>
                 </div>
                 <div
-                    className={id === "local-id" ? "feedback-item-rateing-button deactivated" : "feedback-item-rateing-button"}
+                    className={`feedback-item-rateing-button${id === "local-id" ? " deactivated" : ""}${vote === false ? " is-selected" : ""}`}
                     onClick={() => onRatingClicked(false)}
+                    aria-pressed={vote === false}
                 >
                     <ThumbsDown size={20} />
                     <h5>{localDislikes}</h5>
@@ -173,6 +214,19 @@ const FeedbackItem = ( {id, title, description, author, authorUserId, type, date
                     >
                         <PencilLine size={20}  />
                         <h5>{ feedbackAnswer === "" || feedbackAnswer === null ? "Antworten" : "Antwort bearbeiten"}</h5>
+                    </div>
+                }
+                {
+                    getUserRole() === "ADMIN" && !archived &&
+                    <div
+                        className={id === "local-id" ? "feedback-item-rateing-button deactivated" : "feedback-item-rateing-button"}
+                        onClick={() => {
+                            if (id === "local-id") return;
+                            setShowResolveDialog(true);
+                        }}
+                    >
+                        <CircleCheck size={20} />
+                        <h5>Als erledigt markieren</h5>
                     </div>
                 }
                 {
@@ -193,6 +247,13 @@ const FeedbackItem = ( {id, title, description, author, authorUserId, type, date
                     onCancel={() => setShowFeedbackAnswerDialog(false)}
                     onSubmit={onFeedbackAnswerSubmit}
                     previousAnswer={answer}
+                />
+                <ConfirmDialog
+                    isOpen={showResolveDialog}
+                    onCancel={() => setShowResolveDialog(false)}
+                    onConfirm={onFeedbackResolve}
+                    title="Als erledigt markieren"
+                    subtitle="Der Beitrag wandert ins Archiv. Der Autor bekommt eine Benachrichtigung."
                 />
                 <ConfirmDialog
                     isOpen={showDeleteDialog}

@@ -12,6 +12,8 @@ import com.survivalkit.backend.core.rank.XpRules;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.core.websocket.WebSocketPort;
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.UserVote;
+import com.survivalkit.backend.shared.VoteUpdate;
 import com.survivalkit.backend.shared.RoleLevel;
 import com.survivalkit.backend.shared.WebSocketEnvelope;
 import com.survivalkit.backend.shared.WebSocketMessageType;
@@ -69,7 +71,8 @@ public class FeedbackService implements FeedbackPort {
                 0,
                 null,
                 Instant.now(),
-                Instant.now()
+                Instant.now(),
+                null
         );
         feedbackPersistancePort.saveFeedback(newFeedback);
         statisticsPort.saveTrackAction(TrackAction.Action.IDEA_SUBMITTED);
@@ -87,23 +90,22 @@ public class FeedbackService implements FeedbackPort {
     }
 
     @Override
-    public void rateFeedback(String feedbackId, Boolean upVote) {
+    public VoteUpdate rateFeedback(String feedbackId, Boolean upVote) {
         requireVerification();
 
         var user = SecurityContext.current();
-        if (!feedbackPersistancePort.canVote(feedbackId, user.userId())) {
-            return;
-        }
-
+        var like = Boolean.TRUE.equals(upVote);
         var subject = feedbackPersistancePort.findSubject(feedbackId).orElse(null);
-        feedbackPersistancePort.rateFeedback(feedbackId, upVote, user.userId());
-        xpPort.award(user.userId(), XpRules.Action.FEEDBACK_VOTE);
-        if (!Boolean.TRUE.equals(upVote) || subject == null) {
-            return;
+        var update = feedbackPersistancePort.castFeedbackVote(feedbackId, like, user.userId());
+        if (update.awardXp()) {
+            xpPort.award(user.userId(), XpRules.Action.FEEDBACK_VOTE);
+        }
+        if (!update.notifyLike() || subject == null) {
+            return update;
         }
         var authorUserId = subject.authorUserId();
         if (authorUserId == null || authorUserId.isBlank() || authorUserId.equals(user.userId())) {
-            return;
+            return update;
         }
 
         var activity = activityPort.recordFeedbackLiked(
@@ -113,6 +115,13 @@ public class FeedbackService implements FeedbackPort {
                 feedbackId
         );
         publish(authorUserId, "FEEDBACK_LIKED", activity.id());
+        return update;
+    }
+
+    @Override
+    public List<UserVote> myVotes() {
+        var user = SecurityContext.current();
+        return feedbackPersistancePort.findVotesByUser(user.userId());
     }
 
     @Override
@@ -131,6 +140,28 @@ public class FeedbackService implements FeedbackPort {
 
         var activity = activityPort.recordFeedbackDeleted(authorUserId, subject.title(), admin.username());
         publish(authorUserId, "FEEDBACK_DELETED", activity.id());
+    }
+
+    @Override
+    public void resolveFeedback(String id) {
+        requireVerification();
+        var admin = SecurityContext.current();
+        var subject = feedbackPersistancePort.findSubject(id).orElse(null);
+        if (!feedbackPersistancePort.resolveFeedback(id) || subject == null) {
+            return;
+        }
+        var authorUserId = subject.authorUserId();
+        if (authorUserId == null || authorUserId.isBlank()) {
+            return;
+        }
+
+        var activity = activityPort.recordFeedbackResolved(authorUserId, subject.title(), admin.username(), id);
+        publish(authorUserId, "FEEDBACK_RESOLVED", activity.id());
+    }
+
+    @Override
+    public List<Feedback> archivedFeedback() {
+        return feedbackPersistancePort.findArchived();
     }
 
     @Override

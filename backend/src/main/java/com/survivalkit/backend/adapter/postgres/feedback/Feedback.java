@@ -13,7 +13,8 @@ public record Feedback(
         int dislikes,
         String answer,
         Instant addedAt,
-        Instant lastUpdated
+        Instant lastUpdated,
+        Instant resolvedAt
 
 ) {
     public enum FeedbackType {

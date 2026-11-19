@@ -1,0 +1,57 @@
+{
+  "version": "3.6.1",
+  "date": "2026-11-19",
+  "sections": [
+    {
+      "title": "Präsi-Spiel",
+      "items": [
+        "Beim Erstellen einer Runde legst du fest, wie viel Prozent der Jury ein Wort bestätigen muss: 25, 50, 75 oder 100. Ohne Angabe gilt 50 Prozent",
+        "Nach einem Wortwechsel wartet das nächste Wort 2 Sekunden. Ein Klick, der zu spät kommt, bestätigt nicht schon das neue Wort"
+      ]
+    },
+    {
+      "title": "Ränge",
+      "items": [
+        "Grandmaster of Prokrastination beginnt bei 15000 XP. Die Ränge darunter sind auf diese Schwelle skaliert, Bronze III bleibt bei 0",
+        "Vergangenes Mitmachen ist nachgetragen: Anmeldungen, hochgeladene Memes, Koffein, Ideen, Spielevorschläge, Präsi-Runden und Stimmen auf Memes und Ideen. Gezählt wird mit den aktuellen Punkten pro Aktion"
+      ]
+    },
+    {
+      "title": "Vorlesungstimer",
+      "items": [
+        "Im Vollbild hat der Timer mehr Abstand zum Rand, und zwischen Überschrift und Ring ist mehr Platz",
+        "Der Ring wird mit der Größe dicker",
+        "Die Prozentzahl ist größer und in deiner Akzentfarbe",
+        "Der Ring nutzt die Farbe aus den Timer-Einstellungen"
+      ]
+    },
+    {
+      "title": "Daily Cat und Tagesmeme",
+      "items": [
+        "Die tägliche Katze behält im Vollbild ihr Seitenverhältnis und füllt den Bildschirm so groß wie möglich, mit unscharfem Hintergrund. Schließen geht über das X, Escape oder einen Klick daneben",
+        "Beim Tagesmeme gibt es einen Vollbild-Button"
+      ]
+    },
+    {
+      "title": "Ideen und Feedback",
+      "items": [
+        "Admins können einen Beitrag als erledigt markieren. Der Autor bekommt eine Benachrichtigung",
+        "Erledigte Beiträge stehen im Archiv unter den offenen. Das Archiv ist zuerst zugeklappt, die neuesten oben"
+      ]
+    },
+    {
+      "title": "Stimmen",
+      "items": [
+        "Auf der Memewand und bei Ideen nimmst du deine Stimme mit demselben Button wieder weg. Der andere Button wechselt zwischen Like und Dislike",
+        "Deine aktuelle Stimme bleibt markiert",
+        "Bei älteren Stimmen war die Seite nicht gespeichert. Der erste Klick merkt sie sich, der zweite auf denselben Button nimmt sie weg"
+      ]
+    },
+    {
+      "title": "Dashboard",
+      "items": [
+        "Die Überschrift kannst du mehr als einmal aufs Dashboard ziehen. Jede hat eigenen Titel und Untertitel"
+      ]
+    }
+  ]
+}

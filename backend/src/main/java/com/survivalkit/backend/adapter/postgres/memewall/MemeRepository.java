@@ -3,6 +3,8 @@ package com.survivalkit.backend.adapter.postgres.memewall;
 import com.survivalkit.backend.adapter.web.ErrorCode;
 import com.survivalkit.backend.core.security.SecurityLog;
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.UserVote;
+import com.survivalkit.backend.shared.VoteUpdate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -126,6 +128,9 @@ public class MemeRepository implements MemePersistancePort {
         jdbcClient.sql(Statements.DELETE_VOTES.sql)
                 .paramSource(new MapSqlParameterSource("id", id))
                 .update();
+        jdbcClient.sql(Statements.DELETE_AWARDS.sql)
+                .paramSource(new MapSqlParameterSource("id", id))
+                .update();
         jdbcClient.sql(Statements.DELETE.sql)
                 .paramSource(new MapSqlParameterSource("id", id))
                 .update();
@@ -135,22 +140,92 @@ public class MemeRepository implements MemePersistancePort {
 
     @Override
     @Transactional
-    public boolean rateMeme(String id, boolean upVote, String userId) {
-        var inserted = jdbcClient.sql(Statements.INSERT_VOTE.sql)
-                .paramSource(new MapSqlParameterSource("memeId", id)
-                        .addValue("userId", userId))
-                .update();
-
-        if (inserted == 0) {
-            return false;
+    public VoteUpdate castMemeVote(String id, boolean upVote, String userId) {
+        var existing = findVote(id, userId);
+        if (existing.isEmpty()) {
+            jdbcClient.sql(Statements.INSERT_VOTE.sql)
+                    .paramSource(new MapSqlParameterSource("memeId", id)
+                            .addValue("userId", userId)
+                            .addValue("upVote", upVote))
+                    .update();
+            shiftCounts(id, upVote ? 1 : 0, upVote ? 0 : 1);
+            var awarded = jdbcClient.sql(Statements.INSERT_AWARD.sql)
+                    .paramSource(new MapSqlParameterSource("memeId", id).addValue("userId", userId))
+                    .update() > 0;
+            var counts = readCounts(id);
+            return new VoteUpdate(upVote, counts.likes(), counts.dislikes(), awarded, upVote);
         }
 
-        jdbcClient.sql(Statements.UPDATE_RATING.sql)
+        var previous = existing.get().upVote();
+        if (previous == null) {
+            jdbcClient.sql(Statements.SET_VOTE.sql)
+                    .paramSource(new MapSqlParameterSource("memeId", id)
+                            .addValue("userId", userId)
+                            .addValue("upVote", upVote))
+                    .update();
+            var counts = readCounts(id);
+            return new VoteUpdate(upVote, counts.likes(), counts.dislikes(), false, false);
+        }
+        if (previous == upVote) {
+            jdbcClient.sql(Statements.DELETE_USER_VOTE.sql)
+                    .paramSource(new MapSqlParameterSource("memeId", id).addValue("userId", userId))
+                    .update();
+            shiftCounts(id, upVote ? -1 : 0, upVote ? 0 : -1);
+            var counts = readCounts(id);
+            return new VoteUpdate(null, counts.likes(), counts.dislikes(), false, false);
+        }
+
+        jdbcClient.sql(Statements.SET_VOTE.sql)
+                .paramSource(new MapSqlParameterSource("memeId", id)
+                        .addValue("userId", userId)
+                        .addValue("upVote", upVote))
+                .update();
+        shiftCounts(id, upVote ? 1 : -1, upVote ? -1 : 1);
+        var counts = readCounts(id);
+        return new VoteUpdate(upVote, counts.likes(), counts.dislikes(), false, upVote);
+    }
+
+    @Override
+    public List<UserVote> findVotesByUser(String userId, String course) {
+        return jdbcClient.sql(Statements.FIND_VOTES_BY_USER.sql)
+                .paramSource(new MapSqlParameterSource("userId", userId).addValue("course", course))
+                .query((rs, rowNum) -> new UserVote(rs.getString("id"), readNullableBoolean(rs, "upVote")))
+                .list();
+    }
+
+    private Optional<StoredVote> findVote(String memeId, String userId) {
+        return jdbcClient.sql(Statements.FIND_VOTE.sql)
+                .paramSource(new MapSqlParameterSource("memeId", memeId).addValue("userId", userId))
+                .query((rs, rowNum) -> new StoredVote(readNullableBoolean(rs, "upVote")))
+                .optional();
+    }
+
+    private void shiftCounts(String id, int likeDelta, int dislikeDelta) {
+        jdbcClient.sql(Statements.SHIFT_RATING.sql)
                 .paramSource(new MapSqlParameterSource("id", id)
-                        .addValue("upVote", upVote)
+                        .addValue("likeDelta", likeDelta)
+                        .addValue("dislikeDelta", dislikeDelta)
                         .addValue("currentTime", toTimestamp(Instant.now())))
                 .update();
-        return true;
+    }
+
+    private Counts readCounts(String id) {
+        return jdbcClient.sql(Statements.READ_COUNTS.sql)
+                .param("id", id)
+                .query((rs, rowNum) -> new Counts(rs.getInt("likes"), rs.getInt("dislikes")))
+                .optional()
+                .orElse(new Counts(0, 0));
+    }
+
+    private static Boolean readNullableBoolean(java.sql.ResultSet rs, String column) throws java.sql.SQLException {
+        var value = rs.getObject(column);
+        return value == null ? null : rs.getBoolean(column);
+    }
+
+    private record Counts(int likes, int dislikes) {
+    }
+
+    private record StoredVote(Boolean upVote) {
     }
 
     @Override
@@ -279,21 +354,52 @@ public class MemeRepository implements MemePersistancePort {
             DELETE FROM memeVotes WHERE memeId = :id
         """),
 
+        DELETE_AWARDS("""
+            DELETE FROM memeVoteAwards WHERE memeId = :id
+        """),
+
         // language=sql
         INSERT_VOTE("""
-            INSERT INTO memeVotes (memeId, userId)
+            INSERT INTO memeVotes (memeId, userId, upVote)
+            VALUES (:memeId, :userId, :upVote)
+        """),
+
+        SET_VOTE("""
+            UPDATE memeVotes SET upVote = :upVote WHERE memeId = :memeId AND userId = :userId
+        """),
+
+        DELETE_USER_VOTE("""
+            DELETE FROM memeVotes WHERE memeId = :memeId AND userId = :userId
+        """),
+
+        INSERT_AWARD("""
+            INSERT INTO memeVoteAwards (memeId, userId)
             VALUES (:memeId, :userId)
             ON CONFLICT (memeId, userId) DO NOTHING
         """),
 
-        // language=sql
-        UPDATE_RATING("""
+        SHIFT_RATING("""
             UPDATE memes
             SET
-                likes = likes + CASE WHEN :upVote THEN 1 ELSE 0 END,
-                dislikes = dislikes + CASE WHEN :upVote THEN 0 ELSE 1 END,
+                likes = GREATEST(0, likes + :likeDelta),
+                dislikes = GREATEST(0, dislikes + :dislikeDelta),
                 lastUpdated = :currentTime
             WHERE id = :id
+        """),
+
+        READ_COUNTS("""
+            SELECT likes, dislikes FROM memes WHERE id = :id
+        """),
+
+        FIND_VOTE("""
+            SELECT upVote FROM memeVotes WHERE memeId = :memeId AND userId = :userId
+        """),
+
+        FIND_VOTES_BY_USER("""
+            SELECT v.memeId AS id, v.upVote
+            FROM memeVotes v
+            JOIN memes m ON m.id = v.memeId
+            WHERE v.userId = :userId AND m.course = :course
         """),
 
         // language=sql

@@ -1,7 +1,10 @@
 package com.survivalkit.backend.adapter.postgres.memewall;
 
 import com.survivalkit.backend.shared.Page;
+import com.survivalkit.backend.shared.UserVote;
+import com.survivalkit.backend.shared.VoteUpdate;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MemePersistancePort {
@@ -20,7 +23,9 @@ public interface MemePersistancePort {
 
     void deleteMeme(String id);
 
-    boolean rateMeme(String id, boolean upVote, String userId);
+    VoteUpdate castMemeVote(String id, boolean upVote, String userId);
+
+    List<UserVote> findVotesByUser(String userId, String course);
 
     boolean canVote(String memeId, String userId);
 }
