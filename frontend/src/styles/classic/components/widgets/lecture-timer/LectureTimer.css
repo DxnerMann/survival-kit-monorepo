@@ -21,6 +21,8 @@
     left: 0;
     height: 100vh;
     z-index: 2000;
+    padding: 0.75rem 1.5rem 1.75rem;
+    box-sizing: border-box;
 }
 
 .widget-header {
@@ -180,13 +182,23 @@
     color: var(--color-text-secondary);
 }
 
+.lecture-timer-ring .percentage {
+    color: var(--color-primary-accent);
+    font-weight: 750;
+    line-height: 1;
+}
+
 .lecture-timer-widget > .widget-content {
     flex: 1 1 auto;
     height: auto;
     min-height: 0;
     overflow: hidden;
     justify-content: stretch;
-    padding: 0 0.85rem 0.75rem;
+    padding: 0.85rem 0.85rem 0.75rem;
+}
+
+.lecture-timer-widget.fullscreen > .widget-content {
+    padding: 1.25rem 2.25rem 1.5rem;
 }
 
 .lecture-timer-lecture-title {
@@ -309,14 +321,6 @@
 
 .progress-bar .RCP {
     position: relative;
-}
-
-.lecture-timer-gradient-def {
-    position: absolute;
-    width: 0;
-    height: 0;
-    overflow: hidden;
-    pointer-events: none;
 }
 
 .lecture-timer-ring {

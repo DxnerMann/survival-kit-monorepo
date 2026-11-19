@@ -1,7 +1,7 @@
 import "@/components/widgets/lecture-timer/LectureTimer.css";
 import {dashboardService} from "@/services/dashboardService.tsx";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
-import {type CSSProperties, type RefObject, useEffect, useId, useRef, useState} from "react";
+import {type RefObject, useEffect, useRef, useState} from "react";
 import {Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "@/services/tokenService.tsx";
@@ -33,7 +33,6 @@ const lectureLabel = (title: string) => {
 type LectureTimerRingProps = {
     progress: number;
     strokeColor: string;
-    ringStyle: CSSProperties;
     showPercentage: boolean;
     showCountdown: boolean;
     percentage: number;
@@ -43,7 +42,6 @@ type LectureTimerRingProps = {
 const LectureTimerRing = ({
     progress,
     strokeColor,
-    ringStyle,
     showPercentage,
     showCountdown,
     percentage,
@@ -66,14 +64,14 @@ const LectureTimerRing = ({
         return () => observer.disconnect();
     }, []);
 
-    const stroke = Math.min(34, Math.max(8, available * 0.07));
-    const track = stroke * 0.84;
+    const stroke = Math.min(64, Math.max(10, available * 0.105));
+    const track = stroke * 0.82;
     const radius = Math.max(0, (available - stroke * 2) / 2);
 
     return (
         <div className="lecture-timer-ring-slot" ref={slotRef}>
             {radius > 8 && (
-                <div className="lecture-timer-ring" style={ringStyle}>
+                <div className="lecture-timer-ring">
                     <ProgressBar
                         className="progress-bar"
                         radius={radius}
@@ -86,7 +84,7 @@ const LectureTimerRing = ({
                     >
                         <div className="progress-bar-center">
                             {showPercentage && (
-                                <div className="percentage" style={{fontSize: Math.max(13, available * 0.09)}}>
+                                <div className="percentage" style={{fontSize: Math.max(20, available * 0.16)}}>
                                     {Math.floor(percentage)}%
                                 </div>
                             )}
@@ -132,18 +130,6 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
     const { current, next, loading, error } = lectureService.useCurrentAndNextLecture(isPreview ? null : course);
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const gradientId = `lecture-ring-${useId().replace(/:/g, "")}`;
-    const ringStyle = {"--lecture-timer-stroke": `url(#${gradientId})`} as CSSProperties;
-    const accentGradient = (
-        <svg className="lecture-timer-gradient-def" aria-hidden="true" focusable="false">
-            <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="var(--accent)" />
-                    <stop offset="100%" stopColor="var(--accent-2)" />
-                </linearGradient>
-            </defs>
-        </svg>
-    );
     const useContainerSize = (ref: RefObject<HTMLElement | null>, dep?: unknown) => {
         const [size, setSize] = useState(0);
 
@@ -235,8 +221,7 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
     if (isPreview) {
         return <>
             <div className="lecture-timer-widget-preview" ref={containerRef}>
-                {accentGradient}
-                <div className="lecture-timer-ring" style={ringStyle}>
+                <div className="lecture-timer-ring">
                     <ProgressBar
                         className="progress-bar"
                         radius={inFullscreen ? (size / 5) : (size / 3)}
@@ -254,7 +239,6 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
 
     const getWidgetContent = () => (
         <div className={`lecture-timer-widget ${inFullscreen ? "fullscreen" : ""}`} ref={containerRef} >
-            {accentGradient}
             <div className="widget-header">
                 {!inSettings && <Settings
                      className="widget-header-icon"
@@ -310,7 +294,6 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
                                                     <LectureTimerRing
                                                         progress={percentage}
                                                         strokeColor={decodedData.strokeColor}
-                                                        ringStyle={ringStyle}
                                                         showPercentage={decodedData.showPercentage}
                                                         showCountdown={decodedData.showCountdown}
                                                         percentage={percentage}

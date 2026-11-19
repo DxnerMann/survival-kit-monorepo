@@ -191,7 +191,7 @@ const PresentationGameLobbyPage = () => {
                                 <p>
                                     Beobachten den Vortrag und <strong>genehmigen</strong> ein Wort, wenn es glaubwürdig
                                     eingebaut wurde. Es gilt der Jury-Anteil aus der Raumerstellung. Danach wartet
-                                    das nächste Wort 5 Sekunden.
+                                    das nächste Wort 2 Sekunden.
                                 </p>
                             </div>
                         </div>

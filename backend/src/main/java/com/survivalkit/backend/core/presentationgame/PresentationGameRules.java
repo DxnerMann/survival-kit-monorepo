@@ -8,7 +8,7 @@ public final class PresentationGameRules {
 
     public static final int WORD_PREFETCH_BATCH = 50;
     public static final int WORD_PREFETCH_REMAINING = 5;
-    public static final Duration WORD_COOLDOWN = Duration.ofSeconds(5);
+    public static final Duration WORD_COOLDOWN = Duration.ofSeconds(2);
     public static final int DEFAULT_APPROVAL_PERCENT = 50;
 
     private PresentationGameRules() {}

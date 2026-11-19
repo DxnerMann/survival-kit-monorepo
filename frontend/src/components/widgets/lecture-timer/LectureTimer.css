@@ -21,6 +21,8 @@
     left: 0;
     height: 100vh;
     z-index: 2000;
+    padding: 0.75rem 1.5rem 1.75rem;
+    box-sizing: border-box;
 }
 
 .widget-header {
@@ -189,7 +191,11 @@
     min-height: 0;
     overflow: hidden;
     justify-content: stretch;
-    padding: 0 0.85rem 0.75rem;
+    padding: 0.85rem 0.85rem 0.75rem;
+}
+
+.lecture-timer-widget.fullscreen > .widget-content {
+    padding: 1.25rem 2.25rem 1.5rem;
 }
 
 .lecture-timer-lecture-title {
@@ -325,22 +331,16 @@
     stroke: color-mix(in srgb, var(--color-text-secondary) 18%, var(--color-background-secondary));
 }
 
-.lecture-timer-gradient-def {
-    position: absolute;
-    width: 0;
-    height: 0;
-    overflow: hidden;
-    pointer-events: none;
-}
-
 .lecture-timer-ring {
     position: relative;
     display: flex;
     justify-content: center;
 }
 
-.lecture-timer-ring .RCP__progress {
-    stroke: var(--lecture-timer-stroke);
+.lecture-timer-ring .percentage {
+    color: var(--accent-strong);
+    font-weight: 750;
+    line-height: 1;
 }
 
 .progress-bar-center {
