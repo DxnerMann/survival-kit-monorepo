@@ -2,6 +2,7 @@ package com.survivalkit.backend.adapter.web.presentationgame;
 
 import com.survivalkit.backend.adapter.postgres.presentationgame.PresentationGameRoom;
 
+import java.time.Instant;
 import java.util.List;
 
 public record PresentationGameStateResponse(
@@ -10,6 +11,7 @@ public record PresentationGameStateResponse(
         int totalWords,
         int presenterPoints,
         int jurySize,
+        int approvalPercent,
         int approvalThreshold,
         int currentApprovals,
         List<String> approvingUserIds,
@@ -20,5 +22,6 @@ public record PresentationGameStateResponse(
         boolean canSkip,
         boolean canApprove,
         boolean hasVotedCurrentWord,
+        Instant cooldownUntil,
         List<PresentationGameRoomMemberResponse> members
 ) {}

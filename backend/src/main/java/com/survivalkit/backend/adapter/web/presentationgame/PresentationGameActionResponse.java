@@ -1,5 +1,7 @@
 package com.survivalkit.backend.adapter.web.presentationgame;
 
+import java.time.Instant;
+
 public record PresentationGameActionResponse(
         String event,
         int pointsDelta,
@@ -10,5 +12,6 @@ public record PresentationGameActionResponse(
         int wordIndex,
         int totalWords,
         int currentApprovals,
-        int approvalThreshold
+        int approvalThreshold,
+        Instant cooldownUntil
 ) {}

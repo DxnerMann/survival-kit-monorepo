@@ -2,11 +2,14 @@ package com.survivalkit.backend.core.presentationgame;
 
 import com.survivalkit.backend.adapter.postgres.presentationgame.PresentationGameRoom;
 
+import java.time.Duration;
+
 public final class PresentationGameRules {
 
     public static final int WORD_PREFETCH_BATCH = 50;
     public static final int WORD_PREFETCH_REMAINING = 5;
-    private static final double APPROVAL_RATIO = 0.1;
+    public static final Duration WORD_COOLDOWN = Duration.ofSeconds(5);
+    public static final int DEFAULT_APPROVAL_PERCENT = 50;
 
     private PresentationGameRules() {}
 
@@ -26,11 +29,12 @@ public final class PresentationGameRules {
         return difficulty != PresentationGameRoom.Difficulty.HARD;
     }
 
-    public static int approvalThreshold(int jurySize) {
+    public static int approvalThreshold(int jurySize, int approvalPercent) {
         if (jurySize <= 0) {
             return 1;
         }
-        return Math.max(1, (int) Math.ceil(jurySize * APPROVAL_RATIO));
+        var percent = Math.min(100, Math.max(1, approvalPercent));
+        return Math.max(1, (int) Math.ceil(jurySize * (percent / 100.0)));
     }
 
     public static int jurySize(int memberCount) {

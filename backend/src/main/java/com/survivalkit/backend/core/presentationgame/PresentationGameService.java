@@ -94,6 +94,13 @@ public class PresentationGameService implements PresentationGamePort {
             throw new IllegalArgumentException(ErrorCode.PRESENTATION_ROOM_NAME_EMPTY.getCode());
         }
 
+        var approvalPercent = request.approvalPercent() == null
+                ? PresentationGameRules.DEFAULT_APPROVAL_PERCENT
+                : request.approvalPercent();
+        if (approvalPercent < 1 || approvalPercent > 100) {
+            throw new IllegalArgumentException(ErrorCode.PRESENTATION_APPROVAL_PERCENT_INVALID.getCode());
+        }
+
         var user = currentUser();
 
         String course = null;
@@ -118,7 +125,9 @@ public class PresentationGameService implements PresentationGamePort {
                 null,
                 null,
                 0,
-                0
+                0,
+                approvalPercent,
+                null
         );
 
         persistancePort.createRoom(room);
@@ -249,6 +258,7 @@ public class PresentationGameService implements PresentationGamePort {
                 room.hostUserId(),
                 room.hostUsername(),
                 room.difficulty(),
+                room.approvalPercent(),
                 room.status(),
                 room.isPublic(),
                 room.hostUserId().equals(authUser.userId()),
@@ -320,6 +330,8 @@ public class PresentationGameService implements PresentationGamePort {
             throw new IllegalArgumentException(ErrorCode.PRESENTATION_SKIP_NOT_ALLOWED.getCode());
         }
 
+        assertWordReady(room);
+
         var wordIndex = room.currentWordIndex();
         assertHasCurrentWord(room, wordIndex);
 
@@ -356,6 +368,8 @@ public class PresentationGameService implements PresentationGamePort {
             throw new IllegalArgumentException(ErrorCode.PRESENTATION_NOT_JURY.getCode());
         }
 
+        assertWordReady(room);
+
         var wordIndex = room.currentWordIndex();
         assertHasCurrentWord(room, wordIndex);
 
@@ -366,13 +380,16 @@ public class PresentationGameService implements PresentationGamePort {
         persistancePort.addVote(room.id(), wordIndex, user.id(), VOTE_APPROVE);
 
         var approvals = persistancePort.countApprovals(room.id(), wordIndex);
-        var threshold = PresentationGameRules.approvalThreshold(jurySize);
+        var threshold = PresentationGameRules.approvalThreshold(jurySize, room.approvalPercent());
         var pointsDelta = 0;
         var eventType = "APPROVE_VOTE";
 
         if (approvals >= threshold) {
             pointsDelta = PresentationGameRules.approvePoints(room.difficulty());
-            persistancePort.advanceWord(room.id(), wordIndex, pointsDelta);
+            if (!persistancePort.advanceWord(room.id(), wordIndex, pointsDelta)) {
+                room = reloadRoom(room.id());
+                return buildActionFromRoom("APPROVE", user.id(), user.username(), 0, room);
+            }
             room = reloadRoom(room.id());
             ensureWordsPrefetched(room);
             room = reloadRoom(room.id());
@@ -395,7 +412,8 @@ public class PresentationGameService implements PresentationGamePort {
                 wordIndex,
                 persistancePort.countWords(room.id()),
                 approvals,
-                threshold
+                threshold,
+                cooldownUntil(room)
         );
         broadcastGameEvent(room.id(), voteAction);
         return voteAction;
@@ -492,7 +510,7 @@ public class PresentationGameService implements PresentationGamePort {
 
         var jurySize = PresentationGameRules.jurySize(members.size());
         var isHost = room.hostUserId().equals(user.id());
-        var threshold = PresentationGameRules.approvalThreshold(jurySize);
+        var threshold = PresentationGameRules.approvalThreshold(jurySize, room.approvalPercent());
         var wordIndex = room.currentWordIndex();
         var totalWords = persistancePort.countWords(room.id());
         var approvals = persistancePort.countApprovals(room.id(), wordIndex);
@@ -509,6 +527,7 @@ public class PresentationGameService implements PresentationGamePort {
                 totalWords,
                 room.presenterPoints(),
                 jurySize,
+                room.approvalPercent(),
                 threshold,
                 approvals,
                 approvingUserIds,
@@ -519,6 +538,7 @@ public class PresentationGameService implements PresentationGamePort {
                 isHost && PresentationGameRules.canSkip(room.difficulty()) && room.status() == PresentationGameRoom.Status.IN_PROGRESS,
                 canApprove,
                 hasVoted,
+                cooldownUntil(room),
                 members
         );
     }
@@ -544,7 +564,8 @@ public class PresentationGameService implements PresentationGamePort {
                 wordIndex,
                 totalWords,
                 persistancePort.countApprovals(room.id(), wordIndex),
-                PresentationGameRules.approvalThreshold(jurySize)
+                PresentationGameRules.approvalThreshold(jurySize, room.approvalPercent()),
+                cooldownUntil(room)
         );
     }
 
@@ -565,9 +586,25 @@ public class PresentationGameService implements PresentationGamePort {
                 persistancePort.countWords(roomId),
                 0,
                 PresentationGameRules.approvalThreshold(
-                        PresentationGameRules.jurySize(persistancePort.findMembers(roomId).size())
-                )
+                        PresentationGameRules.jurySize(persistancePort.findMembers(roomId).size()),
+                        room.approvalPercent()
+                ),
+                cooldownUntil(room)
         );
+    }
+
+    private void assertWordReady(PresentationGameRoom room) {
+        if (cooldownUntil(room) != null) {
+            throw new IllegalArgumentException(ErrorCode.PRESENTATION_WORD_COOLDOWN.getCode());
+        }
+    }
+
+    private Instant cooldownUntil(PresentationGameRoom room) {
+        if (room.wordAdvancedAt() == null) {
+            return null;
+        }
+        var until = room.wordAdvancedAt().plus(PresentationGameRules.WORD_COOLDOWN);
+        return until.isAfter(Instant.now()) ? until : null;
     }
 
     private void broadcastGameEvent(String roomId, PresentationGameActionResponse action) {

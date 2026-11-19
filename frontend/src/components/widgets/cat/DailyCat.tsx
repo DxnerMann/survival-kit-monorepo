@@ -1,11 +1,11 @@
 import "@/components/widgets/cat/DailyCat.css";
 import {useEffect, useState} from "react";
-import {createPortal} from "react-dom";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
 import {getDailyCat} from "@/services/dailyEventService.tsx";
 import {getErrorText} from "@/services/api.tsx";
 import {Fullscreen} from "lucide-react";
 import WidgetStatus from "@/components/ui/WidgetStatus.tsx";
+import ImageLightbox from "@/components/ui/ImageLightbox.tsx";
 
 const DailyCat = ({title, isPreview} : WidgetProps) => {
 
@@ -55,31 +55,37 @@ const DailyCat = ({title, isPreview} : WidgetProps) => {
         </>
     }
 
-    const getWidgetContent = () => (
-        <div className={`daily-cat-widget ${inFullscreen ? "fullscreen" : ""}`}>
-            <div className="widget-header">
-                <button
-                    type="button"
-                    className="widget-header-icon"
-                    aria-label={inFullscreen ? "Vollbild schließen" : "Vollbild"}
-                    onClick={() => setInFullscreen(!inFullscreen)}
-                >
-                    <Fullscreen size={20} />
-                </button>
+    return (
+        <>
+            <div className="daily-cat-widget">
+                <div className="widget-header">
+                    <button
+                        type="button"
+                        className="widget-header-icon"
+                        aria-label="Vollbild"
+                        onClick={() => setInFullscreen(true)}
+                        disabled={!catUrl}
+                    >
+                        <Fullscreen size={20} />
+                    </button>
+                </div>
+                <div className="daily-cat-img-wrapper">
+                    {loading && <WidgetStatus status="loading" />}
+                    {!loading && error && <WidgetStatus status="error" message={error} />}
+                    {!loading && !error && catUrl && (
+                        <img className="daily-cat-img" src={catUrl} alt="Tägliche Katze" />
+                    )}
+                </div>
             </div>
-            <div className="daily-cat-img-wrapper">
-                {loading && <WidgetStatus status="loading" />}
-                {!loading && error && <WidgetStatus status="error" message={error} />}
-                {!loading && !error && catUrl && (
-                    <img className="daily-cat-img" src={catUrl} alt="Daily cat" />
-                )}
-            </div>
-        </div>
+            {inFullscreen && catUrl && (
+                <ImageLightbox
+                    src={catUrl}
+                    alt="Tägliche Katze"
+                    onClose={() => setInFullscreen(false)}
+                />
+            )}
+        </>
     );
-
-    return inFullscreen
-        ? createPortal(getWidgetContent(), document.body)
-        : getWidgetContent();
 
 }
 

@@ -33,6 +33,7 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                         .addValue("status", room.status().name())
                         .addValue("createdAt", toTimestamp(room.createdAt()))
                         .addValue("presenterPoints", room.presenterPoints())
+                        .addValue("approvalPercent", room.approvalPercent())
                 ).update();
     }
 
@@ -208,6 +209,7 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                 .paramSource(new MapSqlParameterSource("roomId", roomId)
                         .addValue("expectedWordIndex", expectedWordIndex)
                         .addValue("pointsDelta", pointsDelta)
+                        .addValue("advancedAt", toTimestamp(Instant.now()))
                 ).update();
         return updated > 0;
     }
@@ -240,9 +242,9 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                 """
                     INSERT INTO presentation_game_rooms
                     (id, name, host_user_id, host_username, course, is_public, join_code, difficulty,
-                     status, created_at, presenter_points, current_word_index)
+                     status, created_at, presenter_points, current_word_index, approval_percent)
                     VALUES (:id, :name, :hostUserId, :hostUsername, :course, :isPublic, :joinCode, :difficulty,
-                            :status, :createdAt, :presenterPoints, 0)
+                            :status, :createdAt, :presenterPoints, 0, :approvalPercent)
                     """
         ),
         INSERT_MEMBER(
@@ -277,7 +279,9 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                            difficulty, status, created_at AS createdAt,
                            started_at AS startedAt, finished_at AS finishedAt,
                            presenter_points AS presenterPoints,
-                           current_word_index AS currentWordIndex
+                           current_word_index AS currentWordIndex,
+                           approval_percent AS approvalPercent,
+                           word_advanced_at AS wordAdvancedAt
                     FROM presentation_game_rooms
                     WHERE id = :id
                     """
@@ -289,7 +293,9 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                            difficulty, status, created_at AS createdAt,
                            started_at AS startedAt, finished_at AS finishedAt,
                            presenter_points AS presenterPoints,
-                           current_word_index AS currentWordIndex
+                           current_word_index AS currentWordIndex,
+                           approval_percent AS approvalPercent,
+                           word_advanced_at AS wordAdvancedAt
                     FROM presentation_game_rooms
                     WHERE join_code = :joinCode
                     """
@@ -343,7 +349,8 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
         START_ROOM(
                 """
                     UPDATE presentation_game_rooms
-                    SET status = 'IN_PROGRESS', started_at = :startedAt, current_word_index = 0, presenter_points = 0
+                    SET status = 'IN_PROGRESS', started_at = :startedAt, current_word_index = 0,
+                        presenter_points = 0, word_advanced_at = NULL
                     WHERE id = :roomId
                     """
         ),
@@ -413,7 +420,8 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                 """
                     UPDATE presentation_game_rooms
                     SET current_word_index = current_word_index + 1,
-                        presenter_points = presenter_points + :pointsDelta
+                        presenter_points = presenter_points + :pointsDelta,
+                        word_advanced_at = :advancedAt
                     WHERE id = :roomId
                       AND current_word_index = :expectedWordIndex
                       AND status = 'IN_PROGRESS'

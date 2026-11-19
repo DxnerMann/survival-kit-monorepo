@@ -12,8 +12,11 @@ interface CreatePresentationRoomDialogProps {
         name: string;
         isPublic: boolean;
         difficulty: PresentationGameDifficulty;
+        approvalPercent: number;
     }) => Promise<void>;
 }
+
+const JURY_PERCENTS = [25, 50, 75, 100];
 
 const DIFFICULTIES: PresentationGameDifficulty[] = ["EASY", "MEDIUM", "HARD"];
 
@@ -25,12 +28,14 @@ export default function CreatePresentationRoomDialog({
     const [name, setName] = useState("");
     const [isPublic, setIsPublic] = useState(true);
     const [difficulty, setDifficulty] = useState<PresentationGameDifficulty>("MEDIUM");
+    const [approvalPercent, setApprovalPercent] = useState(50);
     const [submitting, setSubmitting] = useState(false);
 
     const resetForm = () => {
         setName("");
         setIsPublic(true);
         setDifficulty("MEDIUM");
+        setApprovalPercent(50);
         setSubmitting(false);
     };
 
@@ -55,7 +60,7 @@ export default function CreatePresentationRoomDialog({
 
         setSubmitting(true);
         try {
-            await onSubmit({name: name.trim(), isPublic, difficulty});
+            await onSubmit({name: name.trim(), isPublic, difficulty, approvalPercent});
             resetForm();
         } finally {
             setSubmitting(false);
@@ -109,6 +114,21 @@ export default function CreatePresentationRoomDialog({
                             <span>Privat (Code)</span>
                         </label>
                     </div>
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="room-jury">Jury zum Bestätigen</label>
+                    <select
+                        id="room-jury"
+                        value={approvalPercent}
+                        onChange={(e) => setApprovalPercent(Number(e.target.value))}
+                    >
+                        {JURY_PERCENTS.map(percent => (
+                            <option key={percent} value={percent}>
+                                {percent} %
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="form-group">

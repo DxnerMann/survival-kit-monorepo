@@ -1,6 +1,7 @@
 import "@/components/widgets/daily-meme/DailyMeme.css";
 import {useEffect, useRef, useState} from "react";
-import {Images} from "lucide-react";
+import {Fullscreen, Images} from "lucide-react";
+import ImageLightbox from "@/components/ui/ImageLightbox.tsx";
 import {useNavigate} from "react-router-dom";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
 import type {Meme} from "@/models/Meme.tsx";
@@ -21,6 +22,7 @@ const DailyMeme = ({title, isPreview}: WidgetProps) => {
     const [fit, setFit] = useState<"cover" | "contain">("cover");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [inFullscreen, setInFullscreen] = useState(false);
 
     const updateFit = () => {
         const image = imageRef.current;
@@ -109,6 +111,16 @@ const DailyMeme = ({title, isPreview}: WidgetProps) => {
                 )}
             </div>
             <div className="widget-header">
+                {meme && (
+                    <button
+                        type="button"
+                        className="widget-header-icon"
+                        aria-label="Vollbild"
+                        onClick={() => setInFullscreen(true)}
+                    >
+                        <Fullscreen size={20} />
+                    </button>
+                )}
                 <button
                     type="button"
                     className="widget-header-icon"
@@ -118,6 +130,13 @@ const DailyMeme = ({title, isPreview}: WidgetProps) => {
                     <Images size={20} />
                 </button>
             </div>
+            {inFullscreen && meme && (
+                <ImageLightbox
+                    src={memeSrc(meme)}
+                    alt={meme.title || "Tagesmeme"}
+                    onClose={() => setInFullscreen(false)}
+                />
+            )}
         </div>
     );
 };

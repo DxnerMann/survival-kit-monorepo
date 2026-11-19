@@ -11,6 +11,7 @@ public record PresentationGameRoomDetailResponse(
         String hostUserId,
         String hostUsername,
         PresentationGameRoom.Difficulty difficulty,
+        int approvalPercent,
         PresentationGameRoom.Status status,
         boolean isPublic,
         boolean isHost,

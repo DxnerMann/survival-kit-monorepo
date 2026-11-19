@@ -34,6 +34,7 @@ export type PresentationGameState = {
     totalWords: number;
     presenterPoints: number;
     jurySize: number;
+    approvalPercent: number;
     approvalThreshold: number;
     currentApprovals: number;
     approvingUserIds: string[];
@@ -44,6 +45,7 @@ export type PresentationGameState = {
     canSkip: boolean;
     canApprove: boolean;
     hasVotedCurrentWord: boolean;
+    cooldownUntil: string | null;
     members: PresentationGameRoomMember[];
 };
 
@@ -58,6 +60,7 @@ export type PresentationGameAction = {
     totalWords: number;
     currentApprovals: number;
     approvalThreshold: number;
+    cooldownUntil: string | null;
 };
 
 export type PresentationGameRoomDetail = {
@@ -67,6 +70,7 @@ export type PresentationGameRoomDetail = {
     hostUserId: string;
     hostUsername: string;
     difficulty: PresentationGameDifficulty;
+    approvalPercent: number;
     status: PresentationGameStatus;
     isPublic: boolean;
     isHost: boolean;

@@ -97,6 +97,7 @@ const PresentationGameLobbyPage = () => {
         name: string;
         isPublic: boolean;
         difficulty: PresentationGameRoom["difficulty"];
+        approvalPercent: number;
     }) => {
         try {
             const created = await createPresentationRoom(data);
@@ -189,7 +190,8 @@ const PresentationGameLobbyPage = () => {
                                 <h4>Mitspieler · Jury</h4>
                                 <p>
                                     Beobachten den Vortrag und <strong>genehmigen</strong> ein Wort, wenn es glaubwürdig
-                                    eingebaut wurde. Pro Genehmigung gibt es Punkte.
+                                    eingebaut wurde. Es gilt der Jury-Anteil aus der Raumerstellung. Danach wartet
+                                    das nächste Wort 5 Sekunden.
                                 </p>
                             </div>
                         </div>

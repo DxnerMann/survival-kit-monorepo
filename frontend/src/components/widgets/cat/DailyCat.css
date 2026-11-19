@@ -7,18 +7,6 @@
     pointer-events: none;
 }
 
-.daily-cat-widget.fullscreen {
-    background: var(--color-background-primary);
-    position: fixed;
-    border-radius: 0;
-    bottom: 0;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 2000;
-}
-
 .daily-cat-widget .widget-header {
     position: absolute;
     top: 0;
@@ -63,6 +51,11 @@
 .daily-cat-widget .widget-header-icon:focus-visible {
     outline: none;
     box-shadow: 0 0 0 1px var(--accent-line), var(--focus-ring);
+}
+
+.daily-cat-widget .widget-header-icon:disabled {
+    opacity: 0.45;
+    cursor: default;
 }
 
 .daily-cat-img-wrapper {

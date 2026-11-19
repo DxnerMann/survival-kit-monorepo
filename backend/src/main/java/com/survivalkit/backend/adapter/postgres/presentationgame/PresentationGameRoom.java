@@ -16,7 +16,9 @@ public record PresentationGameRoom(
         Instant startedAt,
         Instant finishedAt,
         int presenterPoints,
-        int currentWordIndex
+        int currentWordIndex,
+        int approvalPercent,
+        Instant wordAdvancedAt
 ) {
     public enum Difficulty {
         EASY,

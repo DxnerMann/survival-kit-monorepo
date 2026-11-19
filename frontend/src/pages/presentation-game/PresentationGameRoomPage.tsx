@@ -80,6 +80,7 @@ const applyActionToState = (
             presenterPoints: keepWord ? prev.presenterPoints : action.presenterPoints,
             currentApprovals: keepWord ? prev.currentApprovals : action.currentApprovals,
             approvalThreshold: action.approvalThreshold,
+            cooldownUntil: keepWord ? prev.cooldownUntil : action.cooldownUntil,
             approvingUserIds: keepWord ? prev.approvingUserIds : [],
             hasVotedCurrentWord,
             canApprove: canVote && !hasVotedCurrentWord && wordIndex < totalWords,
@@ -100,6 +101,7 @@ const applyActionToState = (
             presenterPoints: action.presenterPoints,
             currentApprovals: action.currentApprovals,
             approvalThreshold: action.approvalThreshold,
+            cooldownUntil: action.cooldownUntil,
             approvingUserIds: [],
             hasVotedCurrentWord: false,
             canApprove: canVote && action.wordIndex < action.totalWords,
@@ -162,6 +164,22 @@ const PresentationGameRoomPage = () => {
     useEffect(() => {
         gameStateRef.current = gameState;
     }, [gameState]);
+
+    const cooldownUntilMs = gameState?.cooldownUntil ? Date.parse(gameState.cooldownUntil) : Number.NaN;
+    const [clock, setClock] = useState(() => Date.now());
+
+    useEffect(() => {
+        if (!Number.isFinite(cooldownUntilMs) || cooldownUntilMs <= Date.now()) {
+            return;
+        }
+        const timer = window.setInterval(() => setClock(Date.now()), 200);
+        return () => window.clearInterval(timer);
+    }, [gameState?.cooldownUntil]);
+
+    const cooldownSeconds = Number.isFinite(cooldownUntilMs)
+        ? Math.max(0, Math.ceil((cooldownUntilMs - clock) / 1000))
+        : 0;
+    const onCooldown = cooldownSeconds > 0;
 
     const openFinishedDialog = useCallback((action: PresentationGameAction) => {
         if (finishedDialogShownRef.current) {
@@ -504,7 +522,7 @@ const PresentationGameRoomPage = () => {
     }, [room?.id, code, navigate]);
 
     const handleSkip = useCallback(async () => {
-        if (!code || !gameState?.canSkip) {
+        if (!code || !gameState?.canSkip || onCooldown) {
             return;
         }
 
@@ -517,10 +535,10 @@ const PresentationGameRoomPage = () => {
         } finally {
             setActionLoading(false);
         }
-    }, [code, gameState?.canSkip, applyGameAction]);
+    }, [code, gameState?.canSkip, onCooldown, applyGameAction]);
 
     const handleApprove = useCallback(async () => {
-        if (!code || !gameState?.canApprove) {
+        if (!code || !gameState?.canApprove || onCooldown) {
             return;
         }
 
@@ -533,11 +551,11 @@ const PresentationGameRoomPage = () => {
         } finally {
             setActionLoading(false);
         }
-    }, [code, gameState?.canApprove, applyGameAction]);
+    }, [code, gameState?.canApprove, onCooldown, applyGameAction]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.code !== "Space" || event.repeat || actionLoading) {
+            if (event.code !== "Space" || event.repeat || actionLoading || onCooldown) {
                 return;
             }
             const target = event.target as HTMLElement | null;
@@ -555,7 +573,7 @@ const PresentationGameRoomPage = () => {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [actionLoading, gameState?.canSkip, gameState?.canApprove, handleSkip, handleApprove]);
+    }, [actionLoading, onCooldown, gameState?.canSkip, gameState?.canApprove, handleSkip, handleApprove]);
 
     const handleCopyLink = async () => {
         if (!code) {
@@ -610,6 +628,7 @@ const PresentationGameRoomPage = () => {
                     totalWords: snapshot.totalWords,
                     currentApprovals: 0,
                     approvalThreshold: snapshot.approvalThreshold,
+                    cooldownUntil: null,
                 });
             }
         } catch (err: unknown) {
@@ -683,7 +702,7 @@ const PresentationGameRoomPage = () => {
                                 </span>
                                 {gameState.jurySize > 0 && (
                                     <span className="presentation-game-word-card__votes">
-                                        {gameState.currentApprovals} / {gameState.approvalThreshold} Jury-Stimmen
+                                        {gameState.currentApprovals} / {gameState.approvalThreshold} Jury-Stimmen · {gameState.approvalPercent} %
                                     </span>
                                 )}
                             </div>
@@ -702,12 +721,17 @@ const PresentationGameRoomPage = () => {
                             </div>
 
                             <div className="presentation-game-word-card__actions">
+                                {onCooldown && (
+                                    <p className="presentation-game-word-card__cooldown">
+                                        Nächstes Wort in {cooldownSeconds}s
+                                    </p>
+                                )}
                                 {gameState.canSkip && (
                                     <button
                                         type="button"
                                         className="presentation-game-word-card__action presentation-game-word-card__action--skip"
                                         onClick={() => void handleSkip()}
-                                        disabled={actionLoading}
+                                        disabled={actionLoading || onCooldown}
                                     >
                                         Überspringen (Leertaste)
                                     </button>
@@ -717,7 +741,7 @@ const PresentationGameRoomPage = () => {
                                         type="button"
                                         className="presentation-game-word-card__action presentation-game-word-card__action--approve"
                                         onClick={() => void handleApprove()}
-                                        disabled={actionLoading}
+                                        disabled={actionLoading || onCooldown}
                                     >
                                         {gameState.isHost && gameState.jurySize === 0
                                             ? "Selbst bestätigen (Leertaste)"
@@ -755,6 +779,9 @@ const PresentationGameRoomPage = () => {
                             </span>
                             <span className="presentation-game-room-page__visibility">
                                 {room.isPublic ? "Öffentlich" : "Privat"}
+                            </span>
+                            <span className="presentation-game-room-page__visibility">
+                                Jury {room.approvalPercent} %
                             </span>
                             {isPlaying && (
                                 <span className="presentation-game-room-page__score">

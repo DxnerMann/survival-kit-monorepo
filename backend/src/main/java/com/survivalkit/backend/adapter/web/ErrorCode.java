@@ -84,6 +84,8 @@ public enum ErrorCode {
     PRESENTATION_NOT_JURY("09x0000000A", "Only jury members can approve", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_ALREADY_VOTED("09x0000000B", "You already voted on this word", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_NO_WORDS_LEFT("09x0000000C", "No words left in this game", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_WORD_COOLDOWN("09x0000000D", "The next word is still on cooldown", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_APPROVAL_PERCENT_INVALID("09x0000000E", "Jury percentage must be between 1 and 100", HttpStatus.BAD_REQUEST, ErrorCategory.PRESENTATION_GAME),
 
     // MEME WALL (0Ax)
     MEME_COURSE_REQUIRED("0Ax00000000", "Set your course before using the meme wall", HttpStatus.BAD_REQUEST, ErrorCategory.MEME),

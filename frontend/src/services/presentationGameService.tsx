@@ -16,6 +16,7 @@ export const createPresentationRoom = async (data: {
     name: string;
     isPublic: boolean;
     difficulty: PresentationGameDifficulty;
+    approvalPercent: number;
 }): Promise<PresentationGameRoomCreated> => {
     const response = await apiFetch(`${API_URL}/presentation-game/rooms`, {
         method: "POST",

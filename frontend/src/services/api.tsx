@@ -70,6 +70,8 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "09x0000000A": { text: "Nur die Jury kann bestätigen.", type: "error" },
     "09x0000000B": { text: "Du hast für dieses Wort bereits abgestimmt.", type: "warning" },
     "09x0000000C": { text: "Keine Wörter mehr in diesem Spiel.", type: "info" },
+    "09x0000000D": { text: "Kurz warten. Das nächste Wort ist noch gesperrt.", type: "info" },
+    "09x0000000E": { text: "Der Jury-Anteil muss zwischen 1 und 100 Prozent liegen.", type: "warning" },
 
     "0Ax00000000": { text: "Lege zuerst deinen Kurs im Profil fest, um die Memewand zu nutzen.", type: "warning" },
     "0Ax00000001": { text: "Der Datei-Typ konnte nicht erkannt werden.", type: "warning" },

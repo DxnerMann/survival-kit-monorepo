@@ -5,5 +5,6 @@ import com.survivalkit.backend.adapter.postgres.presentationgame.PresentationGam
 public record CreatePresentationGameRoomRequest(
         String name,
         boolean isPublic,
-        PresentationGameRoom.Difficulty difficulty
+        PresentationGameRoom.Difficulty difficulty,
+        Integer approvalPercent
 ) {}

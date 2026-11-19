@@ -40,21 +40,21 @@ public final class XpRules {
 
     public enum Rank {
         BRONZE_III("Bronze III", "BRONZE", "III", 0, "#cd7f32", "#f3d2a4"),
-        BRONZE_II("Bronze II", "BRONZE", "II", 120, "#cd7f32", "#f3d2a4"),
-        BRONZE_I("Bronze I", "BRONZE", "I", 300, "#cd7f32", "#f3d2a4"),
-        SILVER_III("Silver III", "SILVER", "III", 560, "#b7c0cc", "#f4f7fb"),
-        SILVER_II("Silver II", "SILVER", "II", 920, "#b7c0cc", "#f4f7fb"),
-        SILVER_I("Silver I", "SILVER", "I", 1400, "#b7c0cc", "#f4f7fb"),
-        GOLD_III("Gold III", "GOLD", "III", 2050, "#e2b340", "#ffe7a3"),
-        GOLD_II("Gold II", "GOLD", "II", 2900, "#e2b340", "#ffe7a3"),
-        GOLD_I("Gold I", "GOLD", "I", 4000, "#e2b340", "#ffe7a3"),
-        DIAMOND_III("Diamond III", "DIAMOND", "III", 5400, "#6ec6ff", "#e7f7ff"),
-        DIAMOND_II("Diamond II", "DIAMOND", "II", 7200, "#6ec6ff", "#e7f7ff"),
-        DIAMOND_I("Diamond I", "DIAMOND", "I", 9500, "#6ec6ff", "#e7f7ff"),
-        PLATIN_III("Platin III", "PLATIN", "III", 12500, "#b388ff", "#f6edff"),
-        PLATIN_II("Platin II", "PLATIN", "II", 16500, "#b388ff", "#f6edff"),
-        PLATIN_I("Platin I", "PLATIN", "I", 22000, "#b388ff", "#f6edff"),
-        GRANDMASTER("Grandmaster of Prokrastination", "GRANDMASTER", "", 29000, "#ff3d4f", "#ff9a3c");
+        BRONZE_II("Bronze II", "BRONZE", "II", 60, "#cd7f32", "#f3d2a4"),
+        BRONZE_I("Bronze I", "BRONZE", "I", 160, "#cd7f32", "#f3d2a4"),
+        SILVER_III("Silver III", "SILVER", "III", 290, "#b7c0cc", "#f4f7fb"),
+        SILVER_II("Silver II", "SILVER", "II", 480, "#b7c0cc", "#f4f7fb"),
+        SILVER_I("Silver I", "SILVER", "I", 720, "#b7c0cc", "#f4f7fb"),
+        GOLD_III("Gold III", "GOLD", "III", 1060, "#e2b340", "#ffe7a3"),
+        GOLD_II("Gold II", "GOLD", "II", 1500, "#e2b340", "#ffe7a3"),
+        GOLD_I("Gold I", "GOLD", "I", 2070, "#e2b340", "#ffe7a3"),
+        DIAMOND_III("Diamond III", "DIAMOND", "III", 2790, "#6ec6ff", "#e7f7ff"),
+        DIAMOND_II("Diamond II", "DIAMOND", "II", 3720, "#6ec6ff", "#e7f7ff"),
+        DIAMOND_I("Diamond I", "DIAMOND", "I", 4910, "#6ec6ff", "#e7f7ff"),
+        PLATIN_III("Platin III", "PLATIN", "III", 6470, "#b388ff", "#f6edff"),
+        PLATIN_II("Platin II", "PLATIN", "II", 8530, "#b388ff", "#f6edff"),
+        PLATIN_I("Platin I", "PLATIN", "I", 11380, "#b388ff", "#f6edff"),
+        GRANDMASTER("Grandmaster of Prokrastination", "GRANDMASTER", "", 15000, "#ff3d4f", "#ff9a3c");
 
         private final String label;
         private final String tier;

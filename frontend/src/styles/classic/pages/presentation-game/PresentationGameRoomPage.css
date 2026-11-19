@@ -264,6 +264,15 @@
     gap: 0.65rem;
 }
 
+.presentation-game-word-card__cooldown {
+    margin: 0;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-secondary);
+}
+
 .presentation-game-word-card__action {
     width: 100%;
     padding: 0.95rem 1.25rem;
