@@ -13,6 +13,8 @@ public interface UserPersistancePort {
     Optional<UserModel> getById(String id);
     List<UserModel> findByEmail(String email);
     Optional<UserModel> findByUsername(String username);
+    List<UserModel> findUsersByUsernameIgnoreCase(String username);
+    List<String> searchVerifiedUsernames(String pattern, String prefix, String excludeUserId);
     List<String> findUsernamesByCourse(String course);
     Optional<UserModel> findByVerificationToken(String verificationToken);
     void setVerified(String userId, boolean verified);

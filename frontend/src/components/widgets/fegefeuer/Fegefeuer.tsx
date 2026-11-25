@@ -1,6 +1,7 @@
 import "@/components/widgets/fegefeuer/Fegefeuer.css";
 import {useEffect, useState} from "react";
-import {ChevronLeft, ChevronRight, Settings} from "lucide-react";
+import {createPortal} from "react-dom";
+import {ChevronLeft, ChevronRight, Fullscreen, Settings} from "lucide-react";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
 import {dashboardService} from "@/services/dashboardService.tsx";
 import {getUserRole} from "@/services/tokenService.tsx";
@@ -189,6 +190,7 @@ const Fegefeuer = ({title, data, id, isPreview}: WidgetProps) => {
     const [draft, setDraft] = useState<FegefeuerData>(() => readData(data));
     const [pending, setPending] = useState<CustomCountdown>(emptyCountdown);
     const [inSettings, setInSettings] = useState(false);
+    const [inFullscreen, setInFullscreen] = useState(false);
     const [settingsIndex, setSettingsIndex] = useState(0);
     const [viewIndex, setViewIndex] = useState(0);
     const [error, setError] = useState("");
@@ -379,16 +381,23 @@ const Fegefeuer = ({title, data, id, isPreview}: WidgetProps) => {
             : null
     );
 
-    return (
-        <div className="fegefeuer-widget">
+    const widget = (
+        <div className={`fegefeuer-widget${inFullscreen ? " fullscreen" : ""}`}>
             <div className="widget-header">
                 {!inSettings && (
                     <Settings
                         className="widget-header-icon"
                         size={20}
+                        aria-label="Einstellungen"
                         onClick={openSettings}
                     />
                 )}
+                <Fullscreen
+                    className="widget-header-icon"
+                    size={20}
+                    aria-label="Vollbild"
+                    onClick={() => setInFullscreen(open => !open)}
+                />
             </div>
             {inSettings ? (
                 <div className="settings-content">
@@ -550,6 +559,8 @@ const Fegefeuer = ({title, data, id, isPreview}: WidgetProps) => {
             )}
         </div>
     );
+
+    return inFullscreen ? createPortal(widget, document.body) : widget;
 };
 
 export default Fegefeuer;

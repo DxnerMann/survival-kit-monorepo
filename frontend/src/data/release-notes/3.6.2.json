@@ -23,8 +23,10 @@
       "items": [
         "Jedes Konto hat einen Kalender-Code. Im Link steht der Code, nicht der Benutzername",
         "Auf der Kalenderseite kopierst du den Rapla-Link mit diesem Code. Ohne geöffneten Plan ist das der Link deines Kurses, mit geöffnetem Plan der gerade angezeigte",
-        "Wer den Link mit Code einfügt, sieht deine eigenen Termine und deine Farben für Vorlesung, Prüfung, Andere und Termin",
-        "Ein Rapla-Link ohne Code öffnet den Plan wie bisher, auch ohne Konto"
+        "Wer den Link mit Code einfügt, sieht deine eigenen Termine, deine Farben für Vorlesung, Prüfung, Andere und Termin und deine Akzentfarbe",
+        "Ausgeblendete Veranstaltungen bleiben für diese Person ebenfalls ausgeblendet",
+        "Ein Rapla-Link ohne Code öffnet den Plan wie bisher, auch ohne Konto",
+        "Die installierte Kalender-App merkt sich den Plan. Mit einem geteilten Link öffnet sie auch den"
       ]
     },
     {
@@ -32,7 +34,34 @@
       "items": [
         "Jedes Widget kannst du mehr als einmal aufs Dashboard ziehen. Eine weitere Katze, ein weiteres Meme oder ein weiterer Plan zeigt denselben Inhalt",
         "Ein neuer Vorlesungsplan übernimmt Kurs und Farben von einem, den du schon liegen hast",
-        "Mehr als 50 Widgets gehen nicht"
+        "Im Bearbeiten-Modus wackeln die Widgets nur noch ganz leicht",
+        "Lieblingsspiele blättern weiter, wenn mehr Favoriten da sind, als ins Widget passen",
+        "Fegefeuer hat einen Vollbildmodus",
+        "Beim Tagesmeme sitzt Vollbild in der oberen Ecke"
+      ]
+    },
+    {
+      "title": "Großer Kalender",
+      "items": [
+        "Unter Einstellungen blendest du einzelne Veranstaltungen aus. Die Auswahl bleibt gespeichert und gilt auch im Vorlesungsplan-Widget"
+      ]
+    },
+    {
+      "title": "Schwurbeltimer",
+      "items": [
+        "Zwei weitere Videos",
+        "Alle Clips haben oben denselben weißen Balken"
+      ]
+    },
+    {
+      "title": "DRAW",
+      "items": [
+        "Neues Widget „Dummes Rumgekritzel Aufm Whiteboard (DRAW)“, für angemeldete Konten",
+        "Ohne Partner malst du allein. In den Einstellungen suchst du einen Benutzernamen. Gemeinsam geht es, sobald die andere Person dich auch auswählt",
+        "Malen geht im Vollbild, dort mit einer Linie in deiner Akzentfarbe. Im Widget siehst du die Zeichnung",
+        "Links liegen Farbe, Pinselgröße, Pinsel und Radierer. Farbe und Größe klappst du aus einem Punkt auf",
+        "Ein weiteres DRAW-Widget startet ohne Partner",
+        "Jede Nacht wird geleert. Vorher nur, wenn ihr beide leert"
       ]
     }
   ]

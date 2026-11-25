@@ -1,6 +1,7 @@
 .fav-games-widget {
     --fav-games-title-font-size: 1.5rem;
 
+    position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -116,4 +117,44 @@
 .fav-games-grid .widget-status {
     grid-column: 1 / -1;
     grid-row: 1 / -1;
+}
+
+.fav-games-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.fav-games-arrow-left {
+    left: 0.35rem;
+}
+
+.fav-games-arrow-right {
+    right: 0.35rem;
+}
+
+.fav-games-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.widget-card.edit .fav-games-arrow {
+    cursor: pointer;
+}
+
+.widget-card.edit .fav-games-arrow:disabled {
+    cursor: default;
 }

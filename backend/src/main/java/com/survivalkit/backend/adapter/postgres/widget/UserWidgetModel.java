@@ -23,6 +23,7 @@ public record UserWidgetModel(
         EMPTY,
         EMPTY_DASHBOARD,
         LEADERBOARD,
-        SECTION_HEADING
+        SECTION_HEADING,
+        DRAW
     }
 }

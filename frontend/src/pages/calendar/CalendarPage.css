@@ -345,6 +345,19 @@ html.calendar-app-active #root {
     vertical-align: top;
 }
 
+.cal-app .fc-timegrid-body,
+.cal-app .fc-timegrid-slot,
+.cal-app .fc-timegrid-col,
+.cal-app .fc-timegrid-event,
+.cal-app .fc-timegrid-event * {
+    cursor: crosshair;
+}
+
+.cal-app .fc-event-custom,
+.cal-app .fc-event-custom * {
+    cursor: pointer;
+}
+
 .cal-app .fc-timegrid-col-events {
     margin: 0 !important;
 }

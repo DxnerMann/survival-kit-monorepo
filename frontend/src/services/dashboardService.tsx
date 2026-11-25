@@ -12,6 +12,7 @@ import Fegefeuer from "@/components/widgets/fegefeuer/Fegefeuer.tsx";
 import Counter from "@/components/widgets/counter/Counter.tsx";
 import Leaderboard from "@/components/widgets/leaderboard/Leaderboard.tsx";
 import SectionHeadingWidget from "@/components/widgets/section-heading/SectionHeadingWidget.tsx";
+import DrawBoard from "@/components/widgets/draw/DrawBoard.tsx";
 
 const API_URL = api.baseUrl;
 
@@ -182,6 +183,15 @@ const getDefaultToolbox = (): UserWidget[] => {
             data: ""
         },
         {
+            id: "default-draw",
+            type: "DRAW",
+            height: 3,
+            width: 3,
+            x: 0,
+            y: 0,
+            data: ""
+        },
+        {
             id: "default-section-heading",
             type: "SECTION_HEADING",
             height: 1,
@@ -228,6 +238,8 @@ const decideOnWidget = (widget: UserWidget, isPreview: boolean, editable = false
             return <Leaderboard {...shared} title={"Leaderboard"} />
         case "SECTION_HEADING":
             return <SectionHeadingWidget {...shared} title={"Section Heading"} editable={editable} />
+        case "DRAW":
+            return <DrawBoard {...shared} title={"Dummes Rumgekritzel Aufm Whiteboard (DRAW)"} />
     }
 }
 

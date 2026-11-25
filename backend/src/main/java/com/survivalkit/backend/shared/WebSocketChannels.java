@@ -8,6 +8,7 @@ public final class WebSocketChannels {
     private static final Pattern COURSE_CHAT = Pattern.compile("^course:([^:]+):chat$");
     private static final Pattern COURSE_GAME = Pattern.compile("^course:([^:]+):game:([^:]+)$");
     private static final Pattern PRESENTATION_GAME = Pattern.compile("^presentation-game:([^:]+)$");
+    private static final Pattern DRAW = Pattern.compile("^draw:([^:]+)$");
 
     private WebSocketChannels() {}
 
@@ -21,6 +22,10 @@ public final class WebSocketChannels {
 
     public static String presentationGameRoom(String roomId) {
         return "presentation-game:" + sanitize(roomId);
+    }
+
+    public static String drawBoard(String boardId) {
+        return "draw:" + sanitize(boardId);
     }
 
     public static Optional<ParsedChannel> parse(String channel) {
@@ -43,6 +48,11 @@ public final class WebSocketChannels {
             return Optional.of(new ParsedChannel(null, ChannelKind.PRESENTATION_GAME, presentationMatcher.group(1)));
         }
 
+        var drawMatcher = DRAW.matcher(channel);
+        if (drawMatcher.matches()) {
+            return Optional.of(new ParsedChannel(null, ChannelKind.DRAW, drawMatcher.group(1)));
+        }
+
         return Optional.empty();
     }
 
@@ -53,7 +63,8 @@ public final class WebSocketChannels {
     public enum ChannelKind {
         CHAT,
         GAME_LOBBY,
-        PRESENTATION_GAME
+        PRESENTATION_GAME,
+        DRAW
     }
 
     public record ParsedChannel(

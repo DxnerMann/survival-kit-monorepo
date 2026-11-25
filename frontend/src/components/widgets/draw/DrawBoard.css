@@ -1,0 +1,394 @@
+.draw-widget {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    color: var(--color-text-primary, inherit);
+}
+
+.draw-widget.fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+    border-radius: 0;
+    background: var(--color-background-primary);
+}
+
+.draw-widget .widget-header {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.45rem;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    padding: 0.35rem 0.45rem;
+    box-sizing: border-box;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.draw-widget .widget-header-icon {
+    pointer-events: auto;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+}
+
+.draw-widget .widget-header-icon:hover {
+    color: var(--accent-strong, var(--color-text-primary, inherit));
+}
+
+.widget-card.edit .draw-widget .widget-header-icon,
+.widget-card.edit .draw-settings button {
+    cursor: pointer;
+}
+
+.widget-card.edit .draw-settings input {
+    cursor: text;
+}
+
+.draw-heading {
+    margin: 0;
+    padding: 0.15rem 0.8rem 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 0 0 auto;
+}
+
+.draw-hint,
+.draw-partner,
+.draw-reset p {
+    margin: 0.2rem 0 0;
+    padding: 0 0.8rem;
+    color: var(--color-text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.3;
+    text-align: center;
+    flex: 0 0 auto;
+}
+
+.draw-body {
+    display: flex;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+}
+
+.draw-stage {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.draw-board {
+    position: relative;
+    flex: 0 0 auto;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.draw-widget.fullscreen .draw-board::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--accent-strong, var(--color-primary-accent, var(--color-text-primary)));
+    pointer-events: none;
+    z-index: 2;
+}
+
+.draw-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--color-background-primary);
+    border-radius: 0;
+    touch-action: none;
+    pointer-events: none;
+}
+
+.draw-canvas-title,
+.draw-canvas-message {
+    position: absolute;
+    margin: 0;
+    pointer-events: none;
+}
+
+.draw-canvas-title {
+    top: 0.4rem;
+    left: 2.75rem;
+    right: 2.75rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.draw-canvas-message {
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.6rem;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.35;
+}
+
+.draw-canvas.is-drawing {
+    pointer-events: auto;
+    cursor: crosshair;
+}
+
+.draw-tools {
+    position: relative;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: auto;
+    flex: 0 0 auto;
+    margin: 1rem 0 1rem 1rem;
+    padding: 0.9rem;
+    box-sizing: border-box;
+    overflow: visible;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-background-primary) 88%, transparent);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.draw-tools:has(.is-open) {
+    gap: 1.35rem;
+    padding: 1.15rem 0.9rem;
+}
+
+.draw-slot {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.draw-dot {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-background-secondary);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.draw-dot span {
+    display: block;
+    border-radius: 999px;
+    background: var(--color-text-primary);
+}
+
+.draw-dot--color {
+    border-color: var(--color-border);
+}
+
+.draw-dot.is-active,
+.draw-dot.is-alert {
+    color: var(--color-text-primary);
+    border-color: var(--accent-strong, var(--color-text-primary));
+}
+
+.draw-dot:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.draw-hue,
+.draw-slider {
+    position: relative;
+    touch-action: none;
+    cursor: crosshair;
+    user-select: none;
+}
+
+.draw-hue {
+    width: 14px;
+    height: 9.5rem;
+    margin: 0.55rem 0;
+    border-radius: 999px;
+    box-shadow:
+        inset 0 1px 3px rgba(0, 0, 0, 0.22),
+        0 0 0 1px var(--color-border);
+}
+
+.draw-hue-thumb,
+.draw-slider-thumb,
+.draw-field-cursor {
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+.draw-hue-thumb {
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.18);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+    transform: translate(-50%, -50%);
+}
+
+.draw-color-field {
+    position: absolute;
+    left: calc(100% + 2rem);
+    top: 0.55rem;
+    width: 9.5rem;
+    height: 9.5rem;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 0 0 1px var(--color-border);
+    cursor: crosshair;
+    touch-action: none;
+    background-image:
+        linear-gradient(to top, #000, transparent),
+        linear-gradient(to right, #fff, transparent);
+}
+
+.draw-field-cursor {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55);
+    transform: translate(-50%, -50%);
+}
+
+.draw-slider {
+    width: 1.75rem;
+    height: 8.5rem;
+    margin: 0.55rem 0;
+}
+
+.draw-slider::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-border);
+    transform: translateX(-50%);
+}
+
+.draw-slider-thumb {
+    left: 50%;
+    background: var(--color-text-primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+    transform: translate(-50%, -50%);
+}
+
+.draw-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 2.2rem 0.8rem 0.8rem;
+    box-sizing: border-box;
+    overflow: auto;
+}
+
+.draw-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.draw-field input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    background: var(--color-background-secondary);
+    color: inherit;
+    border-radius: 12px;
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+    font-weight: 500;
+}
+
+.draw-results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.draw-result {
+    width: 100%;
+    text-align: left;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: inherit;
+    border-radius: 10px;
+    padding: 0.45rem 0.65rem;
+    font: inherit;
+    cursor: pointer;
+}
+
+.draw-result:hover,
+.draw-dot:hover:not(:disabled) {
+    border-color: var(--accent-strong, var(--color-border));
+}
+
+.draw-settings-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: auto;
+}
+
+.draw-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 4.5rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.draw-partner {
+    font-weight: 700;
+}

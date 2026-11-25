@@ -33,10 +33,10 @@
 @keyframes widget-wiggle {
     0%,
     100% {
-        rotate: -0.18deg;
+        rotate: -0.05deg;
     }
     50% {
-        rotate: 0.18deg;
+        rotate: 0.05deg;
     }
 }
 
@@ -61,7 +61,7 @@
 .widget-card.edit {
     transition: none;
     border-color: var(--accent-line);
-    animation: widget-wiggle 0.85s ease-in-out infinite;
+    animation: widget-wiggle 2.4s ease-in-out infinite;
 }
 
 .widget-card.widget-card--plain.edit {
@@ -72,11 +72,7 @@
 }
 
 .widget-card.edit:nth-child(2n) {
-    animation-delay: -0.12s;
-}
-
-.widget-card.edit:nth-child(3n) {
-    animation-duration: 1s;
+    animation-delay: -0.4s;
 }
 
 .widget-card.edit.react-draggable-dragging,
@@ -85,7 +81,9 @@
 }
 
 .widget-card.edit,
-.widget-card.edit * {
+.widget-card.edit *,
+.widget-card.edit .lecture-calendar,
+.widget-card.edit .lecture-calendar * {
     cursor: grab;
 }
 
@@ -96,7 +94,9 @@
 }
 
 .widget-card.edit.react-draggable-dragging,
-.widget-card.edit.react-draggable-dragging * {
+.widget-card.edit.react-draggable-dragging *,
+.widget-card.edit.react-draggable-dragging .lecture-calendar,
+.widget-card.edit.react-draggable-dragging .lecture-calendar * {
     cursor: grabbing;
 }
 

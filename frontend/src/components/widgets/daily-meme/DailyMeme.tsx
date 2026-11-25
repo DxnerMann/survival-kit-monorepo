@@ -111,6 +111,14 @@ const DailyMeme = ({title, isPreview}: WidgetProps) => {
                 )}
             </div>
             <div className="widget-header">
+                <button
+                    type="button"
+                    className="widget-header-icon"
+                    aria-label="Zur Memewand"
+                    onClick={() => navigate("/memewall")}
+                >
+                    <Images size={20} />
+                </button>
                 {meme && (
                     <button
                         type="button"
@@ -121,14 +129,6 @@ const DailyMeme = ({title, isPreview}: WidgetProps) => {
                         <Fullscreen size={20} />
                     </button>
                 )}
-                <button
-                    type="button"
-                    className="widget-header-icon"
-                    aria-label="Zur Memewand"
-                    onClick={() => navigate("/memewall")}
-                >
-                    <Images size={20} />
-                </button>
             </div>
             {inFullscreen && meme && (
                 <ImageLightbox

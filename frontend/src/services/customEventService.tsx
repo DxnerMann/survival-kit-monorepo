@@ -67,7 +67,9 @@ export const customEventsToCalendar = (events: CustomEvent[], color: string): Ev
             backgroundColor: color,
             borderColor: "transparent",
             textColor,
-            classNames: event.participation === "DECLINED" ? ["fc-event-declined"] : [],
+            classNames: event.participation === "DECLINED"
+                ? ["fc-event-custom", "fc-event-declined"]
+                : ["fc-event-custom"],
             extendedProps: {lecture, textColor, customEvent: event},
         };
     });

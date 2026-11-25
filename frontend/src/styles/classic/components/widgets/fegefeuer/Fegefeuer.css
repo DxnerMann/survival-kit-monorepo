@@ -7,6 +7,17 @@
     border-radius: var(--border-radius);
 }
 
+.fegefeuer-widget.fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+    border-radius: 0;
+    background: var(--color-background-primary);
+    box-sizing: border-box;
+}
+
 .fegefeuer-widget .widget-header {
     display: flex;
     flex-direction: row;

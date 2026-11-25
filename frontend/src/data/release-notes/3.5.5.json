@@ -31,8 +31,7 @@
     {
       "title": "Aktualisierung",
       "items": [
-        "Die App schaut regelmäßig nach, ob auf dem Server eine neuere Version oder sonst etwas Neues liegt. Das gilt auch, wenn die Versionsnummer gleich bleibt",
-        "Unten bleibt dann ein Hinweis mit der Versionsnummer und Neu laden stehen, bis du ihn benutzt"
+        "Gibt es eine neuere Fassung, bleibt unten ein Hinweis mit der Versionsnummer und Neu laden stehen, bis du ihn benutzt"
       ]
     }
   ]

@@ -96,6 +96,19 @@
     border-color: var(--color-primary-accent);
 }
 
+.lecture-calendar .fc-timegrid-body,
+.lecture-calendar .fc-timegrid-slot,
+.lecture-calendar .fc-timegrid-col,
+.lecture-calendar .fc-timegrid-event,
+.lecture-calendar .fc-timegrid-event * {
+    cursor: crosshair;
+}
+
+.lecture-calendar .fc-event-custom,
+.lecture-calendar .fc-event-custom * {
+    cursor: pointer;
+}
+
 .lecture-calendar .fc-timegrid-col-events {
     margin: 0 !important;
 }

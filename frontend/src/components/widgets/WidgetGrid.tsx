@@ -28,6 +28,7 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
     COUNTER: { minW: 2, minH: 2, maxW: 6, maxH: 5, defaultW: 4, defaultH: 3 },
     LEADERBOARD: { minW: 2, minH: 3, maxW: 10, maxH: 8, defaultW: 3, defaultH: 4 },
     SECTION_HEADING: { minW: 10, maxW: 10, minH: 1, maxH: 1, defaultW: 10, defaultH: 1 },
+    DRAW: { minW: 3, minH: 3, maxH: 10, defaultW: 3, defaultH: 3 },
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
@@ -308,7 +309,11 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     const placeFromToolbox = (widget: UserWidget): PendingDrop => {
         const source = layoutWidgetsRef.current.find(entry => entry.type === widget.type && entry.data);
         const placed: UserWidget = widget.id.startsWith("default-")
-            ? {...widget, id: crypto.randomUUID(), data: source?.data || widget.data}
+            ? {
+                ...widget,
+                id: crypto.randomUUID(),
+                data: widget.type === "DRAW" ? "" : (source?.data || widget.data),
+            }
             : widget;
         removedIdsRef.current.delete(placed.id);
         const constraints = getWidgetConstraints(placed.type);

@@ -59,21 +59,16 @@ public class FavouriteRepository implements FavouritePersistancePort {
     public Page<String> getFavouritesForUser(String userId, String continuation, int pageSize) {
         var quicklinkIds = jdbcClient.sql(Statements.GET_FOR_USER.sql)
                 .paramSource(new MapSqlParameterSource("userId", userId)
-                        .addValue("pageSize", pageSize)
+                        .addValue("pageSize", pageSize + 1)
                         .addValue("continuation", decode(continuation))
                 ).query(String.class)
                 .list();
 
-        if (quicklinkIds.isEmpty()) {
-            return new Page<>(
-                    List.of(),
-                    null
-            );
+        if (quicklinkIds.size() <= pageSize) {
+            return new Page<>(quicklinkIds, null);
         }
-        return new Page<>(
-                quicklinkIds,
-                encode(quicklinkIds.getLast())
-        );
+        var page = List.copyOf(quicklinkIds.subList(0, pageSize));
+        return new Page<>(page, encode(page.getLast()));
     }
 
     private enum Statements {

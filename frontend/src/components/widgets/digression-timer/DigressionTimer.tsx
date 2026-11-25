@@ -17,6 +17,8 @@ interface DigressionTimerData {
 const VIDEOS = [
     "/videos/digression.mp4",
     "/videos/digression2.mp4",
+    "/videos/digression3.mp4",
+    "/videos/digression4.mp4",
 ] as const;
 
 const defaultData: DigressionTimerData = {

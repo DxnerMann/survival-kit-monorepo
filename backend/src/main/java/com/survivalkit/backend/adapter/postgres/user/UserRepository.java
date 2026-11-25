@@ -82,6 +82,30 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public List<UserModel> findUsersByUsernameIgnoreCase(String username) {
+        if (username == null || username.isBlank()) {
+            return List.of();
+        }
+        return jdbcClient.sql(Statements.USERS_BY_USERNAME_LOWER.sql)
+                .paramSource(new MapSqlParameterSource("username", username.trim()))
+                .query(USER_ROW_MAPPER)
+                .list();
+    }
+
+    @Override
+    public List<String> searchVerifiedUsernames(String pattern, String prefix, String excludeUserId) {
+        if (pattern == null || pattern.isBlank() || excludeUserId == null || excludeUserId.isBlank()) {
+            return List.of();
+        }
+        return jdbcClient.sql(Statements.SEARCH_USERNAMES.sql)
+                .paramSource(new MapSqlParameterSource("pattern", pattern)
+                        .addValue("prefix", prefix)
+                        .addValue("self", excludeUserId))
+                .query(String.class)
+                .list();
+    }
+
+    @Override
     public List<String> findUsernamesByCourse(String course) {
         if (course == null || course.isBlank()) {
             return List.of();
@@ -460,6 +484,22 @@ public class UserRepository implements UserPersistancePort {
         """),
         USER_ID_BY_CALENDAR_ACCESS_CODE("""
                 SELECT id FROM users WHERE calendarAccessCode = :code
+        """),
+        USERS_BY_USERNAME_LOWER("""
+                SELECT * FROM users WHERE lower(username) = lower(:username)
+        """),
+        SEARCH_USERNAMES("""
+                SELECT username
+                FROM users
+                WHERE isverified IS TRUE
+                  AND role <> 'GUEST'
+                  AND username IS NOT NULL
+                  AND btrim(username) <> ''
+                  AND id <> :self
+                  AND lower(username) LIKE :pattern ESCAPE '!'
+                ORDER BY CASE WHEN lower(username) LIKE :prefix ESCAPE '!' THEN 0 ELSE 1 END,
+                         lower(username)
+                LIMIT 8
         """);
 
         private String sql;

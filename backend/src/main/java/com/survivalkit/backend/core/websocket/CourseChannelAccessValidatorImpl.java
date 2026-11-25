@@ -1,6 +1,7 @@
 package com.survivalkit.backend.core.websocket;
 
 import com.survivalkit.backend.adapter.postgres.presentationgame.PresentationGamePersistancePort;
+import com.survivalkit.backend.core.draw.DrawBoardService;
 import com.survivalkit.backend.shared.WebSocketChannels;
 import org.springframework.stereotype.Service;
 
@@ -10,9 +11,14 @@ import java.util.Optional;
 public class CourseChannelAccessValidatorImpl implements CourseChannelAccessValidator {
 
     private final PresentationGamePersistancePort presentationGamePersistancePort;
+    private final DrawBoardService drawBoardService;
 
-    public CourseChannelAccessValidatorImpl(PresentationGamePersistancePort presentationGamePersistancePort) {
+    public CourseChannelAccessValidatorImpl(
+            PresentationGamePersistancePort presentationGamePersistancePort,
+            DrawBoardService drawBoardService
+    ) {
         this.presentationGamePersistancePort = presentationGamePersistancePort;
+        this.drawBoardService = drawBoardService;
     }
 
     @Override
@@ -29,6 +35,14 @@ public class CourseChannelAccessValidatorImpl implements CourseChannelAccessVali
             }
             if (!presentationGamePersistancePort.isMember(roomId, user.userId())) {
                 return Optional.of("NOT_ROOM_MEMBER");
+            }
+            return Optional.empty();
+        }
+
+        if (parsedChannel.get().kind() == WebSocketChannels.ChannelKind.DRAW) {
+            var boardId = parsedChannel.get().lobbyId();
+            if (boardId == null || boardId.isBlank() || !drawBoardService.canJoin(user.userId(), boardId)) {
+                return Optional.of("NOT_DRAW_MEMBER");
             }
             return Optional.empty();
         }

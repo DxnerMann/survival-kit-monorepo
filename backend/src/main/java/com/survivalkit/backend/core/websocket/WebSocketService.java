@@ -7,6 +7,7 @@ import com.survivalkit.backend.adapter.web.chat.ChatSendRequest;
 import com.survivalkit.backend.adapter.websocket.WebSocketSessionRegistry;
 import com.survivalkit.backend.adapter.websocket.WebSocketUserContext;
 import com.survivalkit.backend.core.chat.ChatPort;
+import com.survivalkit.backend.core.draw.DrawBoardService;
 import com.survivalkit.backend.core.presentationgame.PresentationGamePort;
 import com.survivalkit.backend.shared.WebSocketChannels;
 import com.survivalkit.backend.shared.WebSocketEnvelope;
@@ -28,6 +29,7 @@ public class WebSocketService implements WebSocketPort {
     private final CourseChannelAccessValidator channelAccessValidator;
     private final ChatPort chatPort;
     private final PresentationGamePort presentationGamePort;
+    private final DrawBoardService drawBoardService;
     private final ObjectMapper objectMapper;
 
     public WebSocketService(
@@ -35,12 +37,14 @@ public class WebSocketService implements WebSocketPort {
             CourseChannelAccessValidator channelAccessValidator,
             ChatPort chatPort,
             @Lazy PresentationGamePort presentationGamePort,
+            @Lazy DrawBoardService drawBoardService,
             ObjectMapper objectMapper
     ) {
         this.sessionRegistry = sessionRegistry;
         this.channelAccessValidator = channelAccessValidator;
         this.chatPort = chatPort;
         this.presentationGamePort = presentationGamePort;
+        this.drawBoardService = drawBoardService;
         this.objectMapper = objectMapper;
     }
 
@@ -245,6 +249,12 @@ public class WebSocketService implements WebSocketPort {
             return;
         }
 
+        if (parsed.get().kind() == WebSocketChannels.ChannelKind.DRAW) {
+            var error = drawBoardService.handleStrokeMessage(user.userId(), channel, envelope.payload());
+            error.ifPresent(code -> sendError(session, code, validationErrorMessage(code)));
+            return;
+        }
+
         var relayPayload = wrapOutgoingPayload(user, envelope.payload());
         var relay = WebSocketEnvelope.of(WebSocketMessageType.MESSAGE, channel, relayPayload);
         sendToChannel(channel, relay, session.getId());
@@ -352,6 +362,8 @@ public class WebSocketService implements WebSocketPort {
             case "INVALID_CHANNEL" -> "The requested channel is invalid.";
             case "COURSE_MISMATCH" -> "You can only join channels for your own course.";
             case "NOT_ROOM_MEMBER" -> "You must be a member of this game room.";
+            case "NOT_DRAW_MEMBER" -> "This drawing board is not open for you.";
+            case "INVALID_DRAW" -> "The drawing stroke is invalid.";
             default -> "Channel access denied.";
         };
     }
