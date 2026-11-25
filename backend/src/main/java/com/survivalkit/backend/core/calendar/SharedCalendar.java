@@ -4,6 +4,8 @@ import java.util.List;
 
 public record SharedCalendar(
         List<CustomEvent> events,
-        SharedCalendarColors colors
+        SharedCalendarColors colors,
+        String accent,
+        List<String> hiddenLectures
 ) {
 }

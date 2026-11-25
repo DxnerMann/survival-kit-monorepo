@@ -8,6 +8,8 @@ import com.survivalkit.backend.shared.RoleLevel;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,5 +35,12 @@ public class CalendarShareController {
     @GetMapping("shared")
     public ResponseEntity<SharedCalendar> view(@RequestParam String code) {
         return ResponseEntity.ok(calendarShareService.view(code));
+    }
+
+    @Role(RoleLevel.USER)
+    @PutMapping("hidden")
+    public ResponseEntity<Void> saveHidden(@RequestBody CalendarHiddenRequest request) {
+        calendarShareService.saveHiddenLectures(request.hiddenLectures());
+        return ResponseEntity.noContent().build();
     }
 }

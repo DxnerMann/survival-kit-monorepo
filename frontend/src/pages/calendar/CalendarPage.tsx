@@ -9,7 +9,8 @@ import { api } from "@/services/api.tsx";
 import type { DayOfWeek, Lecture } from "@/models/Lecture.tsx";
 import type { LecturePlanResponse } from "@/models/LecturePlanResponse.tsx";
 import { lectureConversionUtil } from "@/services/lectureConversionUtil.tsx";
-import { customEventToLecture, customEventsToCalendar, getCalendarShareLink, getSharedCalendar, listCustomEvents, type CalendarShareLink } from "@/services/customEventService.tsx";
+import { customEventToLecture, customEventsToCalendar, getCalendarShareLink, getSharedCalendar, listCustomEvents, saveCalendarHidden, type CalendarShareLink } from "@/services/customEventService.tsx";
+import {applyAccentOverride} from "@/services/accentColor.ts";
 import { snackbarService } from "@/services/snackBarService.tsx";
 import { CUSTOM_EVENTS_CHANGED, DEFAULT_CUSTOM_EVENT_COLOR, type CustomEvent } from "@/models/CustomEvent.tsx";
 import CustomEventDialog from "@/components/widgets/lecture-plan/CustomEventDialog.tsx";
@@ -74,6 +75,28 @@ const isTitleHidden = (title: string, hidden: string[]) =>
     hidden.some((entry) => title.trim().includes(entry.trim()));
 
 const STORED_FILE_KEY = "calendar-source";
+const STORED_CODE_KEY = "calendar-access-code";
+
+const readStoredValue = (key: string) => {
+    try {
+        return localStorage.getItem(key)?.trim() ?? "";
+    } catch {
+        return "";
+    }
+};
+
+const restoreAccent = (accent: string, shade: string) => {
+    if (!accent) {
+        applyAccentOverride(null);
+        return;
+    }
+    document.body.style.setProperty("--color-accent-override", accent);
+    if (shade) {
+        document.body.style.setProperty("--color-accent-shade", shade);
+    } else {
+        document.body.style.removeProperty("--color-accent-shade");
+    }
+};
 
 const memoryKey = (file: string, offset: number) => `${file}:${toDateKey(mondayOfWeek(offset))}`;
 
@@ -358,6 +381,7 @@ const CalendarPage = () => {
         || "").trim() || null;
     const [standalone] = useState(isStandaloneDisplay);
     const [linkInput, setLinkInput] = useState("");
+    const [planLink, setPlanLink] = useState(source);
 
     const [view, setView] = useState<ViewMode>("week");
     const [weekOffset, setWeekOffset] = useState(0);
@@ -366,6 +390,9 @@ const CalendarPage = () => {
     const [courseName, setCourseName] = useState(() => readStoredPlan(source)?.courseName ?? "");
     const [semesterNames, setSemesterNames] = useState<string[]>(() => readStoredPlan(source)?.semesterNames ?? []);
     const [hiddenTitles, setHiddenTitles] = useState<string[]>(() => {
+        if (accessCode) {
+            return [];
+        }
         const storedCourse = readStoredPlan(source)?.courseName ?? "";
         return storedCourse ? readHiddenTitles(storedCourse) : [];
     });
@@ -400,6 +427,9 @@ const CalendarPage = () => {
     const suppressClickRef = useRef(false);
     const [slotArea, setSlotArea] = useState(0);
     const loadedSource = useRef(source);
+    const serverHiddenRef = useRef<string[] | null>(null);
+    const courseNameRef = useRef(courseName);
+    courseNameRef.current = courseName;
     if (loadedSource.current !== source) {
         loadedSource.current = source;
         cacheRef.current.clear();
@@ -410,7 +440,9 @@ const CalendarPage = () => {
         setTitle(stored?.title || "Stundenplan");
         setCourseName(stored?.courseName ?? "");
         setSemesterNames(stored?.semesterNames ?? []);
-        setHiddenTitles(stored?.courseName ? readHiddenTitles(stored.courseName) : []);
+        if (!accessCode) {
+            setHiddenTitles(serverHiddenRef.current ?? (stored?.courseName ? readHiddenTitles(stored.courseName) : []));
+        }
         setLoading(Boolean(source) && mapped[String(weekOffset)] === undefined);
         setFailed(false);
     }
@@ -474,14 +506,23 @@ const CalendarPage = () => {
         let cancelled = false;
         getSharedCalendar(shareLink.code)
             .then((shared) => {
-                if (!cancelled) {
-                    setOwnColors({
-                        LECTURE: shared.colors.lecture,
-                        EXAM: shared.colors.exam,
-                        OTHER: shared.colors.other,
-                        CUSTOM: shared.colors.custom,
-                    });
+                if (cancelled) {
+                    return;
                 }
+                setOwnColors({
+                    LECTURE: shared.colors.lecture,
+                    EXAM: shared.colors.exam,
+                    OTHER: shared.colors.other,
+                    CUSTOM: shared.colors.custom,
+                });
+                const hidden = shared.hiddenLectures ?? [];
+                serverHiddenRef.current = hidden;
+                setHiddenTitles(hidden);
+                const course = courseNameRef.current;
+                if (course) {
+                    localStorage.setItem(hiddenStorageKey(course), JSON.stringify(hidden));
+                }
+                applyAccentOverride(shared.accent);
             })
             .catch(() => undefined);
         return () => {
@@ -491,6 +532,7 @@ const CalendarPage = () => {
 
     useEffect(() => {
         if (!accessCode) {
+            serverHiddenRef.current = null;
             setSharedEvents(null);
             setSharedColors(null);
             setAccessCodeInvalid(false);
@@ -510,18 +552,41 @@ const CalendarPage = () => {
                     OTHER: shared.colors.other,
                     CUSTOM: shared.colors.custom,
                 });
+                const hidden = shared.hiddenLectures ?? [];
+                serverHiddenRef.current = hidden;
+                setHiddenTitles(hidden);
+                applyAccentOverride(shared.accent);
             })
             .catch(() => {
                 if (!cancelled) {
                     setSharedEvents([]);
                     setSharedColors(null);
                     setAccessCodeInvalid(true);
+                    applyAccentOverride(null);
                 }
             });
         return () => {
             cancelled = true;
         };
     }, [accessCode]);
+
+    useEffect(() => {
+        const previousAccent = document.body.style.getPropertyValue("--color-accent-override");
+        const previousShade = document.body.style.getPropertyValue("--color-accent-shade");
+        return () => restoreAccent(previousAccent, previousShade);
+    }, []);
+
+    const hadAccessCode = useRef(Boolean(accessCode));
+    useEffect(() => {
+        if (accessCode) {
+            hadAccessCode.current = true;
+            return;
+        }
+        if (hadAccessCode.current && !shareLink?.code) {
+            applyAccentOverride(null);
+        }
+        hadAccessCode.current = false;
+    }, [accessCode, shareLink?.code]);
 
     useEffect(() => {
         document.documentElement.classList.add("calendar-app-active");
@@ -540,9 +605,41 @@ const CalendarPage = () => {
     }, [title]);
 
     useEffect(() => {
-        if (source) {
-            localStorage.setItem(STORED_FILE_KEY, source);
+        if (!isStandaloneDisplay()) {
+            return;
         }
+        const stored = readStoredValue(STORED_FILE_KEY);
+        const storedCode = readStoredValue(STORED_CODE_KEY);
+        if (!stored || stored === source) {
+            if (accessCode && !storedCode) {
+                localStorage.setItem(STORED_CODE_KEY, accessCode);
+            }
+            return;
+        }
+        const params = new URLSearchParams();
+        params.set("source", stored);
+        const code = storedCode || accessCode;
+        if (code) {
+            params.set("code", code);
+        }
+        navigate(`/calendar?${params.toString()}`, {replace: true});
+    }, [accessCode, navigate, source]);
+
+    useEffect(() => {
+        if (!source) {
+            return;
+        }
+        if (isStandaloneDisplay()) {
+            const stored = readStoredValue(STORED_FILE_KEY);
+            if (stored && stored !== source) {
+                return;
+            }
+        }
+        localStorage.setItem(STORED_FILE_KEY, source);
+    }, [source]);
+
+    useEffect(() => {
+        setPlanLink(source);
     }, [source]);
 
     useEffect(() => {
@@ -599,7 +696,13 @@ const CalendarPage = () => {
                 }
                 setTitle(course);
                 setCourseName(course);
-                setHiddenTitles(readHiddenTitles(course));
+                if (!accessCode) {
+                    const hidden = serverHiddenRef.current ?? readHiddenTitles(course);
+                    setHiddenTitles(hidden);
+                    if (serverHiddenRef.current) {
+                        localStorage.setItem(hiddenStorageKey(course), JSON.stringify(hidden));
+                    }
+                }
                 const storedNames = readStoredPlan(source)?.courseName === course
                     ? readStoredPlan(source)?.semesterNames ?? []
                     : [];
@@ -806,16 +909,49 @@ const CalendarPage = () => {
         });
     };
 
+    const ownsSharedPlan = !accessCode || accessCode === shareLink?.code;
+
     const toggleVisible = (name: string) => {
         setHiddenTitles((current) => {
             const next = current.includes(name)
                 ? current.filter((item) => item !== name)
                 : [...current, name];
-            if (courseName) {
-                localStorage.setItem(hiddenStorageKey(courseName), JSON.stringify(next));
+            if (ownsSharedPlan) {
+                serverHiddenRef.current = next;
+                if (courseName) {
+                    localStorage.setItem(hiddenStorageKey(courseName), JSON.stringify(next));
+                }
+                if (shareLink?.code) {
+                    void saveCalendarHidden(next);
+                }
             }
             return next;
         });
+    };
+
+    const applyPlanLink = () => {
+        const trimmed = planLink.trim();
+        if (!trimmed) {
+            return;
+        }
+        const split = splitCalendarAccess(trimmed);
+        const nextSource = normalizeRaplaUrl(split.raplaUrl);
+        const nextCode = split.code || accessCode;
+        if (nextSource === source && (nextCode ?? "") === (accessCode ?? "")) {
+            return;
+        }
+        localStorage.setItem(STORED_FILE_KEY, nextSource);
+        if (nextCode) {
+            localStorage.setItem(STORED_CODE_KEY, nextCode);
+        } else {
+            localStorage.removeItem(STORED_CODE_KEY);
+        }
+        const params = new URLSearchParams();
+        params.set("source", nextSource);
+        if (nextCode) {
+            params.set("code", nextCode);
+        }
+        navigate(`/calendar?${params.toString()}`);
     };
 
     shiftRef.current = shift;
@@ -1039,7 +1175,7 @@ const CalendarPage = () => {
                                     type="button"
                                     className="cal-app__install"
                                     onClick={() => setSettingsOpen(true)}
-                                    aria-label="Veranstaltungen filtern"
+                                    aria-label="Einstellungen"
                                 >
                                     <Settings size={16} />
                                 </button>
@@ -1135,17 +1271,33 @@ const CalendarPage = () => {
                         className="cal-sheet"
                         role="dialog"
                         aria-modal="true"
-                        aria-label="Veranstaltungen"
+                        aria-label="Einstellungen"
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="cal-sheet__header">
                             <div>
-                                <h2>Veranstaltungen</h2>
+                                <h2>Einstellungen</h2>
                             </div>
                             <button type="button" className="cal-sheet__close" onClick={() => setSettingsOpen(false)} aria-label="Schließen">
                                 <X size={18} />
                             </button>
                         </div>
+                        <div className="cal-settings__link">
+                            <label htmlFor="calendar-plan-link">Rapla-Link</label>
+                            <input
+                                id="calendar-plan-link"
+                                type="url"
+                                inputMode="url"
+                                autoComplete="off"
+                                value={planLink}
+                                onChange={(event) => setPlanLink(event.target.value)}
+                            />
+                            <p className="cal-settings__hint">Der Plan wechselt sofort, ohne die App neu zu installieren.</p>
+                            <button type="button" onClick={applyPlanLink} disabled={!planLink.trim()}>
+                                Übernehmen
+                            </button>
+                        </div>
+                        <h3 className="cal-settings__events">Veranstaltungen</h3>
                         {semesterNames.length === 0 ? (
                             <p className="cal-settings__empty">Keine Veranstaltungen für dieses Semester.</p>
                         ) : (

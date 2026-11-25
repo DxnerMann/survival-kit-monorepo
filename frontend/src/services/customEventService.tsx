@@ -115,6 +115,8 @@ export type SharedCalendarColors = {
 export type SharedCalendar = {
     events: CustomEvent[];
     colors: SharedCalendarColors;
+    accent?: string | null;
+    hiddenLectures?: string[];
 };
 
 export type CalendarShareLink = {
@@ -129,6 +131,18 @@ export const getCalendarShareLink = async (): Promise<CalendarShareLink | null> 
     }
     await checkResponse(response);
     return response.json() as Promise<CalendarShareLink>;
+};
+
+export const saveCalendarHidden = async (hiddenLectures: string[]): Promise<void> => {
+    const response = await apiFetch(`${API_URL}/calendar/hidden`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({hiddenLectures}),
+    });
+    if (response.status === 401 || response.status === 403) {
+        return;
+    }
+    await checkResponse(response);
 };
 
 export const getSharedCalendar = async (code: string): Promise<SharedCalendar> => {

@@ -1,6 +1,7 @@
 package com.survivalkit.backend.core.calendar;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.survivalkit.backend.adapter.postgres.course.CoursePersistancePort;
 import com.survivalkit.backend.adapter.postgres.user.UserPersistancePort;
@@ -13,7 +14,9 @@ import com.survivalkit.backend.core.user.exception.UserNotFoundException;
 import io.viascom.nanoid.NanoId;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -70,7 +73,45 @@ public class CalendarShareService {
         }
         var userId = userPersistancePort.findUserIdByCalendarAccessCode(normalized)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.CALENDAR_ACCESS_CODE_INVALID.getCode()));
-        return new SharedCalendar(customEventService.listFor(userId), colorsFor(userId));
+        var plan = planSettings(userId);
+        var accent = userPersistancePort.getUserProfile(userId)
+                .map(profile -> colorValue(profile.accentColor()))
+                .orElse(null);
+        return new SharedCalendar(customEventService.listFor(userId), plan.colors(), accent, plan.hiddenLectures());
+    }
+
+    public void saveHiddenLectures(List<String> hiddenLectures) {
+        var user = SecurityContext.current();
+        var cleaned = cleanHidden(hiddenLectures);
+        UserWidgetModel fallback = null;
+        var saved = false;
+        for (var widget : userWidgetPersistancePort.getAllForUser(user.userId())) {
+            if (widget.type() != UserWidgetModel.WidgetType.LECTURE_PLAN) {
+                continue;
+            }
+            if (fallback == null) {
+                fallback = widget;
+            }
+            if (widget.data() == null || widget.data().isBlank()) {
+                continue;
+            }
+            saved = writeHidden(widget, user.userId(), cleaned) || saved;
+        }
+        if (!saved && fallback != null) {
+            writeHidden(fallback, user.userId(), cleaned);
+        }
+    }
+
+    private boolean writeHidden(UserWidgetModel widget, String userId, List<String> hiddenLectures) {
+        var node = readObject(widget.data());
+        var hidden = node.putArray("hiddenLectures");
+        hiddenLectures.forEach(hidden::add);
+        try {
+            userWidgetPersistancePort.saveDataForWidget(widget.id(), userId, objectMapper.writeValueAsString(node));
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private String ensureCode(String userId) {
@@ -86,18 +127,76 @@ public class CalendarShareService {
         return generated;
     }
 
-    private SharedCalendarColors colorsFor(String userId) {
+    private PlanSettings planSettings(String userId) {
         for (var widget : userWidgetPersistancePort.getAllForUser(userId)) {
             if (widget.type() != UserWidgetModel.WidgetType.LECTURE_PLAN || widget.data() == null || widget.data().isBlank()) {
                 continue;
             }
             try {
-                return colorsFrom(objectMapper.readTree(widget.data()));
+                var node = objectMapper.readTree(widget.data());
+                return new PlanSettings(colorsFrom(node), hiddenFrom(node));
             } catch (Exception ignored) {
-                return DEFAULT_COLORS;
+                return new PlanSettings(DEFAULT_COLORS, List.of());
             }
         }
-        return DEFAULT_COLORS;
+        return new PlanSettings(DEFAULT_COLORS, List.of());
+    }
+
+    private ObjectNode readObject(String data) {
+        if (data == null || data.isBlank()) {
+            return objectMapper.createObjectNode();
+        }
+        try {
+            var parsed = objectMapper.readTree(data);
+            if (parsed instanceof ObjectNode object) {
+                return object;
+            }
+        } catch (Exception ignored) {
+            // Replace unreadable widget data with a fresh object.
+        }
+        return objectMapper.createObjectNode();
+    }
+
+    private static List<String> hiddenFrom(JsonNode node) {
+        var hidden = node.path("hiddenLectures");
+        if (!hidden.isArray()) {
+            return List.of();
+        }
+        var names = new ArrayList<String>();
+        hidden.forEach(item -> {
+            if (item.isTextual()) {
+                var value = item.asText().trim();
+                if (!value.isEmpty()) {
+                    names.add(value);
+                }
+            }
+        });
+        return names;
+    }
+
+    private static List<String> cleanHidden(List<String> hiddenLectures) {
+        var cleaned = new ArrayList<String>();
+        if (hiddenLectures == null) {
+            return cleaned;
+        }
+        for (var item : hiddenLectures) {
+            if (item == null || cleaned.size() >= 200) {
+                continue;
+            }
+            var value = item.strip();
+            if (!value.isEmpty() && value.length() <= 200) {
+                cleaned.add(value);
+            }
+        }
+        return cleaned;
+    }
+
+    private static String colorValue(String value) {
+        var trimmed = value == null ? "" : value.trim();
+        return HEX.matcher(trimmed).matches() ? trimmed : null;
+    }
+
+    private record PlanSettings(SharedCalendarColors colors, List<String> hiddenLectures) {
     }
 
     private static SharedCalendarColors colorsFrom(JsonNode node) {

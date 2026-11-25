@@ -421,6 +421,67 @@ html.calendar-app-active #root {
     font-size: 14px;
 }
 
+.cal-settings__link {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.cal-settings__link label,
+.cal-settings__events {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.cal-settings__events {
+    margin-top: 18px;
+}
+
+.cal-settings__link input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 16px;
+}
+
+.cal-settings__link input:focus,
+.cal-settings__link input:focus-visible {
+    outline: 2px solid var(--color-primary-accent);
+    outline-offset: 1px;
+}
+
+.cal-settings__hint {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+}
+
+.cal-settings__link button {
+    align-self: flex-start;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-primary-accent);
+    color: #fff;
+    padding: 8px 14px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cal-settings__link button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 .cal-settings__empty {
     margin: 8px 0 0;
     color: var(--color-text-secondary);
