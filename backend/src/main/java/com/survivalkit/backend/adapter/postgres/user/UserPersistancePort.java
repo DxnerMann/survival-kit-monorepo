@@ -30,4 +30,7 @@ public interface UserPersistancePort {
     void updateVerificationToken(String userId, String verificationToken);
     Page<UserProfile> getUsers(int pageSize, String continuation);
     void setRole(String userId, RoleLevel role);
+    Optional<String> findCalendarAccessCode(String userId);
+    int setCalendarAccessCodeIfMissing(String userId, String code);
+    Optional<String> findUserIdByCalendarAccessCode(String code);
 }

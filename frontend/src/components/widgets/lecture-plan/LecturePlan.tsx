@@ -2,7 +2,7 @@ import "@/components/widgets/lecture-plan/LecturePlan.css";
 import {dashboardService} from "@/services/dashboardService.tsx";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
 import {useEffect, useState} from "react";
-import {Fullscreen, Settings} from "lucide-react";
+import {CalendarPlus, Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "@/services/tokenService.tsx";
 import {LECTURE_PLAN_STORAGE_KEY, lectureService, publishTimerPlan, setTimerCourse} from "@/services/lectureService.tsx";
@@ -11,6 +11,9 @@ import CourseSelection from "@/components/ui/CourseSelection.tsx";
 import Button from "@/components/ui/Button.tsx";
 import type {Lecture} from "@/models/Lecture.tsx";
 import LectureCalendar from "@/components/lecture/LectureCalendar.tsx";
+import CreateEventForm from "@/components/widgets/lecture-plan/CreateEventForm.tsx";
+import {CUSTOM_EVENTS_CHANGED, DEFAULT_CUSTOM_EVENT_COLOR, type CustomEvent} from "@/models/CustomEvent.tsx";
+import {listCustomEvents} from "@/services/customEventService.tsx";
 import ColorPicker from "@/components/ui/ColorPicker.tsx";
 import SelectionDropdown from "@/components/ui/SelectionDropdown.tsx";
 import WidgetStatus from "@/components/ui/WidgetStatus.tsx";
@@ -19,6 +22,7 @@ interface LecturePlanData {
     lectureColor: string,
     examColor: string,
     otherColor: string,
+    customColor: string,
     course: string,
     hiddenLectures: string[],
 }
@@ -27,9 +31,29 @@ const defaultData : LecturePlanData = {
     lectureColor: "#bc0101",
     examColor: "#e8ba02",
     otherColor: "#cac6c6",
+    customColor: DEFAULT_CUSTOM_EVENT_COLOR,
     course: "",
     hiddenLectures: []
 }
+
+const readPlan = (raw: string): LecturePlanData => {
+    const parsed = JSON.parse(raw) as Partial<LecturePlanData>;
+    return {
+        ...defaultData,
+        ...parsed,
+        lectureColor: parsed.lectureColor || defaultData.lectureColor,
+        examColor: parsed.examColor || defaultData.examColor,
+        otherColor: parsed.otherColor || defaultData.otherColor,
+        customColor: parsed.customColor || defaultData.customColor,
+        course: parsed.course ?? defaultData.course,
+        hiddenLectures: Array.isArray(parsed.hiddenLectures) ? parsed.hiddenLectures : [],
+    };
+};
+
+const canCreateEvents = () => {
+    const role = getUserRole();
+    return role === "USER" || role === "MEMELORD" || role === "ADMIN";
+};
 
 const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
 
@@ -37,6 +61,8 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
 
     const [inFullscreen, setInFullscreen] = useState(false);
     const [inSettings, setInSettings] = useState(false);
+    const [inCreate, setInCreate] = useState(false);
+    const [customEvents, setCustomEvents] = useState<CustomEvent[]>([]);
     const [weekOffset, setWeekOffset] = useState(0);
     const [lectures, setLectures] = useState<Lecture[]>([]);
     const [raplaNotice, setRaplaNotice] = useState<string | null>(null);
@@ -50,11 +76,11 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 if (data === "") {
                     return defaultData;
                 }
-                return JSON.parse(data);
+                return readPlan(data);
             } else {
                 const cookieData = localStorage.getItem(LOCAL_STORAGE_KEY)
                 if (cookieData) {
-                    return JSON.parse(cookieData);
+                    return readPlan(cookieData);
                 } else   {
                     return defaultData;
                 }
@@ -67,6 +93,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [selectedLectureColor, setSelectedLectureColor] = useState<string>(decodedData.lectureColor);
     const [selectedExamColor, setSelectedExamColor] = useState<string>(decodedData.examColor);
     const [selectedOtherColor, setSelectedOtherColor] = useState<string>(decodedData.otherColor);
+    const [selectedCustomColor, setSelectedCustomColor] = useState<string>(decodedData.customColor);
     const [hiddenLectures, setHiddenLectures] = useState<string[]>(decodedData.hiddenLectures);
     const [allLectures, setAllLectures] = useState<string[]>([]);
     const [selectedLectures, setSelectedLectures] = useState<string[]>(
@@ -110,6 +137,38 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
             }
         })();
     }, [decodedData, decodedData.hiddenLectures, selectedCourse, weekOffset, isPreview]);
+
+    useEffect(() => {
+        if (decodedData.customColor) {
+            localStorage.setItem("lecture-plan-custom-color", decodedData.customColor);
+        }
+    }, [decodedData.customColor]);
+
+    useEffect(() => {
+        if (isPreview || !canCreateEvents()) {
+            return;
+        }
+        let cancelled = false;
+        const load = () => {
+            listCustomEvents()
+                .then(events => {
+                    if (!cancelled) {
+                        setCustomEvents(events);
+                    }
+                })
+                .catch(() => {
+                    if (!cancelled) {
+                        setCustomEvents([]);
+                    }
+                });
+        };
+        load();
+        window.addEventListener(CUSTOM_EVENTS_CHANGED, load);
+        return () => {
+            cancelled = true;
+            window.removeEventListener(CUSTOM_EVENTS_CHANGED, load);
+        };
+    }, [isPreview]);
 
     useEffect(() => {
         if (isPreview || decodedData.course === "") {
@@ -178,6 +237,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 lectureColor: selectedLectureColor,
                 examColor: selectedExamColor,
                 otherColor: selectedOtherColor,
+                customColor: selectedCustomColor,
                 hiddenLectures: hiddenLectures
             };
             lectureService.setHiddenLectures(hiddenLectures);
@@ -205,6 +265,8 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 break;
             case "OTHER": setSelectedOtherColor(color);
                 break;
+            case "CUSTOM": setSelectedCustomColor(color);
+                break;
         }
     }
 
@@ -231,7 +293,15 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const getWidgetContent = () => (
         <div className={`lecture-plan-widget ${inFullscreen ? "fullscreen" : ""}`}>
             <div className="widget-header">
-                {!inSettings && <Settings
+                {!inSettings && !inCreate && canCreateEvents() && (
+                    <CalendarPlus
+                        className="widget-header-icon"
+                        size={20}
+                        aria-label="Termin erstellen"
+                        onClick={() => setInCreate(true)}
+                    />
+                )}
+                {!inSettings && !inCreate && <Settings
                      className="widget-header-icon"
                      size={20}
                      onClick={() => setInSettings(!inSettings)}
@@ -243,7 +313,9 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                 />
             </div>
             {
-                inSettings
+                inCreate
+                    ? <CreateEventForm onCancel={() => setInCreate(false)} onCreated={() => setInCreate(false)} />
+                    : inSettings
                     ? <div className="settings-content">
                         <div className="settings-content-wrapper">
                             <p className="widget-settings-heading">Vorlesungsplan ändern</p>
@@ -252,6 +324,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                             <ColorPicker startValue={decodedData.lectureColor} onChange={(hex) => onColorValueChange(hex, "LECTURE")} label="Vorlesung" key="LECTURE" />
                             <ColorPicker startValue={decodedData.examColor} onChange={(hex) => onColorValueChange(hex, "EXAM")} label="Prüfung" key="EXAM" />
                             <ColorPicker startValue={decodedData.otherColor} onChange={(hex) => onColorValueChange(hex, "OTHER")} label="Andere" key="OTHER" />
+                            <ColorPicker startValue={decodedData.customColor} onChange={(hex) => onColorValueChange(hex, "CUSTOM")} label="Termin" key="CUSTOM" />
                             <p className="widget-settings-heading">Vorlesungen filtern</p>
                             < SelectionDropdown values={allLectures} selectedItems={selectedLectures} returnSelected={true} onChange={onFilterChanged} />
                         </div>
@@ -262,33 +335,40 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                     </div>
                     : <div className="widget-content">
                         {
-                            decodedData.course === ""
+                            decodedData.course === "" && customEvents.length === 0
                                 ? <div className="no-course-set-info">
                                     Du hast noch keinen Kurs angegeben, der angezeigt werden soll.
                                     <a className="important-text" onClick={() => setInSettings(true)}>Einstellungen</a>
                                 </div>
                                 : loading
                                     ? <WidgetStatus status="loading" />
-                                    : error
+                                    : error && customEvents.length === 0
                                         ? <WidgetStatus status="error" message={error} />
-                                        : planMissing
+                                        : planMissing && customEvents.length === 0
                                             ? <div className="no-course-set-info">
                                                 Für diesen Kurs ist kein Stundenplan hinterlegt.
                                             </div>
                                             : <>
+                                            {error && (
+                                                <div className="lecture-plan-notice" role="status">
+                                                    {error}
+                                                </div>
+                                            )}
                                             {raplaNotice && (
                                                 <div className="lecture-plan-notice" role="status">
                                                     {raplaNotice}
                                                 </div>
                                             )}
-                                            <h4 className="lecture-plan-heading">{decodedData.course}</h4>
+                                            {decodedData.course !== "" && <h4 className="lecture-plan-heading">{decodedData.course}</h4>}
                                             <LectureCalendar
                                                 key={`${weekOffset}`}
                                                 weekOffset={weekOffset}
-                                                lectures={lectures}
+                                                lectures={error || planMissing || decodedData.course === "" ? [] : lectures}
                                                 colorLecture={decodedData.lectureColor}
                                                 colorExam={decodedData.examColor}
                                                 colorOther={decodedData.otherColor}
+                                                colorCustom={decodedData.customColor}
+                                                customEvents={customEvents}
                                             />
                                             <div className="lecture-plan-footer">
                                                 <Button text="Vorherige Woche" onClick={() => setWeekOffset(weekOffset - 1)} variant="transparent" fullWidth={true} />

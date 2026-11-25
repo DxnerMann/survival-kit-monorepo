@@ -166,6 +166,139 @@
     text-decoration: underline;
 }
 
+.lecture-plan-create {
+    flex: 1;
+    gap: 0.75rem;
+    min-height: 0;
+    overflow: auto;
+    padding-bottom: 0.5rem;
+}
+
+.lecture-plan-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    width: 100%;
+    text-align: left;
+}
+
+.lecture-plan-field span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.lecture-plan-field input,
+.lecture-plan-field textarea,
+.lecture-plan-invite input {
+    width: 100%;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    padding: 0.45rem 0.6rem;
+    font: inherit;
+}
+
+.lecture-plan-field textarea {
+    min-height: 4.5rem;
+    resize: vertical;
+}
+
+.lecture-plan-times {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    width: 100%;
+}
+
+.lecture-plan-form-error {
+    margin: 0;
+    color: var(--color-danger, #bc0101);
+    font-size: 0.82rem;
+}
+
+.lecture-plan-invite {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+.lecture-plan-invite__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lecture-plan-invite__chips li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.35rem 0.15rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--color-text-primary);
+    font-size: 0.78rem;
+}
+
+.lecture-plan-invite__chips button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.lecture-plan-invite__hint {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: 0.78rem;
+}
+
+.lecture-plan-invite__menu {
+    max-height: 11rem;
+    margin: 0;
+    padding: 0.3rem;
+    overflow: auto;
+    list-style: none;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-background-elevated);
+    box-shadow: var(--shadow-lg);
+}
+
+.lecture-plan-invite__menu button {
+    width: 100%;
+    padding: 0.4rem 0.55rem;
+    border: none;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.lecture-plan-invite__menu button:hover {
+    background: var(--accent-soft);
+}
+
+.lecture-plan-invite__menu--empty {
+    padding: 0.55rem 0.7rem;
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+}
+
 .lecture-plan-notice {
     width: 100%;
     margin: 0 0 0.75rem;

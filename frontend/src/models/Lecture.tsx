@@ -2,11 +2,12 @@ export type DayOfWeek = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDA
 
 export interface Lecture {
     title: string;
-    type: "LECTURE" | "EXAM" | "OTHER";
+    type: "LECTURE" | "EXAM" | "OTHER" | "CUSTOM";
     startTime: string;
     endTime: string;
     rooms: string[];
     lecturer: string;
     courses: string[];
     day: DayOfWeek;
+    description?: string;
 }

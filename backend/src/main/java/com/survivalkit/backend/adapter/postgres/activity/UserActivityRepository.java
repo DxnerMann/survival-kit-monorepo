@@ -34,6 +34,15 @@ public class UserActivityRepository implements UserActivityPersistancePort {
     }
 
     @Override
+    public void updateKind(String id, String userId, String kind) {
+        jdbcClient.sql(Statements.UPDATE_KIND.sql)
+                .paramSource(new MapSqlParameterSource("id", id)
+                        .addValue("userId", userId)
+                        .addValue("kind", kind))
+                .update();
+    }
+
+    @Override
     public List<UserActivity> findByUser(String userId) {
         return jdbcClient.sql(Statements.FIND_BY_USER.sql)
                 .param("userId", userId)
@@ -57,6 +66,11 @@ public class UserActivityRepository implements UserActivityPersistancePort {
         SAVE("""
             INSERT INTO userActivities (id, userId, kind, title, actorUsername, subjectId, createdAt)
             VALUES (:id, :userId, :kind, :title, :actorUsername, :subjectId, :createdAt)
+        """),
+        UPDATE_KIND("""
+            UPDATE userActivities
+            SET kind = :kind
+            WHERE id = :id AND userId = :userId
         """),
         FIND_BY_USER("""
             SELECT id, userId, kind, title, actorUsername, subjectId, createdAt

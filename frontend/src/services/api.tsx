@@ -50,6 +50,17 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
 
     "06x00000000": { text: "Rapla-URL und Kurs dürfen nicht beide leer sein.", type: "warning" },
     "06x00000001": { text: "Kurs nicht gefunden.", type: "error" },
+    "06x00000002": { text: "Der Titel muss zwischen 1 und 120 Zeichen lang sein.", type: "warning" },
+    "06x00000003": { text: "Die Uhrzeit ist ungültig. Das Ende muss nach dem Beginn liegen.", type: "warning" },
+    "06x00000004": { text: "Das Datum ist ungültig.", type: "warning" },
+    "06x00000005": { text: "Dieser Termin wurde nicht gefunden.", type: "error" },
+    "06x00000006": { text: "Eingeladene Personen müssen in deinem Kurs sein.", type: "warning" },
+    "06x00000007": { text: "Lege zuerst deinen Kurs im Profil fest, um Personen einzuladen.", type: "warning" },
+    "06x00000008": { text: "Auf diese Einladung wurde bereits geantwortet.", type: "info" },
+    "06x00000009": { text: "Raum oder Beschreibung ist zu lang.", type: "warning" },
+    "06x0000000A": { text: "Dieser Kalender-Code ist ungültig.", type: "error" },
+
+    "07x00000002": { text: "Höchstens 50 Widgets auf dem Dashboard.", type: "warning" },
 
     "08x00000000": { text: "Die Koffeinmenge muss zwischen 1 und 1000 mg liegen.", type: "warning" },
     "08x00000001": { text: "Ungültige Koffein-Quelle.", type: "warning" },

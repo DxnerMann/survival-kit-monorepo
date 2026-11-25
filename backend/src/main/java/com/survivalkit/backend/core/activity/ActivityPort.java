@@ -19,5 +19,9 @@ public interface ActivityPort {
 
     UserActivity recordRankUp(String userId, String rankLabel);
 
+    UserActivity recordEventInvited(String userId, String title, String actorUsername, String eventId);
+
+    void markEventInvite(String activityId, String userId, boolean accepted);
+
     List<UserActivity> listMine();
 }

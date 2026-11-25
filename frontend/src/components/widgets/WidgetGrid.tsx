@@ -12,6 +12,7 @@ import "@/components/widgets/WidgetGrid.css";
 import type {UserWidget} from "@/models/UserWidget.tsx";
 import {getUserRole} from "@/services/tokenService.tsx";
 import {dashboardService} from "@/services/dashboardService.tsx";
+import {snackbarService} from "@/services/snackBarService.tsx";
 import {applyStoredLecturePlan, restoreGuestTimerPlan} from "@/services/lectureService.tsx";
 
 const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: number; maxH?: number; defaultW: number; defaultH: number }> = {
@@ -32,7 +33,10 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
 
 const DROPPING_ID = "__dropping-elem__";
 const GRID_COLS = 10;
-const canRepeat = (type: string | undefined) => type === "SECTION_HEADING";
+const MAX_DASHBOARD_WIDGETS = 50;
+
+const placedWidgetCount = (items: Layout) =>
+    items.filter(item => item.i && item.i !== DROPPING_ID).length;
 
 class WidgetBoundary extends Component<{children: ReactNode; fallback: ReactNode}, {failed: boolean}> {
     state = {failed: false};
@@ -109,18 +113,13 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     const dragFinishedRef = useRef(false);
 
     const toolbox = useMemo(() => {
-        const layoutTypes = new Set(
-            layout.map(l => layoutWidgets.find(w => w.id === l.i)?.type
-                ?? toolboxPool.find(w => w.id === l.i)?.type)
-        );
         const seen = new Set<string>();
         return toolboxPool.filter(w => {
             if (seen.has(w.type)) return false;
-            if (!canRepeat(w.type) && layoutTypes.has(w.type)) return false;
             seen.add(w.type);
             return true;
         });
-    }, [toolboxPool, layout, layoutWidgets]);
+    }, [toolboxPool]);
 
     const findWidget = useCallback((id: string): UserWidget | undefined => {
         return layoutWidgets.find(w => w.id === id)
@@ -165,12 +164,10 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             storedData
                 .filter(widget => widget.type === "LECTURE_PLAN")
                 .forEach(widget => applyStoredLecturePlan(widget.data));
-            const storedTypes = new Set(storedData.map(w => w.type));
 
             const seen = new Set<string>();
             const pool = [...defaultToolbox, ...defaultLayout].filter(w => {
                 if (seen.has(w.type)) return false;
-                if (!canRepeat(w.type) && storedTypes.has(w.type)) return false;
                 seen.add(w.type);
                 return true;
             });
@@ -244,8 +241,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             layoutWidgetsRef.current = remaining;
             setLayoutWidgets(remaining);
             setToolboxPool(prev => {
-                if (prev.some(widget => widget.id === deleted.id)) return prev;
-                if (canRepeat(deleted.type) && prev.some(widget => widget.type === deleted.type)) return prev;
+                if (prev.some(widget => widget.id === deleted.id || widget.type === deleted.type)) return prev;
                 return [...prev, deleted];
             });
         }
@@ -270,7 +266,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             const existingTypes = new Set(prev.map(widget => widget.type));
             return [...prev, ...placed.filter(widget => {
                 if (existingIds.has(widget.id)) return false;
-                return !(canRepeat(widget.type) && existingTypes.has(widget.type));
+                return !existingTypes.has(widget.type);
             })];
         });
     };
@@ -310,8 +306,9 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     }, [widgetDraged, removeWidget]);
 
     const placeFromToolbox = (widget: UserWidget): PendingDrop => {
+        const source = layoutWidgetsRef.current.find(entry => entry.type === widget.type && entry.data);
         const placed: UserWidget = widget.id.startsWith("default-")
-            ? {...widget, id: crypto.randomUUID()}
+            ? {...widget, id: crypto.randomUUID(), data: source?.data || widget.data}
             : widget;
         removedIdsRef.current.delete(placed.id);
         const constraints = getWidgetConstraints(placed.type);
@@ -326,7 +323,7 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     const handleToolboxDrop = (_layout: Layout, item: LayoutItem | undefined) => {
         const pending = droppingRef.current;
         droppingRef.current = null;
-        if (!pending || !item) {
+        if (!pending || !item || placedWidgetCount(layoutRef.current) >= MAX_DASHBOARD_WIDGETS) {
             return;
         }
         const constraints = getWidgetConstraints(pending.placed.type);
@@ -357,11 +354,10 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
         };
         acceptedDropRef.current = dropped;
         setLayout(prev => [...prev.filter(entry => entry.i !== dropped.i && entry.i !== DROPPING_ID), dropped]);
-        setToolboxPool(prev => canRepeat(pending.placed.type)
-            ? prev
-            : prev.filter(entry => entry.id !== pending.sourceId));
         setLayoutWidgets(prev => [...prev.filter(entry => entry.id !== pending.placed.id), pending.placed]);
     };
+
+    const atWidgetLimit = placedWidgetCount(layout) >= MAX_DASHBOARD_WIDGETS;
 
     return (
         <div ref={ref} className="widget-grid-wrapper">
@@ -518,14 +514,32 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                         </div>
                     </button>
                 </div>}
-                <p className="toolbox-hint">Ziehe das gewünschte Widget in dein Dashboard und passe die Größe an.</p>
+                <p className="toolbox-hint">
+                    {atWidgetLimit
+                        ? "Du hast die Grenze von 50 Widgets erreicht. Entferne zuerst eins."
+                        : "Ziehe das gewünschte Widget in dein Dashboard und passe die Größe an."}
+                </p>
                 <div className="toolbox-scroll">
                     {toolbox.map(widget => (
                         <div
                             key={widget.id}
-                            className="toolbox-item"
-                            draggable={editMode}
+                            className={`toolbox-item${atWidgetLimit ? " toolbox-item--blocked" : ""}`}
+                            draggable={editMode && !atWidgetLimit}
+                            onPointerDown={() => {
+                                if (!atWidgetLimit) {
+                                    return;
+                                }
+                                snackbarService.showSnackbar({
+                                    type: "error",
+                                    text: "Höchstens 50 Widgets auf dem Dashboard.",
+                                    showIcon: true,
+                                });
+                            }}
                             onDragStart={(event) => {
+                                if (placedWidgetCount(layoutRef.current) >= MAX_DASHBOARD_WIDGETS) {
+                                    event.preventDefault();
+                                    return;
+                                }
                                 const pending = placeFromToolbox(widget);
                                 droppingRef.current = pending;
                                 event.dataTransfer.setData("text/plain", pending.placed.id);

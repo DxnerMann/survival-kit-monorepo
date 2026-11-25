@@ -1,8 +1,10 @@
 import {useEffect, useRef, useState, type ReactNode} from "react";
 import {createPortal} from "react-dom";
 import {useNavigate} from "react-router-dom";
-import {Bell, CircleCheck, Heart, Medal, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
+import {Bell, CalendarPlus, CircleCheck, Heart, Medal, MessageSquare, MessageSquareX, Shield, ThumbsUp, Trash2} from "lucide-react";
 import {getMyActivities} from "@/services/activityService.tsx";
+import {respondToCustomEvent} from "@/services/customEventService.tsx";
+import {notifyCustomEventsChanged} from "@/models/CustomEvent.tsx";
 import {getAnsweredFeedback} from "@/services/feedbackService.tsx";
 import {getUsername} from "@/services/userService.tsx";
 import {websocketService} from "@/services/websocketService.tsx";
@@ -58,7 +60,10 @@ type ActivityKind =
     | "MEME_DELETED"
     | "MEME_LIKED"
     | "ROLE_CHANGED"
-    | "RANK_UP";
+    | "RANK_UP"
+    | "EVENT_INVITED"
+    | "EVENT_INVITE_ACCEPTED"
+    | "EVENT_INVITE_DECLINED";
 
 const STORED_KINDS = new Set<ActivityKind>([
     "FEEDBACK_DELETED",
@@ -68,6 +73,9 @@ const STORED_KINDS = new Set<ActivityKind>([
     "MEME_LIKED",
     "ROLE_CHANGED",
     "RANK_UP",
+    "EVENT_INVITED",
+    "EVENT_INVITE_ACCEPTED",
+    "EVENT_INVITE_DECLINED",
 ]);
 
 const isActivityKind = (kind: string): kind is ActivityKind => STORED_KINDS.has(kind as ActivityKind);
@@ -83,6 +91,11 @@ type ActivityNotice = {
 const quoted = (title: string) => {
     const value = title.trim();
     return value ? ` "${value}"` : "";
+};
+
+const eventTitle = (title: string) => {
+    const value = title.trim();
+    return value ? `"${value}"` : "einem Event";
 };
 
 const noticeText = (item: ActivityNotice) => {
@@ -117,6 +130,15 @@ const noticeText = (item: ActivityNotice) => {
         const rank = item.title.trim();
         return rank ? `Du bist aufgestiegen: ${rank}.` : "Du bist aufgestiegen.";
     }
+    if (item.kind === "EVENT_INVITED") {
+        return `Du wurdest zum Event ${eventTitle(item.title)} eingeladen`;
+    }
+    if (item.kind === "EVENT_INVITE_ACCEPTED") {
+        return `Du hast die Einladung zum Event ${eventTitle(item.title)} angenommen.`;
+    }
+    if (item.kind === "EVENT_INVITE_DECLINED") {
+        return `Du hast die Einladung zum Event ${eventTitle(item.title)} abgelehnt.`;
+    }
     return `Dein Feedback-Beitrag${quoted(item.title)} wurde von einem Admin beantwortet.`;
 };
 
@@ -142,10 +164,19 @@ const noticeIcon = (kind: ActivityKind): ReactNode => {
     if (kind === "RANK_UP") {
         return <Medal size={18} />;
     }
+    if (kind === "EVENT_INVITED" || kind === "EVENT_INVITE_ACCEPTED" || kind === "EVENT_INVITE_DECLINED") {
+        return <CalendarPlus size={18} />;
+    }
     return <MessageSquare size={18} />;
 };
 
+const isEventNotice = (kind: ActivityKind) =>
+    kind === "EVENT_INVITED" || kind === "EVENT_INVITE_ACCEPTED" || kind === "EVENT_INVITE_DECLINED";
+
 const isVisible = (item: ActivityNotice, seen: SeenMap, now: number) => {
+    if (item.kind === "EVENT_INVITED") {
+        return true;
+    }
     const seenAt = seen[item.id];
     if (seenAt == null) {
         return true;
@@ -160,6 +191,7 @@ const Notifications = () => {
     const [seen, setSeen] = useState<SeenMap>(() => readSeen());
     const rootRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
+    const [pendingInviteId, setPendingInviteId] = useState<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -246,9 +278,27 @@ const Notifications = () => {
         };
     }, [open]);
 
+    const answerInvite = async (item: ActivityNotice, accept: boolean) => {
+        if (!item.subjectId || pendingInviteId) {
+            return;
+        }
+        setPendingInviteId(item.id);
+        try {
+            await respondToCustomEvent(item.subjectId, accept);
+            setItems(current => current.map(entry => entry.id === item.id
+                ? {...entry, kind: accept ? "EVENT_INVITE_ACCEPTED" : "EVENT_INVITE_DECLINED"}
+                : entry));
+            notifyCustomEventsChanged();
+        } catch {
+            // The request helper already shows the error.
+        } finally {
+            setPendingInviteId(null);
+        }
+    };
+
     const now = Date.now();
     const visible = items.filter(item => isVisible(item, seen, now));
-    const unseenCount = visible.filter(item => seen[item.id] == null).length;
+    const unseenCount = visible.filter(item => item.kind === "EVENT_INVITED" || seen[item.id] == null).length;
 
     const openItem = (item: ActivityNotice) => {
         setOpen(false);
@@ -262,6 +312,9 @@ const Notifications = () => {
         }
         if (item.kind === "FEEDBACK_DELETED") {
             navigate("/ideas");
+            return;
+        }
+        if (isEventNotice(item.kind)) {
             return;
         }
         if (item.kind === "FEEDBACK_RESOLVED" && item.subjectId) {
@@ -290,7 +343,34 @@ const Notifications = () => {
                 <div className="notifications-overlay" role="dialog" aria-label="Aktivitäten" ref={overlayRef}>
                     <h2 className="notifications-heading">Aktivitäten</h2>
                     {visible.length > 0 ? (
-                        visible.map(item => (
+                        visible.map(item => isEventNotice(item.kind) ? (
+                            <div key={item.id} className="notifications-item notifications-item--static">
+                                <span className="notifications-item-icon">
+                                    {noticeIcon(item.kind)}
+                                </span>
+                                <span className="notifications-item-body">
+                                    <span className="notifications-item-text">{noticeText(item)}</span>
+                                    {item.kind === "EVENT_INVITED" && item.subjectId && (
+                                        <span className="notifications-item-actions">
+                                            <button
+                                                type="button"
+                                                disabled={pendingInviteId === item.id}
+                                                onClick={() => void answerInvite(item, true)}
+                                            >
+                                                Annehmen
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={pendingInviteId === item.id}
+                                                onClick={() => void answerInvite(item, false)}
+                                            >
+                                                Ablehnen
+                                            </button>
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        ) : (
                             <button
                                 key={item.id}
                                 type="button"

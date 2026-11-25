@@ -169,6 +169,36 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public Optional<String> findCalendarAccessCode(String userId) {
+        return jdbcClient.sql(Statements.GET_CALENDAR_ACCESS_CODE.sql)
+                .param("id", userId)
+                .query((rs, rowNum) -> {
+                    var code = rs.getString("calendarAccessCode");
+                    return code == null ? "" : code;
+                })
+                .optional()
+                .filter(code -> !code.isBlank());
+    }
+
+    @Override
+    public int setCalendarAccessCodeIfMissing(String userId, String code) {
+        return jdbcClient.sql(Statements.SET_CALENDAR_ACCESS_CODE.sql)
+                .paramSource(new MapSqlParameterSource("id", userId).addValue("code", code))
+                .update();
+    }
+
+    @Override
+    public Optional<String> findUserIdByCalendarAccessCode(String code) {
+        if (code == null || code.isBlank()) {
+            return Optional.empty();
+        }
+        return jdbcClient.sql(Statements.USER_ID_BY_CALENDAR_ACCESS_CODE.sql)
+                .param("code", code.trim())
+                .query(String.class)
+                .optional();
+    }
+
+    @Override
     public void updatePassword(String userId, String newPassword) {
         jdbcClient.sql(Statements.UPDATE_PASSWORD.sql)
                 .paramSource(new MapSqlParameterSource("password", newPassword)
@@ -419,7 +449,18 @@ public class UserRepository implements UserPersistancePort {
                 """
                         UPDATE users SET role = :role WHERE id = :id
                     """
-        );
+        ),
+        GET_CALENDAR_ACCESS_CODE("""
+                SELECT calendarAccessCode FROM users WHERE id = :id
+        """),
+        SET_CALENDAR_ACCESS_CODE("""
+                UPDATE users
+                SET calendarAccessCode = :code
+                WHERE id = :id AND calendarAccessCode IS NULL
+        """),
+        USER_ID_BY_CALENDAR_ACCESS_CODE("""
+                SELECT id FROM users WHERE calendarAccessCode = :code
+        """);
 
         private String sql;
 

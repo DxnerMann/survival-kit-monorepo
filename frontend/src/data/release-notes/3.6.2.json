@@ -1,0 +1,34 @@
+{
+  "version": "3.6.2",
+  "date": "2026-11-25",
+  "sections": [
+    {
+      "title": "Eigene Termine",
+      "items": [
+        "Im Vorlesungsplan gibt es in den Einstellungen eine Farbe für eigene Termine",
+        "Über das Kalender-Plus legst du einen Termin an: Titel, Tag, Beginn und Ende, optional Raum und Beschreibung",
+        "Du kannst mehrere Personen aus deinem Kurs einladen. Die Suche geht über die Benutzernamen",
+        "Der Termin steht danach in deinem Widget und im großen Kalender",
+        "Eingeladene bekommen eine Aktivität: Du wurdest zum Event „…“ eingeladen, mit Annehmen und Ablehnen darunter",
+        "Annehmen legt den Termin in den eigenen Kalender. Ablehnen lässt ihn weg"
+      ]
+    },
+    {
+      "title": "Kalender teilen",
+      "items": [
+        "Jedes Konto hat einen Kalender-Code. Im Link steht der Code, nicht der Benutzername",
+        "Auf der Kalenderseite kopierst du den Rapla-Link mit diesem Code. Ohne geöffneten Plan ist das der Link deines Kurses, mit geöffnetem Plan der gerade angezeigte",
+        "Wer den Link mit Code einfügt, sieht deine eigenen Termine und deine Farben für Vorlesung, Prüfung, Andere und Termin",
+        "Ein Rapla-Link ohne Code öffnet den Plan wie bisher, auch ohne Konto"
+      ]
+    },
+    {
+      "title": "Dashboard",
+      "items": [
+        "Jedes Widget kannst du mehr als einmal aufs Dashboard ziehen. Eine weitere Katze, ein weiteres Meme oder ein weiterer Plan zeigt denselben Inhalt",
+        "Ein neuer Vorlesungsplan übernimmt Kurs und Farben von einem, den du schon liegen hast",
+        "Mehr als 50 Widgets gehen nicht"
+      ]
+    }
+  ]
+}

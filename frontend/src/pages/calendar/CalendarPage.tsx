@@ -4,12 +4,16 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import type { EventClickArg, EventContentArg } from "@fullcalendar/core";
 import deLocale from "@fullcalendar/core/locales/de";
-import { Book, Clock1, Download, MapPin, Settings, User, X } from "lucide-react";
+import { Book, Clock1, Download, FileText, Link2, MapPin, Settings, User, X } from "lucide-react";
 import { api } from "@/services/api.tsx";
 import type { DayOfWeek, Lecture } from "@/models/Lecture.tsx";
 import type { LecturePlanResponse } from "@/models/LecturePlanResponse.tsx";
 import { lectureConversionUtil } from "@/services/lectureConversionUtil.tsx";
-import { normalizeRaplaUrl } from "@/utils/raplaUrl.ts";
+import { customEventToLecture, customEventsToCalendar, getCalendarShareLink, getSharedCalendar, listCustomEvents, type CalendarShareLink } from "@/services/customEventService.tsx";
+import { snackbarService } from "@/services/snackBarService.tsx";
+import { CUSTOM_EVENTS_CHANGED, DEFAULT_CUSTOM_EVENT_COLOR, type CustomEvent } from "@/models/CustomEvent.tsx";
+import { getUserRole } from "@/services/tokenService.tsx";
+import { normalizeRaplaUrl, splitCalendarAccess, withCalendarAccessCode } from "@/utils/raplaUrl.ts";
 import { readStoredPlan, rememberCourse, rememberWeek, sameLectures, type StoredPlan } from "@/pages/calendar/planCache.ts";
 import "@/pages/calendar/CalendarPage.css";
 
@@ -17,12 +21,14 @@ const COLORS: Record<Lecture["type"], string> = {
     LECTURE: "#bc0101",
     EXAM: "#e8ba02",
     OTHER: "#bdbdbd",
+    CUSTOM: DEFAULT_CUSTOM_EVENT_COLOR,
 };
 
 const TYPE_LABELS: Record<Lecture["type"], string> = {
     LECTURE: "Vorlesung",
     EXAM: "Prüfung",
     OTHER: "Sonstiges",
+    CUSTOM: "Termin",
 };
 
 const WEEK_DAYS: DayOfWeek[] = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
@@ -39,7 +45,7 @@ const clock = (totalMinutes: number) => {
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
 };
 
-const planTimeRange = (items: Lecture[]) => {
+const planTimeRange = (items: {startTime: string; endTime: string}[]) => {
     if (items.length === 0) {
         return { min: "08:00:00", max: "18:00:00" };
     }
@@ -257,7 +263,7 @@ const hiddenDaysFor = (items: Lecture[], view: ViewMode) => {
     return days;
 };
 
-const slotLayoutFor = (items: Lecture[], slotArea: number) => {
+const slotLayoutFor = (items: {startTime: string; endTime: string}[], slotArea: number) => {
     const range = planTimeRange(items);
     const slots = Math.max(1, (minutesOf(range.max) - minutesOf(range.min)) / 30);
     const fitted = Math.floor(slotArea / slots);
@@ -272,6 +278,8 @@ const PlanPane = ({
     view,
     weekOffset,
     slotArea,
+    customEvents,
+    colors,
     onEventClick,
 }: {
     lectures: Lecture[];
@@ -279,19 +287,32 @@ const PlanPane = ({
     view: ViewMode;
     weekOffset: number;
     slotArea: number;
+    customEvents: CustomEvent[];
+    colors: Record<Lecture["type"], string>;
     onEventClick: (info: EventClickArg) => void;
 }) => {
     const dayName = WEEK_DAYS[(date.getDay() + 6) % 7];
     const dayLectures = lectures.filter((lecture) => lecture.day === dayName);
+    const visibleCustom = customEvents.filter((event) => {
+        if (view === "day") {
+            return event.date === toDateKey(date);
+        }
+        const monday = toDateKey(mondayOfWeek(weekOffset));
+        const sunday = toDateKey(addDays(mondayOfWeek(weekOffset), 6));
+        return event.date >= monday && event.date <= sunday;
+    });
     const layoutSource = view === "day"
         ? (dayLectures.length > 0 ? dayLectures : lectures)
         : lectures;
-    const layout = slotLayoutFor(layoutSource, slotArea);
-    const hiddenDays = hiddenDaysFor(lectures, view);
-    const events = useMemo(
-        () => lectureConversionUtil.toCalendarEvents(lectures, COLORS, weekOffset),
-        [lectures, weekOffset]
+    const layout = slotLayoutFor([...layoutSource, ...visibleCustom], slotArea);
+    const hiddenDays = hiddenDaysFor(
+        [...lectures, ...visibleCustom.map(event => customEventToLecture(event))],
+        view
     );
+    const events = [
+        ...lectureConversionUtil.toCalendarEvents(lectures, colors, weekOffset),
+        ...customEventsToCalendar(visibleCustom, colors.CUSTOM),
+    ];
 
     return (
         <div
@@ -331,6 +352,9 @@ const CalendarPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const source = readPlanSource(searchParams);
+    const accessCode = (searchParams.get("code")?.trim()
+        || splitCalendarAccess(searchParams.get("source") ?? "").code
+        || "").trim() || null;
     const [standalone] = useState(isStandaloneDisplay);
     const [linkInput, setLinkInput] = useState("");
 
@@ -349,6 +373,13 @@ const CalendarPage = () => {
     const [loading, setLoading] = useState(() => Boolean(source) && mapStoredWeeks(readStoredPlan(source))["0"] === undefined);
     const [failed, setFailed] = useState(false);
     const [selected, setSelected] = useState<Lecture | null>(null);
+    const [customEvents, setCustomEvents] = useState<CustomEvent[]>([]);
+    const [customColor] = useState(() => localStorage.getItem("lecture-plan-custom-color") || DEFAULT_CUSTOM_EVENT_COLOR);
+    const [shareLink, setShareLink] = useState<CalendarShareLink | null>(null);
+    const [sharedEvents, setSharedEvents] = useState<CustomEvent[] | null>(null);
+    const [sharedColors, setSharedColors] = useState<Record<Lecture["type"], string> | null>(null);
+    const [ownColors, setOwnColors] = useState<Record<Lecture["type"], string> | null>(null);
+    const [accessCodeInvalid, setAccessCodeInvalid] = useState(false);
     const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
     const [iosInstallable, setIosInstallable] = useState(false);
     const [iosHint, setIosHint] = useState(false);
@@ -398,6 +429,97 @@ const CalendarPage = () => {
             .filter((lecture) => !isTitleHidden(lecture.title, hiddenTitles));
         return { date, offset, lectures: paneLectures };
     }), [view, visibleDate, weekOffset, weeks, hiddenTitles]);
+
+    useEffect(() => {
+        const role = getUserRole();
+        if (role !== "USER" && role !== "MEMELORD" && role !== "ADMIN") {
+            return;
+        }
+        let cancelled = false;
+        getCalendarShareLink()
+            .then((link) => {
+                if (!cancelled) {
+                    setShareLink(link);
+                }
+            })
+            .catch(() => undefined);
+        if (accessCode) {
+            return () => {
+                cancelled = true;
+            };
+        }
+        const load = () => {
+            listCustomEvents()
+                .then((events) => {
+                    if (!cancelled) {
+                        setCustomEvents(events);
+                    }
+                })
+                .catch(() => undefined);
+        };
+        load();
+        window.addEventListener(CUSTOM_EVENTS_CHANGED, load);
+        return () => {
+            cancelled = true;
+            window.removeEventListener(CUSTOM_EVENTS_CHANGED, load);
+        };
+    }, [accessCode]);
+
+    useEffect(() => {
+        if (accessCode || !shareLink?.code) {
+            return;
+        }
+        let cancelled = false;
+        getSharedCalendar(shareLink.code)
+            .then((shared) => {
+                if (!cancelled) {
+                    setOwnColors({
+                        LECTURE: shared.colors.lecture,
+                        EXAM: shared.colors.exam,
+                        OTHER: shared.colors.other,
+                        CUSTOM: shared.colors.custom,
+                    });
+                }
+            })
+            .catch(() => undefined);
+        return () => {
+            cancelled = true;
+        };
+    }, [accessCode, shareLink?.code]);
+
+    useEffect(() => {
+        if (!accessCode) {
+            setSharedEvents(null);
+            setSharedColors(null);
+            setAccessCodeInvalid(false);
+            return;
+        }
+        let cancelled = false;
+        setAccessCodeInvalid(false);
+        getSharedCalendar(accessCode)
+            .then((shared) => {
+                if (cancelled) {
+                    return;
+                }
+                setSharedEvents(shared.events ?? []);
+                setSharedColors({
+                    LECTURE: shared.colors.lecture,
+                    EXAM: shared.colors.exam,
+                    OTHER: shared.colors.other,
+                    CUSTOM: shared.colors.custom,
+                });
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setSharedEvents([]);
+                    setSharedColors(null);
+                    setAccessCodeInvalid(true);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [accessCode]);
 
     useEffect(() => {
         document.documentElement.classList.add("calendar-app-active");
@@ -596,7 +718,7 @@ const CalendarPage = () => {
 
         const origin = window.location.origin;
         const startUrl = source
-            ? `${origin}/calendar?source=${encodeURIComponent(source)}`
+            ? `${origin}/calendar?source=${encodeURIComponent(source)}${accessCode ? `&code=${encodeURIComponent(accessCode)}` : ""}`
             : `${origin}/calendar`;
         const manifest = {
             id: startUrl,
@@ -659,7 +781,7 @@ const CalendarPage = () => {
             URL.revokeObjectURL(manifestUrl);
             window.removeEventListener("beforeinstallprompt", onInstallPrompt);
         };
-    }, [source, title]);
+    }, [source, title, accessCode]);
 
     const shift = (direction: 1 | -1) => {
         setSelected(null);
@@ -827,7 +949,13 @@ const CalendarPage = () => {
         if (!trimmed) {
             return;
         }
-        navigate(`/calendar?source=${encodeURIComponent(normalizeRaplaUrl(trimmed))}`);
+        const split = splitCalendarAccess(trimmed);
+        const params = new URLSearchParams();
+        params.set("source", normalizeRaplaUrl(split.raplaUrl));
+        if (split.code) {
+            params.set("code", split.code);
+        }
+        navigate(`/calendar?${params.toString()}`);
     };
 
     const install = async () => {
@@ -837,6 +965,31 @@ const CalendarPage = () => {
         }
         await installPrompt.prompt();
         setInstallPrompt(null);
+    };
+
+    const visibleCustomEvents = accessCode ? (sharedEvents ?? []) : customEvents;
+    const visibleColors = (accessCode ? sharedColors : ownColors) ?? { ...COLORS, CUSTOM: customColor };
+
+    const shareableUrl = useMemo(() => {
+        if (!shareLink?.code) {
+            return null;
+        }
+        if (source) {
+            return withCalendarAccessCode(source, shareLink.code);
+        }
+        return shareLink.raplaUrl;
+    }, [shareLink, source]);
+
+    const copyShareLink = async () => {
+        if (!shareableUrl) {
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(shareableUrl);
+            snackbarService.showSnackbar({ type: "success", text: "Kalenderlink kopiert", showIcon: true });
+        } catch {
+            snackbarService.showSnackbar({ type: "error", text: "Link konnte nicht kopiert werden.", showIcon: true });
+        }
     };
 
     const onEventClick = (info: EventClickArg) => {
@@ -857,37 +1010,52 @@ const CalendarPage = () => {
                 </div>
                 {source && (
                     <div className="cal-app__actions">
-                        {(installPrompt || iosInstallable) && !standalone && (
+                        {shareableUrl && (
+                            <button
+                                type="button"
+                                className="cal-app__install"
+                                onClick={() => void copyShareLink()}
+                                title="Aktiven Rapla-Link mit Zugangs-Code kopieren"
+                                aria-label="Kalenderlink kopieren"
+                            >
+                                <Link2 size={16} />
+                            </button>
+                        )}
+                        {source && (installPrompt || iosInstallable) && !standalone && (
                             <button type="button" className="cal-app__install" onClick={install} aria-label="App installieren">
                                 <Download size={16} />
                             </button>
                         )}
-                        <button
-                            type="button"
-                            className="cal-app__install"
-                            onClick={() => setSettingsOpen(true)}
-                            aria-label="Veranstaltungen filtern"
-                        >
-                            <Settings size={16} />
-                        </button>
-                        <div className="cal-app__toggle" role="group" aria-label="Ansicht">
-                            <button
-                                type="button"
-                                className={view === "week" ? "is-active" : ""}
-                                aria-pressed={view === "week"}
-                                onClick={() => setView("week")}
-                            >
-                                Woche
-                            </button>
-                            <button
-                                type="button"
-                                className={view === "day" ? "is-active" : ""}
-                                aria-pressed={view === "day"}
-                                onClick={() => setView("day")}
-                            >
-                                Tag
-                            </button>
-                        </div>
+                        {source && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="cal-app__install"
+                                    onClick={() => setSettingsOpen(true)}
+                                    aria-label="Veranstaltungen filtern"
+                                >
+                                    <Settings size={16} />
+                                </button>
+                                <div className="cal-app__toggle" role="group" aria-label="Ansicht">
+                                    <button
+                                        type="button"
+                                        className={view === "week" ? "is-active" : ""}
+                                        aria-pressed={view === "week"}
+                                        onClick={() => setView("week")}
+                                    >
+                                        Woche
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={view === "day" ? "is-active" : ""}
+                                        aria-pressed={view === "day"}
+                                        onClick={() => setView("day")}
+                                    >
+                                        Tag
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
             </header>
@@ -909,8 +1077,22 @@ const CalendarPage = () => {
                             value={linkInput}
                             onChange={(event) => setLinkInput(event.target.value)}
                         />
-                        <button type="submit" disabled={linkInput.trim() === ""}>Öffnen</button>
+                        <div className="cal-app__link-actions">
+                            <button type="submit" disabled={linkInput.trim() === ""}>Öffnen</button>
+                            {shareableUrl && (
+                                <button
+                                    type="button"
+                                    className="cal-app__link-copy"
+                                    onClick={() => void copyShareLink()}
+                                >
+                                    Link kopieren
+                                </button>
+                            )}
+                        </div>
                     </form>
+                )}
+                {accessCodeInvalid && (
+                    <p className="cal-app__message">Der Kalender-Code ist ungültig. Der Plan wird ohne persönliche Termine gezeigt.</p>
                 )}
                 {source && failed && (
                     <p className="cal-app__message">Plan konnte nicht geladen werden.</p>
@@ -929,6 +1111,8 @@ const CalendarPage = () => {
                                         view={view}
                                         weekOffset={pane.offset}
                                         slotArea={slotArea}
+                                        customEvents={visibleCustomEvents}
+                                        colors={visibleColors}
                                         onEventClick={onEventClick}
                                     />
                                 </div>
@@ -1002,18 +1186,28 @@ const CalendarPage = () => {
                                 <dt><Clock1 size={14} /> Zeit</dt>
                                 <dd>{selected.startTime} – {selected.endTime}</dd>
                             </div>
+                            {selected.type !== "CUSTOM" && (
+                                <div>
+                                    <dt><User size={14} /> Dozent*in</dt>
+                                    <dd>{selected.lecturer || "—"}</dd>
+                                </div>
+                            )}
                             <div>
-                                <dt><User size={14} /> Dozent*in</dt>
-                                <dd>{selected.lecturer || "—"}</dd>
-                            </div>
-                            <div>
-                                <dt><MapPin size={14} /> Räume</dt>
+                                <dt><MapPin size={14} /> {selected.type === "CUSTOM" ? "Raum" : "Räume"}</dt>
                                 <dd>{selected.rooms.length ? selected.rooms.join(", ") : "—"}</dd>
                             </div>
-                            <div>
-                                <dt><Book size={14} /> Kurse</dt>
-                                <dd>{selected.courses.length ? selected.courses.join(", ") : "—"}</dd>
-                            </div>
+                            {selected.description && (
+                                <div>
+                                    <dt><FileText size={14} /> Beschreibung</dt>
+                                    <dd>{selected.description}</dd>
+                                </div>
+                            )}
+                            {selected.type !== "CUSTOM" && (
+                                <div>
+                                    <dt><Book size={14} /> Kurse</dt>
+                                    <dd>{selected.courses.length ? selected.courses.join(", ") : "—"}</dd>
+                                </div>
+                            )}
                         </dl>
                     </section>
                 </div>

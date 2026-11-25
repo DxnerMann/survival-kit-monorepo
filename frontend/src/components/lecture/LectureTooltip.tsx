@@ -1,6 +1,6 @@
 import "@/components/lecture/LectureTooltip.css";
 import type {Lecture} from "@/models/Lecture.tsx";
-import {Book, Clock1, MapPin, User} from "lucide-react";
+import {Book, Clock1, FileText, MapPin, User} from "lucide-react";
 import type {ReactNode} from "react";
 
 interface LectureTooltipProps {
@@ -13,6 +13,7 @@ const TYPE_LABELS: Record<Lecture["type"], string> = {
     LECTURE: "Vorlesung",
     EXAM:    "Prüfung",
     OTHER:   "Sonstiges",
+    CUSTOM:  "Termin",
 };
 
 const LectureTooltip = ({ lecture, x, y }: LectureTooltipProps) => (
@@ -27,9 +28,10 @@ const LectureTooltip = ({ lecture, x, y }: LectureTooltipProps) => (
 
         <div className="lc-tooltip__body">
             <Row icon={<Clock1 size={10}/>} label="Zeit"     value={`${lecture.startTime} – ${lecture.endTime}`} />
-            <Row icon={<User size={10} /> } label="Dozent*in"   value={lecture.lecturer || "—"} />
-            <Row icon={<MapPin size={10} /> } label="Räume"    value={lecture.rooms.length ? lecture.rooms.join(", ") : "—"} />
-            <Row icon={<Book size={10} /> } label="Kurse"    value={lecture.courses.length ? lecture.courses.join(", ") : "—"} />
+            {lecture.type !== "CUSTOM" && <Row icon={<User size={10} /> } label="Dozent*in"   value={lecture.lecturer || "—"} />}
+            <Row icon={<MapPin size={10} /> } label={lecture.type === "CUSTOM" ? "Raum" : "Räume"}    value={lecture.rooms.length ? lecture.rooms.join(", ") : "—"} />
+            {lecture.description && <Row icon={<FileText size={10} />} label="Beschreibung" value={lecture.description} />}
+            {lecture.type !== "CUSTOM" && <Row icon={<Book size={10} /> } label="Kurse"    value={lecture.courses.length ? lecture.courses.join(", ") : "—"} />}
         </div>
     </div>
 );

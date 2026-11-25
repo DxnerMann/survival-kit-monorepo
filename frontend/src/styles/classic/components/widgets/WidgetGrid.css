@@ -219,6 +219,11 @@
     cursor: grab;
 }
 
+.toolbox-item--blocked,
+.toolbox-item--blocked * {
+    cursor: not-allowed;
+}
+
 .toolbox-item:active,
 .toolbox-item:active * {
     cursor: grabbing;

@@ -236,6 +236,16 @@
     cursor: grab;
 }
 
+.toolbox-item--blocked,
+.toolbox-item--blocked * {
+    cursor: not-allowed;
+}
+
+.toolbox-item--blocked:hover > :first-child {
+    border-color: var(--color-border);
+    transform: none;
+}
+
 .toolbox-item:active,
 .toolbox-item:active * {
     cursor: grabbing;

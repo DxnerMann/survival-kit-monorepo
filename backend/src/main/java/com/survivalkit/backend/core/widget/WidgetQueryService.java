@@ -17,6 +17,8 @@ import static com.survivalkit.backend.context.SecurityContext.requireVerificatio
 @Service
 public class WidgetQueryService implements WidgetQueryPort {
 
+    static final int MAX_WIDGETS = 50;
+
     private final UserWidgetPersistancePort userWidgetPersistancePort;
     private final ObjectMapper objectMapper;
     private final UserPersistancePort userPersistancePort;
@@ -46,6 +48,13 @@ public class WidgetQueryService implements WidgetQueryPort {
     public void saveAllWidgets(List<UserWidgetModel> widgetModels) {
 
         requireVerification();
+
+        var countable = widgetModels.stream()
+                .filter(widget -> widget.type() != UserWidgetModel.WidgetType.EMPTY_DASHBOARD)
+                .count();
+        if (countable > MAX_WIDGETS) {
+            throw new IllegalArgumentException(ErrorCode.TOO_MANY_WIDGETS.getCode());
+        }
 
         var user = SecurityContext.current();
 

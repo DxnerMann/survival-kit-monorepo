@@ -58,10 +58,20 @@ public enum ErrorCode {
     // LECTURE (06x)
     RAPLA_URL_AND_COURSE_EMPTY("06x00000000", "Rapla URL and course cannot both be empty", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
     COURSE_NOT_FOUND("06x00000001", "Course not found", HttpStatus.NOT_FOUND, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_TITLE_INVALID("06x00000002", "Custom event title must be 1 to 120 characters", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_TIME_INVALID("06x00000003", "Custom event time range is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_DATE_INVALID("06x00000004", "Custom event date is invalid", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_NOT_FOUND("06x00000005", "Custom event was not found", HttpStatus.NOT_FOUND, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_INVITE_INVALID("06x00000006", "Invited users must belong to your course", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_COURSE_REQUIRED("06x00000007", "Set your course before inviting users", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_ALREADY_ANSWERED("06x00000008", "This invitation was already answered", HttpStatus.CONFLICT, ErrorCategory.LECTURE),
+    CUSTOM_EVENT_DETAILS_INVALID("06x00000009", "Custom event room or description is too long", HttpStatus.BAD_REQUEST, ErrorCategory.LECTURE),
+    CALENDAR_ACCESS_CODE_INVALID("06x0000000A", "Calendar access code was not found", HttpStatus.NOT_FOUND, ErrorCategory.LECTURE),
 
     // WIDGET (07x)
     FAILED_TO_READ_WIDGET_DATA("07x00000000", "Failed to read data of the widget", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.WIDGET),
     WIDGET_NOT_FOUND("07x00000001", "Widget not found or not owned by user", HttpStatus.NOT_FOUND, ErrorCategory.WIDGET),
+    TOO_MANY_WIDGETS("07x00000002", "A dashboard can contain at most 50 widgets", HttpStatus.BAD_REQUEST, ErrorCategory.WIDGET),
 
     // CAFFEINE (08x)
     CAFFEINE_AMOUNT_INVALID("08x00000000", "Caffeine amount must be between 1 and 1000 mg", HttpStatus.BAD_REQUEST, ErrorCategory.CAFFEINE),

@@ -148,6 +148,50 @@
     line-height: 1.4;
 }
 
+.notifications-item--static {
+    cursor: default;
+}
+
+.notifications-item--static:hover {
+    transform: none;
+}
+
+.notifications-item-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.notifications-item-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.notifications-item-actions button {
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--color-text-primary);
+    border-radius: var(--radius-pill);
+    padding: 0.28rem 0.7rem;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.notifications-item-actions button:first-child {
+    background: var(--accent-gradient);
+    color: var(--on-accent);
+    border-color: transparent;
+}
+
+.notifications-item-actions button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
 @keyframes notifications-drop {
     from {
         opacity: 0;

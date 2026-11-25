@@ -1,6 +1,33 @@
 const isRaplaHost = (host: string) =>
     host === "rapla.dhbw.de" || (host.startsWith("rapla.") && host.endsWith(".dhbw.de"));
 
+export const splitCalendarAccess = (raw: string): { raplaUrl: string; code: string | null } => {
+    const trimmed = raw.trim();
+    try {
+        const url = new URL(trimmed);
+        const code = url.searchParams.get("code")?.trim() || null;
+        url.searchParams.delete("code");
+        return { raplaUrl: url.toString(), code };
+    } catch {
+        return { raplaUrl: trimmed, code: null };
+    }
+};
+
+export const withCalendarAccessCode = (raw: string, code: string): string => {
+    const plan = normalizeRaplaUrl(splitCalendarAccess(raw).raplaUrl);
+    const accessCode = code.trim();
+    if (!accessCode) {
+        return plan;
+    }
+    try {
+        const url = new URL(plan);
+        url.searchParams.set("code", accessCode);
+        return url.toString();
+    } catch {
+        return plan;
+    }
+};
+
 export const normalizeRaplaUrl = (raw: string): string => {
     const trimmed = raw.trim();
     let url: URL;

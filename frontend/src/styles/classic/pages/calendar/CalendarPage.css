@@ -138,6 +138,15 @@ html.calendar-app-active #root {
     font-size: 16px;
 }
 
+.cal-app__link-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.cal-app__link-actions button {
+    flex: 1;
+}
+
 .cal-app__link-form button {
     border: 0;
     border-radius: 999px;
@@ -150,6 +159,12 @@ html.calendar-app-active #root {
 
 .cal-app__link-form button:disabled {
     opacity: 0.45;
+}
+
+.cal-app__link-form .cal-app__link-copy {
+    background: transparent;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
 }
 
 .cal-app__message {
@@ -364,6 +379,11 @@ html.calendar-app-active #root {
 
 .cal-sheet__badge--other {
     background: #bdbdbd;
+}
+
+.cal-sheet__badge--custom {
+    background: #2563eb;
+    color: #fff;
 }
 
 .cal-sheet__list {
