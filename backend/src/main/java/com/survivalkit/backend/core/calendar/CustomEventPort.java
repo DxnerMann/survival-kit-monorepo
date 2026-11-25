@@ -8,5 +8,9 @@ public interface CustomEventPort {
 
     CustomEvent create(CreateCustomEventCommand command);
 
+    CustomEvent update(String eventId, CreateCustomEventCommand command);
+
+    void delete(String eventId);
+
     void respond(String eventId, boolean accept);
 }

@@ -9,8 +9,13 @@
         "Über das Kalender-Plus legst du einen Termin an: Titel, Tag, Beginn und Ende, optional Raum und Beschreibung",
         "Du kannst mehrere Personen aus deinem Kurs einladen. Die Suche geht über die Benutzernamen",
         "Der Termin steht danach in deinem Widget und im großen Kalender",
+        "Ein Klick auf den Termin öffnet ihn. Du änderst Titel, Tag, Zeit, Raum und Beschreibung oder löschst ihn. Das gilt für alle Eingeladenen",
         "Eingeladene bekommen eine Aktivität: Du wurdest zum Event „…“ eingeladen, mit Annehmen und Ablehnen darunter",
-        "Annehmen legt den Termin in den eigenen Kalender. Ablehnen lässt ihn weg"
+        "Annehmen legt den Termin in den eigenen Kalender. Ablehnen lässt ihn stehen, blasser und mit gepunktetem Rand",
+        "Angenommene und abgelehnte Personen klicken den Termin an und ändern ihre Entscheidung",
+        "Du bekommst eine Aktivität, wenn jemand annimmt oder ablehnt, auch wenn die Person sich später umentscheidet",
+        "Der Plan im Widget geht mindestens bis 18 Uhr. Dauert eine Vorlesung oder ein Termin länger, wächst er mit",
+        "Eigene Termine stehen auch im Vorlesungstimer. Läuft gleichzeitig eine Vorlesung, zählt dein Termin. Ein abgelehnter Termin kommt erst, wenn sonst nichts läuft"
       ]
     },
     {

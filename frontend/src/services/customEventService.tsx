@@ -67,7 +67,8 @@ export const customEventsToCalendar = (events: CustomEvent[], color: string): Ev
             backgroundColor: color,
             borderColor: "transparent",
             textColor,
-            extendedProps: {lecture, textColor},
+            classNames: event.participation === "DECLINED" ? ["fc-event-declined"] : [],
+            extendedProps: {lecture, textColor, customEvent: event},
         };
     });
 
@@ -136,6 +137,27 @@ export const getSharedCalendar = async (code: string): Promise<SharedCalendar> =
         throw new Error("Kalender-Code ist ungültig");
     }
     return response.json() as Promise<SharedCalendar>;
+};
+
+export const updateCustomEvent = async (id: string, input: CreateCustomEventInput): Promise<CustomEvent> => {
+    const response = await apiFetch(`${API_URL}/custom-events/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            ...input,
+            startTime: clock(input.startTime),
+            endTime: clock(input.endTime),
+        }),
+    });
+    await checkResponse(response);
+    return response.json() as Promise<CustomEvent>;
+};
+
+export const deleteCustomEvent = async (id: string): Promise<void> => {
+    const response = await apiFetch(`${API_URL}/custom-events/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+    });
+    await checkResponse(response);
 };
 
 export const respondToCustomEvent = async (id: string, accept: boolean): Promise<void> => {

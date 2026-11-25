@@ -49,11 +49,42 @@ public class CustomEventRepository implements CustomEventPersistancePort {
     }
 
     @Override
-    public List<StoredCustomEvent> findVisible(String userId) {
+    public List<VisibleCustomEvent> findVisible(String userId) {
         return jdbcClient.sql(Statements.FIND_VISIBLE.sql)
                 .param("userId", userId)
-                .query(CustomEventRepository::mapEvent)
+                .query(CustomEventRepository::mapVisible)
                 .list();
+    }
+
+    @Override
+    public Optional<StoredCustomEvent> findById(String id) {
+        return jdbcClient.sql(Statements.FIND_BY_ID.sql)
+                .param("id", id)
+                .query(CustomEventRepository::mapEvent)
+                .optional();
+    }
+
+    @Override
+    public void update(StoredCustomEvent event) {
+        jdbcClient.sql(Statements.UPDATE.sql)
+                .paramSource(new MapSqlParameterSource("id", event.id())
+                        .addValue("title", event.title())
+                        .addValue("eventDate", event.eventDate())
+                        .addValue("startTime", event.startTime())
+                        .addValue("endTime", event.endTime())
+                        .addValue("room", event.room())
+                        .addValue("description", event.description()))
+                .update();
+    }
+
+    @Override
+    public void delete(String eventId) {
+        jdbcClient.sql(Statements.DELETE_INVITES.sql)
+                .param("eventId", eventId)
+                .update();
+        jdbcClient.sql(Statements.DELETE_EVENT.sql)
+                .param("id", eventId)
+                .update();
     }
 
     @Override
@@ -87,6 +118,10 @@ public class CustomEventRepository implements CustomEventPersistancePort {
         );
     }
 
+    private static VisibleCustomEvent mapVisible(ResultSet rs, int rowNum) throws SQLException {
+        return new VisibleCustomEvent(mapEvent(rs, rowNum), rs.getString("inviteStatus"));
+    }
+
     private static CustomEventInvite mapInvite(ResultSet rs, int rowNum) throws SQLException {
         return new CustomEventInvite(
                 rs.getString("id"),
@@ -107,16 +142,37 @@ public class CustomEventRepository implements CustomEventPersistancePort {
             VALUES (:id, :eventId, :inviteeUserId, :status, :activityId, :createdAt)
         """),
         FIND_VISIBLE("""
+            SELECT e.id, e.ownerUserId, e.title, e.eventDate, e.startTime, e.endTime, e.room, e.description,
+                   i.status AS inviteStatus
+            FROM customEvents e
+            LEFT JOIN customEventInvites i
+                ON i.eventId = e.id AND i.inviteeUserId = :userId
+            WHERE e.ownerUserId = :userId
+               OR i.status IN ('ACCEPTED', 'DECLINED')
+            ORDER BY e.eventDate, e.startTime
+        """),
+        FIND_BY_ID("""
             SELECT id, ownerUserId, title, eventDate, startTime, endTime, room, description
             FROM customEvents
-            WHERE ownerUserId = :userId
-               OR id IN (
-                    SELECT eventId
-                    FROM customEventInvites
-                    WHERE inviteeUserId = :userId
-                      AND status = 'ACCEPTED'
-               )
-            ORDER BY eventDate, startTime
+            WHERE id = :id
+        """),
+        UPDATE("""
+            UPDATE customEvents
+            SET title = :title,
+                eventDate = :eventDate,
+                startTime = :startTime,
+                endTime = :endTime,
+                room = :room,
+                description = :description
+            WHERE id = :id
+        """),
+        DELETE_INVITES("""
+            DELETE FROM customEventInvites
+            WHERE eventId = :eventId
+        """),
+        DELETE_EVENT("""
+            DELETE FROM customEvents
+            WHERE id = :id
         """),
         FIND_INVITE("""
             SELECT id, eventId, inviteeUserId, status, activityId
@@ -128,7 +184,6 @@ public class CustomEventRepository implements CustomEventPersistancePort {
             SET status = :status
             WHERE eventId = :eventId
               AND inviteeUserId = :userId
-              AND status = 'PENDING'
         """);
 
         private final String sql;

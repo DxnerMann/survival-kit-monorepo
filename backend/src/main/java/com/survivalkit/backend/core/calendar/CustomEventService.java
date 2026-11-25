@@ -61,7 +61,7 @@ public class CustomEventService implements CustomEventPort {
 
     public List<CustomEvent> listFor(String userId) {
         return customEventPersistancePort.findVisible(userId).stream()
-                .map(event -> toView(event, userId))
+                .map(visible -> toView(visible.event(), userId, visible.inviteStatus()))
                 .toList();
     }
 
@@ -94,7 +94,41 @@ public class CustomEventService implements CustomEventPort {
             );
             publish(invitee.id(), activity.id());
         }
-        return toView(stored, user.userId());
+        return toView(stored, user.userId(), null);
+    }
+
+    @Override
+    @Transactional
+    public CustomEvent update(String eventId, CreateCustomEventCommand command) {
+        SecurityContext.requireVerification();
+        var existing = ownedEvent(eventId);
+        var title = requiredTitle(command.title());
+        var date = requiredDate(command.date());
+        var start = requiredClock(command.startTime());
+        var end = requiredClock(command.endTime());
+        if (minutes(end) <= minutes(start)) {
+            throw new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_TIME_INVALID.getCode());
+        }
+        var updated = new StoredCustomEvent(
+                existing.id(),
+                existing.ownerUserId(),
+                title,
+                date,
+                start,
+                end,
+                optionalText(command.room(), 80),
+                optionalText(command.description(), 1000)
+        );
+        customEventPersistancePort.update(updated);
+        return toView(updated, existing.ownerUserId(), null);
+    }
+
+    @Override
+    @Transactional
+    public void delete(String eventId) {
+        SecurityContext.requireVerification();
+        var existing = ownedEvent(eventId);
+        customEventPersistancePort.delete(existing.id());
     }
 
     @Override
@@ -107,15 +141,39 @@ public class CustomEventService implements CustomEventPort {
         }
         var invite = customEventPersistancePort.findInvite(eventId.strip(), user.userId())
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_NOT_FOUND.getCode()));
-        if (!"PENDING".equals(invite.status())) {
-            throw new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_ALREADY_ANSWERED.getCode());
+        var nextStatus = accept ? "ACCEPTED" : "DECLINED";
+        if (nextStatus.equals(invite.status())) {
+            return;
         }
-        var updated = customEventPersistancePort.markInvite(invite.eventId(), user.userId(), accept ? "ACCEPTED" : "DECLINED");
+        var updated = customEventPersistancePort.markInvite(invite.eventId(), user.userId(), nextStatus);
         if (updated == 0) {
-            throw new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_ALREADY_ANSWERED.getCode());
+            throw new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_NOT_FOUND.getCode());
         }
         activityPort.markEventInvite(invite.activityId(), user.userId(), accept);
         publish(user.userId(), invite.activityId());
+        var event = customEventPersistancePort.findById(invite.eventId())
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_NOT_FOUND.getCode()));
+        var hostNotice = activityPort.recordEventGuestResponse(
+                event.ownerUserId(),
+                event.title(),
+                user.username(),
+                event.id(),
+                accept
+        );
+        publish(event.ownerUserId(), hostNotice.id());
+    }
+
+    private StoredCustomEvent ownedEvent(String eventId) {
+        var user = SecurityContext.current();
+        if (eventId == null || eventId.isBlank()) {
+            throw new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_NOT_FOUND.getCode());
+        }
+        var event = customEventPersistancePort.findById(eventId.strip())
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_NOT_FOUND.getCode()));
+        if (!event.ownerUserId().equals(user.userId())) {
+            throw new IllegalArgumentException(ErrorCode.CUSTOM_EVENT_NOT_FOUND.getCode());
+        }
+        return event;
     }
 
     private List<UserModel> invitees(String course, String ownerUsername, List<String> requested) {
@@ -203,7 +261,9 @@ public class CustomEventService implements CustomEventPort {
         return Integer.parseInt(parts[0]) * 60 + Integer.parseInt(parts[1]);
     }
 
-    private static CustomEvent toView(StoredCustomEvent event, String userId) {
+    private static CustomEvent toView(StoredCustomEvent event, String userId, String inviteStatus) {
+        var owned = event.ownerUserId().equals(userId);
+        var participation = owned ? "OWNER" : inviteStatus == null || inviteStatus.isBlank() ? "ACCEPTED" : inviteStatus;
         return new CustomEvent(
                 event.id(),
                 event.title(),
@@ -212,7 +272,8 @@ public class CustomEventService implements CustomEventPort {
                 event.endTime(),
                 event.room(),
                 event.description(),
-                event.ownerUserId().equals(userId)
+                owned,
+                participation
         );
     }
 

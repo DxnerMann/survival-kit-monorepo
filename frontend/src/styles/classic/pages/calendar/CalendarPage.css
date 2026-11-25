@@ -290,6 +290,12 @@ html.calendar-app-active #root {
     flex: none;
 }
 
+.cal-app .fc-event-declined {
+    opacity: 0.5;
+    outline: 2px dotted currentColor;
+    outline-offset: -3px;
+}
+
 .cal-app .fc-event-main {
     padding: 0;
     height: 100%;

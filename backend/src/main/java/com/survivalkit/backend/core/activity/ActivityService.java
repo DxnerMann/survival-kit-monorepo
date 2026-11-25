@@ -22,6 +22,8 @@ public class ActivityService implements ActivityPort {
     static final String EVENT_INVITED = "EVENT_INVITED";
     static final String EVENT_INVITE_ACCEPTED = "EVENT_INVITE_ACCEPTED";
     static final String EVENT_INVITE_DECLINED = "EVENT_INVITE_DECLINED";
+    static final String EVENT_RESPONSE_ACCEPTED = "EVENT_RESPONSE_ACCEPTED";
+    static final String EVENT_RESPONSE_DECLINED = "EVENT_RESPONSE_DECLINED";
 
     private final UserActivityPersistancePort userActivityPersistancePort;
 
@@ -67,6 +69,17 @@ public class ActivityService implements ActivityPort {
     @Override
     public UserActivity recordEventInvited(String userId, String title, String actorUsername, String eventId) {
         return record(userId, EVENT_INVITED, title, actorUsername, eventId);
+    }
+
+    @Override
+    public UserActivity recordEventGuestResponse(String userId, String title, String actorUsername, String eventId, boolean accepted) {
+        return record(
+                userId,
+                accepted ? EVENT_RESPONSE_ACCEPTED : EVENT_RESPONSE_DECLINED,
+                title,
+                actorUsername,
+                eventId
+        );
     }
 
     @Override

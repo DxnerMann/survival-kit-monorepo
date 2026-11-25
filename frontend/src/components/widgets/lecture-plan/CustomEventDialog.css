@@ -1,0 +1,107 @@
+.custom-event-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 4000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px;
+    background: color-mix(in srgb, var(--color-background-primary) 28%, transparent);
+}
+
+.custom-event-dialog__card {
+    width: min(100%, 440px);
+    max-height: min(88vh, 720px);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    background: var(--color-background-primary);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+}
+
+.custom-event-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.custom-event-dialog__header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.custom-event-dialog__header button {
+    border: 0;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.custom-event-dialog__form,
+.custom-event-dialog__details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+}
+
+.custom-event-dialog__form label,
+.custom-event-dialog__times {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.custom-event-dialog__times {
+    flex-direction: row;
+}
+
+.custom-event-dialog__times label {
+    flex: 1;
+}
+
+.custom-event-dialog__form span,
+.custom-event-dialog__details dt {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.custom-event-dialog__form input,
+.custom-event-dialog__form textarea {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    padding: 10px 12px;
+    font: inherit;
+}
+
+.custom-event-dialog__form textarea {
+    min-height: 72px;
+    resize: vertical;
+}
+
+.custom-event-dialog__details dd,
+.custom-event-dialog__details p {
+    margin: 0;
+}
+
+.custom-event-dialog__error {
+    margin: 0;
+    color: var(--color-error);
+    font-size: 0.85rem;
+}
+
+.custom-event-dialog__actions {
+    display: flex;
+    gap: 8px;
+}

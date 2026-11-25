@@ -63,7 +63,9 @@ type ActivityKind =
     | "RANK_UP"
     | "EVENT_INVITED"
     | "EVENT_INVITE_ACCEPTED"
-    | "EVENT_INVITE_DECLINED";
+    | "EVENT_INVITE_DECLINED"
+    | "EVENT_RESPONSE_ACCEPTED"
+    | "EVENT_RESPONSE_DECLINED";
 
 const STORED_KINDS = new Set<ActivityKind>([
     "FEEDBACK_DELETED",
@@ -76,6 +78,8 @@ const STORED_KINDS = new Set<ActivityKind>([
     "EVENT_INVITED",
     "EVENT_INVITE_ACCEPTED",
     "EVENT_INVITE_DECLINED",
+    "EVENT_RESPONSE_ACCEPTED",
+    "EVENT_RESPONSE_DECLINED",
 ]);
 
 const isActivityKind = (kind: string): kind is ActivityKind => STORED_KINDS.has(kind as ActivityKind);
@@ -139,6 +143,14 @@ const noticeText = (item: ActivityNotice) => {
     if (item.kind === "EVENT_INVITE_DECLINED") {
         return `Du hast die Einladung zum Event ${eventTitle(item.title)} abgelehnt.`;
     }
+    if (item.kind === "EVENT_RESPONSE_ACCEPTED") {
+        const user = item.actorUsername?.trim() || "Jemand";
+        return `${user} hat die Einladung zum Event ${eventTitle(item.title)} angenommen.`;
+    }
+    if (item.kind === "EVENT_RESPONSE_DECLINED") {
+        const user = item.actorUsername?.trim() || "Jemand";
+        return `${user} hat die Einladung zum Event ${eventTitle(item.title)} abgelehnt.`;
+    }
     return `Dein Feedback-Beitrag${quoted(item.title)} wurde von einem Admin beantwortet.`;
 };
 
@@ -164,14 +176,15 @@ const noticeIcon = (kind: ActivityKind): ReactNode => {
     if (kind === "RANK_UP") {
         return <Medal size={18} />;
     }
-    if (kind === "EVENT_INVITED" || kind === "EVENT_INVITE_ACCEPTED" || kind === "EVENT_INVITE_DECLINED") {
+    if (kind === "EVENT_INVITED" || kind === "EVENT_INVITE_ACCEPTED" || kind === "EVENT_INVITE_DECLINED" || kind === "EVENT_RESPONSE_ACCEPTED" || kind === "EVENT_RESPONSE_DECLINED") {
         return <CalendarPlus size={18} />;
     }
     return <MessageSquare size={18} />;
 };
 
 const isEventNotice = (kind: ActivityKind) =>
-    kind === "EVENT_INVITED" || kind === "EVENT_INVITE_ACCEPTED" || kind === "EVENT_INVITE_DECLINED";
+    kind === "EVENT_INVITED" || kind === "EVENT_INVITE_ACCEPTED" || kind === "EVENT_INVITE_DECLINED"
+    || kind === "EVENT_RESPONSE_ACCEPTED" || kind === "EVENT_RESPONSE_DECLINED";
 
 const isVisible = (item: ActivityNotice, seen: SeenMap, now: number) => {
     if (item.kind === "EVENT_INVITED") {

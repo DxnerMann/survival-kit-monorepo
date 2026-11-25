@@ -14,6 +14,7 @@ import LectureCalendar from "@/components/lecture/LectureCalendar.tsx";
 import CreateEventForm from "@/components/widgets/lecture-plan/CreateEventForm.tsx";
 import {CUSTOM_EVENTS_CHANGED, DEFAULT_CUSTOM_EVENT_COLOR, type CustomEvent} from "@/models/CustomEvent.tsx";
 import {listCustomEvents} from "@/services/customEventService.tsx";
+import CustomEventDialog from "@/components/widgets/lecture-plan/CustomEventDialog.tsx";
 import ColorPicker from "@/components/ui/ColorPicker.tsx";
 import SelectionDropdown from "@/components/ui/SelectionDropdown.tsx";
 import WidgetStatus from "@/components/ui/WidgetStatus.tsx";
@@ -63,6 +64,7 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
     const [inSettings, setInSettings] = useState(false);
     const [inCreate, setInCreate] = useState(false);
     const [customEvents, setCustomEvents] = useState<CustomEvent[]>([]);
+    const [activeEvent, setActiveEvent] = useState<CustomEvent | null>(null);
     const [weekOffset, setWeekOffset] = useState(0);
     const [lectures, setLectures] = useState<Lecture[]>([]);
     const [raplaNotice, setRaplaNotice] = useState<string | null>(null);
@@ -369,7 +371,11 @@ const LecturePlan = ({title, data, id, isPreview} : WidgetProps) => {
                                                 colorOther={decodedData.otherColor}
                                                 colorCustom={decodedData.customColor}
                                                 customEvents={customEvents}
+                                                onCustomEventClick={setActiveEvent}
                                             />
+                                            {activeEvent && (
+                                                <CustomEventDialog event={activeEvent} onClose={() => setActiveEvent(null)} />
+                                            )}
                                             <div className="lecture-plan-footer">
                                                 <Button text="Vorherige Woche" onClick={() => setWeekOffset(weekOffset - 1)} variant="transparent" fullWidth={true} />
                                                 <Button text="Nächste Woche" onClick={() => setWeekOffset(weekOffset + 1)} variant="transparent" fullWidth={true} />

@@ -113,6 +113,12 @@
         filter var(--dur-2) ease;
 }
 
+.lecture-calendar .fc-event-declined {
+    opacity: 0.5;
+    outline: 2px dotted currentColor;
+    outline-offset: -3px;
+}
+
 .lecture-calendar .fc-timegrid-event:hover {
     filter: brightness(1.06);
     box-shadow:

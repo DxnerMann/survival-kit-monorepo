@@ -10,9 +10,15 @@ public interface CustomEventPersistancePort {
 
     void saveInvite(CustomEventInvite invite, Instant createdAt);
 
-    List<StoredCustomEvent> findVisible(String userId);
+    List<VisibleCustomEvent> findVisible(String userId);
+
+    Optional<StoredCustomEvent> findById(String id);
 
     Optional<CustomEventInvite> findInvite(String eventId, String userId);
+
+    void update(StoredCustomEvent event);
+
+    void delete(String eventId);
 
     int markInvite(String eventId, String userId, String status);
 }

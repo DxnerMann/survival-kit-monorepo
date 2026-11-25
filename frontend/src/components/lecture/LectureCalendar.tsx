@@ -20,6 +20,7 @@ interface LectureCalendarProps {
     colorOther?: string;
     customEvents?: CustomEvent[];
     colorCustom?: string;
+    onCustomEventClick?: (event: CustomEvent) => void;
 }
 
 interface TooltipState {
@@ -60,6 +61,7 @@ const LectureCalendar = ({
                              colorOther   = "#c8c8b9",
                              customEvents = [],
                              colorCustom = DEFAULT_CUSTOM_EVENT_COLOR,
+                             onCustomEventClick,
                          }: LectureCalendarProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [tooltip, setTooltip]       = useState<TooltipState | null>(null);
@@ -69,20 +71,29 @@ const LectureCalendar = ({
         return customEventsInRange(customEvents, range.start, range.end);
     }, [customEvents, weekOffset]);
     const timeRange = useMemo(() => {
-        let min = 8 * 60;
-        let max = 19 * 60;
-        for (const event of visibleCustom) {
-            min = Math.min(min, Math.floor(minutesOf(event.startTime) / 60) * 60);
-            max = Math.max(max, Math.ceil(minutesOf(event.endTime) / 60) * 60);
+        const open = 8 * 60;
+        const close = 18 * 60;
+        let min = open;
+        let max = close;
+        const spans = [
+            ...lectures.map((lecture) => ({start: lecture.startTime, end: lecture.endTime})),
+            ...visibleCustom.map((event) => ({start: event.startTime, end: event.endTime})),
+        ];
+        for (const span of spans) {
+            const start = minutesOf(span.start);
+            const end = minutesOf(span.end);
+            min = Math.min(min, Math.floor(start / 60) * 60);
+            if (end > close) {
+                const hour = Math.ceil(end / 60) * 60;
+                max = Math.max(max, hour === end ? Math.min(24 * 60, end + 60) : hour);
+            }
         }
         if (max <= min) {
             max = Math.min(24 * 60, min + 60);
         }
         return {min: clock(min), max: clock(max)};
-    }, [visibleCustom]);
-    const slotCount = timeRange.min === "08:00:00" && timeRange.max === "19:00:00"
-        ? 23
-        : Math.max(1, (minutesOf(timeRange.max) - minutesOf(timeRange.min)) / 30);
+    }, [lectures, visibleCustom]);
+    const slotCount = Math.max(1, (minutesOf(timeRange.max) - minutesOf(timeRange.min)) / 30) + 1;
 
     useEffect(() => {
         const updateHeight = () => {
@@ -165,6 +176,13 @@ const LectureCalendar = ({
                 eventContent={(arg: EventContentArg) => <EventCard arg={arg} />}
                 eventMouseEnter={handleMouseEnter}
                 eventMouseLeave={() => setTooltip(null)}
+                eventClick={(info) => {
+                    const custom = info.event.extendedProps["customEvent"] as CustomEvent | undefined;
+                    if (custom) {
+                        info.jsEvent.preventDefault();
+                        onCustomEventClick?.(custom);
+                    }
+                }}
             />
 
             {tooltip && createPortal(

@@ -1,12 +1,16 @@
 import "@/components/widgets/lecture-timer/LectureTimer.css";
 import {dashboardService} from "@/services/dashboardService.tsx";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
-import {type RefObject, useEffect, useRef, useState} from "react";
+import {type RefObject, useEffect, useMemo, useRef, useState} from "react";
 import {Fullscreen, Settings} from "lucide-react";
 import {createPortal} from "react-dom";
 import {getUserRole} from "@/services/tokenService.tsx";
 import {lectureService, useTimerCourse} from "@/services/lectureService.tsx";
-import type {Lecture} from "@/models/Lecture.tsx";
+import {preferCustomEvents} from "@/services/lectureTimerSelection.ts";
+import {customEventToLecture, listCustomEvents} from "@/services/customEventService.tsx";
+import {CUSTOM_EVENTS_CHANGED} from "@/models/CustomEvent.tsx";
+import type {CustomEvent} from "@/models/CustomEvent.tsx";
+import type {DayOfWeek, Lecture} from "@/models/Lecture.tsx";
 import ProgressBar from 'react-customizable-progressbar';
 import ColorPicker from "@/components/ui/ColorPicker.tsx";
 import Button from "@/components/ui/Button.tsx";
@@ -128,6 +132,7 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
     });
     const course = useTimerCourse();
     const { current, next, loading, error } = lectureService.useCurrentAndNextLecture(isPreview ? null : course);
+    const [ownEvents, setOwnEvents] = useState<CustomEvent[]>([]);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const useContainerSize = (ref: RefObject<HTMLElement | null>, dep?: unknown) => {
@@ -160,12 +165,55 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        if (isPreview) {
+            return;
+        }
+        let cancelled = false;
+        const load = () => {
+            listCustomEvents()
+                .then((events) => {
+                    if (!cancelled) {
+                        setOwnEvents(events);
+                    }
+                })
+                .catch(() => {
+                    if (!cancelled) {
+                        setOwnEvents([]);
+                    }
+                });
+        };
+        load();
+        window.addEventListener(CUSTOM_EVENTS_CHANGED, load);
+        return () => {
+            cancelled = true;
+            window.removeEventListener(CUSTOM_EVENTS_CHANGED, load);
+        };
+    }, [isPreview]);
+
     const parseMinutes = (time: string) => {
         const [h, m] = time.split(":").map(Number);
         return h * 60 + m;
     };
 
     const nowMinutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+    const shown = useMemo(() => {
+        const week: DayOfWeek[] = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+        const todayName = week[now.getDay()];
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+        return preferCustomEvents(
+            current,
+            next ?? [],
+            ownEvents.map((event) => ({
+                lecture: customEventToLecture(event),
+                date: event.date,
+                declined: event.participation === "DECLINED",
+            })),
+            today,
+            todayName,
+            nowMinutes,
+        );
+    }, [current, next, ownEvents, now, nowMinutes]);
 
     const lectureProgress = (lecture: Lecture) => {
         const startMinutes = parseMinutes(lecture.startTime);
@@ -209,13 +257,13 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
         setSelectedColor(hex)
     }
 
-    const groupedLectures = next?.reduce((acc, lecture) => {
+    const groupedLectures = shown.next.reduce((acc, lecture) => {
         if (!lectureService.isToday(lecture.day) && !lectureService.isTomorrow(lecture.day)) return acc;
         const key = lectureService.isToday(lecture.day) ? "Heute" : "Morgen";
         if (!acc[key]) acc[key] = [];
         acc[key].push(lecture);
         return acc;
-    }, {} as Record<string, typeof next>);
+    }, {} as Record<string, Lecture[]>);
 
 
     if (isPreview) {
@@ -282,15 +330,15 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
                                 ? <WidgetStatus status="loading" />
                                 : error
                                     ? <WidgetStatus status="error" message={error} />
-                                    : current.length > 0
-                                        ? <div className={`lecture-timer-current-lectures${current.length > 1 ? " multiple" : ""}`}>
-                                            {current.map(lecture => {
+                                    : shown.current.length > 0
+                                        ? <div className={`lecture-timer-current-lectures${shown.current.length > 1 ? " multiple" : ""}`}>
+                                            {shown.current.map(lecture => {
                                                 const {percentage, countdown} = lectureProgress(lecture);
                                                 const label = lectureLabel(lecture.title);
-                                                return <div key={`${lecture.title}-${lecture.startTime}`} className="lecture-timer-current-lecture">
+                                                return <div key={`${lecture.type}-${lecture.title}-${lecture.startTime}`} className="lecture-timer-current-lecture">
                                                     <div className="lecture-timer-lecture-title" title={lecture.title}>{label}</div>
-                                                    <div className="lecture-timer-lecture-info" title={lecture.lecturer}>{lecture.lecturer}</div>
-                                                    <div className="lecture-timer-lecture-info">{lecture.rooms.join(", ")}</div>
+                                                    {lecture.lecturer && <div className="lecture-timer-lecture-info" title={lecture.lecturer}>{lecture.lecturer}</div>}
+                                                    {lecture.rooms.length > 0 && <div className="lecture-timer-lecture-info">{lecture.rooms.join(", ")}</div>}
                                                     <LectureTimerRing
                                                         progress={percentage}
                                                         strokeColor={decodedData.strokeColor}
@@ -303,8 +351,8 @@ const LectureTimer = ({title, data, id, isPreview} : WidgetProps) => {
                                             })}
                                         </div>
                                         : <><span className="no-lecture-heading">Aktuell keine Vorlesung.</span>
-                                            {next && next.length === 0 && <span className="no-lecture-heading-2">Keine Weiteren Vorlesungen in dieser Woche</span>}
-                                            {next && next.length !== 0 && <div className="lecture-timer-no-lecture">
+                                            {shown.next.length === 0 && <span className="no-lecture-heading-2">Keine Weiteren Vorlesungen in dieser Woche</span>}
+                                            {shown.next.length !== 0 && <div className="lecture-timer-no-lecture">
                                                 {Object.entries(groupedLectures ?? {}).map(([label, lectures]) => (
                                                     <div key={label} className="lecture-timer-day-group">
                                                         <span className="day-label">{label}</span>

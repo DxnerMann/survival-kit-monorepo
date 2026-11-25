@@ -12,6 +12,7 @@ import { lectureConversionUtil } from "@/services/lectureConversionUtil.tsx";
 import { customEventToLecture, customEventsToCalendar, getCalendarShareLink, getSharedCalendar, listCustomEvents, type CalendarShareLink } from "@/services/customEventService.tsx";
 import { snackbarService } from "@/services/snackBarService.tsx";
 import { CUSTOM_EVENTS_CHANGED, DEFAULT_CUSTOM_EVENT_COLOR, type CustomEvent } from "@/models/CustomEvent.tsx";
+import CustomEventDialog from "@/components/widgets/lecture-plan/CustomEventDialog.tsx";
 import { getUserRole } from "@/services/tokenService.tsx";
 import { normalizeRaplaUrl, splitCalendarAccess, withCalendarAccessCode } from "@/utils/raplaUrl.ts";
 import { readStoredPlan, rememberCourse, rememberWeek, sameLectures, type StoredPlan } from "@/pages/calendar/planCache.ts";
@@ -373,6 +374,7 @@ const CalendarPage = () => {
     const [loading, setLoading] = useState(() => Boolean(source) && mapStoredWeeks(readStoredPlan(source))["0"] === undefined);
     const [failed, setFailed] = useState(false);
     const [selected, setSelected] = useState<Lecture | null>(null);
+    const [activeEvent, setActiveEvent] = useState<CustomEvent | null>(null);
     const [customEvents, setCustomEvents] = useState<CustomEvent[]>([]);
     const [customColor] = useState(() => localStorage.getItem("lecture-plan-custom-color") || DEFAULT_CUSTOM_EVENT_COLOR);
     const [shareLink, setShareLink] = useState<CalendarShareLink | null>(null);
@@ -998,6 +1000,11 @@ const CalendarPage = () => {
             suppressClickRef.current = false;
             return;
         }
+        const custom = info.event.extendedProps["customEvent"] as CustomEvent | undefined;
+        if (custom && !accessCode) {
+            setActiveEvent(custom);
+            return;
+        }
         setSelected(info.event.extendedProps["lecture"] as Lecture);
     };
 
@@ -1159,6 +1166,10 @@ const CalendarPage = () => {
                         )}
                     </section>
                 </div>
+            )}
+
+            {activeEvent && !accessCode && (
+                <CustomEventDialog event={activeEvent} onClose={() => setActiveEvent(null)} />
             )}
 
             {selected && (

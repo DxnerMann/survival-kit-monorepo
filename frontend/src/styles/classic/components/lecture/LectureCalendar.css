@@ -95,6 +95,12 @@
     margin: 0 !important;
 }
 
+.lecture-calendar .fc-event-declined {
+    opacity: 0.5;
+    outline: 2px dotted currentColor;
+    outline-offset: -3px;
+}
+
 .lecture-calendar .fc-timegrid-event {
     border: none !important;
     border-radius: 6px !important;

@@ -21,6 +21,8 @@ public interface ActivityPort {
 
     UserActivity recordEventInvited(String userId, String title, String actorUsername, String eventId);
 
+    UserActivity recordEventGuestResponse(String userId, String title, String actorUsername, String eventId, boolean accepted);
+
     void markEventInvite(String activityId, String userId, boolean accepted);
 
     List<UserActivity> listMine();

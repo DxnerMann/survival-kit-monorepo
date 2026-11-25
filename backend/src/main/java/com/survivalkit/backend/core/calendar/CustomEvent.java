@@ -8,6 +8,7 @@ public record CustomEvent(
         String endTime,
         String room,
         String description,
-        boolean owned
+        boolean owned,
+        String participation
 ) {
 }

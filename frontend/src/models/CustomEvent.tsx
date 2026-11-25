@@ -7,6 +7,7 @@ export interface CustomEvent {
     room: string | null;
     description: string | null;
     owned: boolean;
+    participation: "OWNER" | "ACCEPTED" | "DECLINED";
 }
 
 export const DEFAULT_CUSTOM_EVENT_COLOR = "#2563eb";
