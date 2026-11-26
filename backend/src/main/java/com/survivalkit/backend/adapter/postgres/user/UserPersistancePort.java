@@ -4,6 +4,7 @@ import com.survivalkit.backend.adapter.web.profile.UserProfile;
 import com.survivalkit.backend.shared.Page;
 import com.survivalkit.backend.shared.RoleLevel;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,8 @@ public interface UserPersistancePort {
     boolean isLastAdmin(String userId);
     void changeEmail(String userId, String newEmail, String newToken);
     void updateVerificationToken(String userId, String verificationToken);
+    Optional<PasswordReset> findPasswordReset(String userId);
+    void savePasswordReset(String userId, String codeHash, Instant expiresAt);
     Page<UserProfile> getUsers(int pageSize, String continuation);
     void setRole(String userId, RoleLevel role);
     Optional<String> findCalendarAccessCode(String userId);

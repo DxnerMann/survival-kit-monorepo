@@ -5,5 +5,6 @@ public record PresentationGameRoomListItem(
         String name,
         String hostUsername,
         PresentationGameRoom.Difficulty difficulty,
+        PresentationGameRoom.Status status,
         int jurySize
 ) {}

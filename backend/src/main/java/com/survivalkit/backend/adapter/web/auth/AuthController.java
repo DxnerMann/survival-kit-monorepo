@@ -123,4 +123,18 @@ public class AuthController {
         authPort.sendVerifcationEmailAgain();
         return ResponseEntity.ok().build();
     }
+
+    @Role(RoleLevel.GUEST)
+    @PostMapping("password/forgot")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        authPort.requestPasswordReset(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Role(RoleLevel.GUEST)
+    @PostMapping("password/reset")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authPort.resetPassword(request.email(), request.code(), request.newPassword());
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -23,18 +23,24 @@ import com.survivalkit.backend.core.security.TokenService;
 import com.survivalkit.backend.core.statistics.StatisticsPort;
 import com.survivalkit.backend.shared.RoleLevel;
 import io.viascom.nanoid.NanoId;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
 public class AuthService implements AuthPort {
+
+    private static final String RESET_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final Duration RESET_TTL = Duration.ofMinutes(30);
 
     private final UserPersistancePort userPersistancePort;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -49,8 +55,10 @@ public class AuthService implements AuthPort {
     private final FavouritePersistancePort favouritePersistancePort;
     private final SecurityLog securityLog;
     private final XpPort xpPort;
+    private final String frontendBaseUrl;
+    private final SecureRandom random = new SecureRandom();
 
-    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort, FavouritePersistancePort favouritePersistancePort, SecurityLog securityLog, XpPort xpPort) {
+    public AuthService(UserPersistancePort userPersistancePort, BCryptPasswordEncoder passwordEncoder, TokenService tokenService, EmailPort emailPort, StatisticsPort statisticsPort, UserPort userPort, UserWidgetPersistancePort userWidgetPersistancePort, UserTrackingPersistancePort userTrackingPersistancePort, QuickLinkPersistancePort quickLinkPersistancePort, FeedbackPersistancePort feedbackPersistancePort, FavouritePersistancePort favouritePersistancePort, SecurityLog securityLog, XpPort xpPort, @Value("${app.frontend-base-url}") String frontendBaseUrl) {
         this.userPersistancePort = userPersistancePort;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
@@ -64,6 +72,9 @@ public class AuthService implements AuthPort {
         this.favouritePersistancePort = favouritePersistancePort;
         this.securityLog = securityLog;
         this.xpPort = xpPort;
+        this.frontendBaseUrl = frontendBaseUrl.endsWith("/")
+                ? frontendBaseUrl.substring(0, frontendBaseUrl.length() - 1)
+                : frontendBaseUrl;
     }
 
     @Override
@@ -163,7 +174,7 @@ public class AuthService implements AuthPort {
             return new ModelAndView("verification-failed");
         }
 
-        var loginUrl = "https://lecture-survival-kit.jannis-saur.de/login";
+        var loginUrl = frontendBaseUrl + "/login";
 
         if (user.get().isVerified()) {
             var mav = new ModelAndView("already-verified");
@@ -313,6 +324,79 @@ public class AuthService implements AuthPort {
             userPersistancePort.updateVerificationToken(userModel.id(), verificationToken);
             emailPort.sendVerificationEmail(userModel.email(), userModel.firstname(), verificationToken);
         });
+    }
+
+    @Override
+    public void requestPasswordReset(String email) {
+        if (!isEmailValid(email)) {
+            throw new InvalidCredentialsException(ErrorCode.EMAIL_NOT_VALID.getCode());
+        }
+        var user = resolveEmail(email).orElse(null);
+        if (user == null || !Boolean.TRUE.equals(user.isVerified())) {
+            return;
+        }
+        var existing = userPersistancePort.findPasswordReset(user.id()).orElse(null);
+        if (existing != null && existing.expiresAt().isAfter(Instant.now().plus(RESET_TTL).minusSeconds(60))) {
+            return;
+        }
+        var code = newResetCode();
+        userPersistancePort.savePasswordReset(user.id(), passwordEncoder.encode(code), Instant.now().plus(RESET_TTL));
+        try {
+            emailPort.sendPasswordResetEmail(
+                    user.email(),
+                    user.firstname() == null ? "" : user.firstname(),
+                    code.substring(0, 4) + "-" + code.substring(4),
+                    frontendBaseUrl + "/login?reset=1"
+            );
+        } catch (RuntimeException ex) {
+            userPersistancePort.savePasswordReset(user.id(), null, null);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void resetPassword(String email, String code, String newPassword) {
+        if (isPasswordInvalid(newPassword)) {
+            throw new InvalidCredentialsException(ErrorCode.PASSWORD_NOT_VALID.getCode());
+        }
+        var normalized = normalizeResetCode(code);
+        var user = resolveEmail(email).orElse(null);
+        var reset = user == null ? null : userPersistancePort.findPasswordReset(user.id()).orElse(null);
+        if (normalized.length() != 8
+                || user == null
+                || reset == null
+                || reset.expiresAt().isBefore(Instant.now())
+                || isPasswordIncorrect(normalized, reset.codeHash())) {
+            throw new InvalidCredentialsException(ErrorCode.PASSWORD_RESET_INVALID.getCode());
+        }
+        userPersistancePort.updatePassword(user.id(), hashPassword(newPassword));
+        securityLog.logInfo(ErrorCode.ErrorCategory.AUTHENTICATION, "Password reset for " + user.username());
+    }
+
+    private Optional<UserModel> resolveEmail(String email) {
+        var matches = userPersistancePort.findByEmail(email);
+        var exact = matches.stream()
+                .filter(user -> email != null && email.equalsIgnoreCase(user.email()))
+                .findFirst();
+        if (exact.isPresent()) {
+            return exact;
+        }
+        return matches.size() == 1 ? Optional.of(matches.getFirst()) : Optional.empty();
+    }
+
+    private String newResetCode() {
+        var chars = new char[8];
+        for (var index = 0; index < chars.length; index++) {
+            chars[index] = RESET_ALPHABET.charAt(random.nextInt(RESET_ALPHABET.length()));
+        }
+        return new String(chars);
+    }
+
+    private static String normalizeResetCode(String code) {
+        if (code == null) {
+            return "";
+        }
+        return code.replaceAll("[\\s-]", "").toUpperCase(Locale.ROOT);
     }
 
     private Optional<UserModel> findLoginUser(String email, String password) {

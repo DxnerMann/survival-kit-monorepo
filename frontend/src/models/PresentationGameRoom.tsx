@@ -6,6 +6,7 @@ export type PresentationGameRoom = {
     name: string;
     hostUsername: string;
     difficulty: PresentationGameDifficulty;
+    status: PresentationGameStatus;
     jurySize: number;
 };
 
@@ -50,7 +51,7 @@ export type PresentationGameState = {
 };
 
 export type PresentationGameAction = {
-    event: "SKIP" | "APPROVE" | "APPROVE_VOTE" | "STARTED" | "FINISHED" | "MEMBER_LEFT" | "ROOM_CLOSED";
+    event: "SKIP" | "APPROVE" | "APPROVE_VOTE" | "STARTED" | "FINISHED" | "MEMBER_JOINED" | "MEMBER_LEFT" | "ROOM_CLOSED";
     pointsDelta: number;
     userId: string | null;
     username: string | null;

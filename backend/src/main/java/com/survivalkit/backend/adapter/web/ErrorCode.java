@@ -28,6 +28,7 @@ public enum ErrorCode {
     RATE_LIMIT_EXCEEDED("01x0000000C", "Too many requests", HttpStatus.TOO_MANY_REQUESTS, ErrorCategory.AUTHENTICATION),
     LAST_NAME_REQUIRED("01x0000000D", "Last name is required", HttpStatus.BAD_REQUEST, ErrorCategory.AUTHENTICATION),
     EMAIL_PROVIDER_NOT_TRUSTED("01x0000000E", "Email provider is not a trusted mailbox", HttpStatus.BAD_REQUEST, ErrorCategory.AUTHENTICATION),
+    PASSWORD_RESET_INVALID("01x0000000F", "Password reset code is invalid or expired", HttpStatus.BAD_REQUEST, ErrorCategory.AUTHENTICATION),
 
     // EMAIL (02x)
     FAILED_TO_SEND_EMAIL("02x00000000", "Failed to send email", HttpStatus.INTERNAL_SERVER_ERROR, ErrorCategory.EMAIL),
@@ -86,7 +87,7 @@ public enum ErrorCode {
     PRESENTATION_ROOM_CODE_INVALID("09x00000002", "Invalid room code", HttpStatus.NOT_FOUND, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_COURSE_REQUIRED("09x00000003", "Set your course before creating a public room", HttpStatus.BAD_REQUEST, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_ROOM_ACCESS_DENIED("09x00000004", "You cannot join this room", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
-    PRESENTATION_ROOM_ALREADY_STARTED("09x00000005", "This room has already started", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
+    PRESENTATION_ROOM_ALREADY_STARTED("09x00000005", "This game has already finished", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_ROOM_NOT_HOST("09x00000006", "Only the host can perform this action", HttpStatus.FORBIDDEN, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_ROOM_NOT_IN_LOBBY("09x00000007", "The room is not in lobby state", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),
     PRESENTATION_ROOM_NOT_IN_PROGRESS("09x00000008", "The game is not running", HttpStatus.CONFLICT, ErrorCategory.PRESENTATION_GAME),

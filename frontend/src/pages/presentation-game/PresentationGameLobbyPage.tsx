@@ -277,6 +277,10 @@ const PresentationGameLobbyPage = () => {
                                     <dt>Jury</dt>
                                     <dd>{room.jurySize}</dd>
                                 </div>
+                                <div>
+                                    <dt>Status</dt>
+                                    <dd>{room.status === "IN_PROGRESS" ? "Läuft" : "Wartet"}</dd>
+                                </div>
                             </dl>
                             <Button
                                 text="Beitreten"

@@ -101,6 +101,29 @@ public class DrawBoardService {
         return written.isPresent();
     }
 
+    public Optional<DrawBoardResponse.Stroke> undoLast(String partnerUsername) {
+        var resolved = resolveMutual(partnerUsername);
+        if (resolved.response() != null) {
+            return Optional.empty();
+        }
+        var removed = repository.removeLastByAuthor(resolved.low(), resolved.high(), today(), resolved.self().userId());
+        removed.ifPresent(value -> broadcast(value.boardId(), removePayload(value.stroke().id())));
+        return removed.flatMap(value -> publish(value.stroke()));
+    }
+
+    public boolean removeStroke(String partnerUsername, String strokeId) {
+        if (strokeId == null || !STROKE_ID.matcher(strokeId).matches()) {
+            return false;
+        }
+        var resolved = resolveMutual(partnerUsername);
+        if (resolved.response() != null) {
+            return false;
+        }
+        var removed = repository.remove(resolved.low(), resolved.high(), today(), strokeId, resolved.self().userId());
+        removed.ifPresent(value -> broadcast(value.boardId(), removePayload(value.stroke().id())));
+        return removed.isPresent();
+    }
+
     public Optional<String> handleStrokeMessage(String userId, String channel, JsonNode payload) {
         var parsed = WebSocketChannels.parse(channel);
         if (parsed.isEmpty() || parsed.get().kind() != WebSocketChannels.ChannelKind.DRAW) {
@@ -336,6 +359,13 @@ public class DrawBoardService {
         var payload = objectMapper.createObjectNode();
         payload.put("action", "stroke");
         publish(stroke).ifPresent(published -> payload.set("stroke", objectMapper.valueToTree(published)));
+        return payload;
+    }
+
+    private JsonNode removePayload(String strokeId) {
+        var payload = objectMapper.createObjectNode();
+        payload.put("action", "remove");
+        payload.put("id", strokeId == null ? "" : strokeId);
         return payload;
     }
 

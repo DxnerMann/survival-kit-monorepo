@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {authService, validatePassword} from "@/services/authService"
 import {touchGuest} from "@/services/guestService.tsx"
 
@@ -8,12 +8,13 @@ import ThemeToggle from "@/components/layout/ThemeToggle"
 import "@/pages/login/LoginPage.css"
 import {snackbarService} from "@/services/snackBarService.tsx";
 
-type Mode = 'login' | 'register' | 'verify';
+type Mode = 'login' | 'register' | 'verify' | 'forgot' | 'reset';
 
 const LoginPage = () => {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
 
-    const [mode, setMode] = useState<Mode>('login')
+    const [mode, setMode] = useState<Mode>(searchParams.get('reset') === '1' ? 'reset' : 'login')
     const [loading, setLoading] = useState(false)
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
@@ -21,6 +22,7 @@ const LoginPage = () => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [repeatPassword, setRepeatPassword] = useState('')
+    const [resetCode, setResetCode] = useState('')
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const handleLogin = async () => {
@@ -90,6 +92,59 @@ const LoginPage = () => {
         }
     }
 
+    const handleForgot = async () => {
+        try {
+            setLoading(true)
+            if (!email.match(EMAIL_REGEX)) {
+                snackbarService.showSnackbar({type: "error", text: "Die eingegebene E-Mail-Adresse ist ungültig", showIcon: true});
+                return
+            }
+            await authService.requestPasswordReset(email.trim())
+            snackbarService.showSnackbar({
+                type: "success",
+                text: "Wenn ein Konto dazu existiert, ist das Einmalpasswort unterwegs.",
+                showIcon: true,
+            })
+            setMode('reset')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleReset = async () => {
+        try {
+            setLoading(true)
+            if (!email.match(EMAIL_REGEX)) {
+                snackbarService.showSnackbar({type: "error", text: "Die eingegebene E-Mail-Adresse ist ungültig", showIcon: true});
+                return
+            }
+            if (resetCode.trim().length === 0) {
+                snackbarService.showSnackbar({type: "error", text: "Bitte gib das Einmalpasswort ein", showIcon: true});
+                return
+            }
+            if (!validatePassword(password)) {
+                snackbarService.showSnackbar({type: "error", text: "Dein Passwort erfüllt die Anforderungen nicht", showIcon: true});
+                return
+            }
+            if (password !== repeatPassword) {
+                snackbarService.showSnackbar({type: "error", text: "Passwörter stimmen nicht überein", showIcon: true});
+                return
+            }
+            await authService.resetPassword(email.trim(), resetCode.trim(), password)
+            setPassword('')
+            setRepeatPassword('')
+            setResetCode('')
+            setMode('login')
+            snackbarService.showSnackbar({
+                type: "success",
+                text: "Passwort geändert. Du kannst dich jetzt anmelden.",
+                showIcon: true,
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const continueAsGuest = async () => {
         localStorage.setItem('guest', 'true');
         authService.removeToken();
@@ -117,7 +172,7 @@ const LoginPage = () => {
             <div className="login-card">
 
                 <h1>
-                    {mode === 'login' ? 'Login' : mode === 'register' ? 'Registrieren' : 'E-Mail bestätigen'}
+                    {mode === 'login' ? 'Login' : mode === 'register' ? 'Registrieren' : mode === 'verify' ? 'E-Mail bestätigen' : mode === 'forgot' ? 'Passwort vergessen' : 'Neues Passwort'}
                 </h1>
                 {mode === 'login' ? (
                     <>
@@ -133,6 +188,12 @@ const LoginPage = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+
+                        <p className="switch-text">
+                            <span onClick={() => setMode('forgot')}>
+                                Passwort vergessen?
+                            </span>
+                        </p>
 
                         <button
                             onClick={handleLogin}
@@ -208,6 +269,57 @@ const LoginPage = () => {
                             <span onClick={() => setMode('login')}>
                                 Login
                             </span>
+                        </p>
+                    </>
+                ) : mode === 'forgot' ? (
+                    <>
+                        <p className="centered-text">Wir schicken dir ein Einmalpasswort, falls ein Konto zu dieser Adresse existiert.</p>
+                        <input
+                            placeholder="E-Mail"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <button onClick={handleForgot} disabled={loading}>
+                            Einmalpasswort senden
+                        </button>
+                        <p className="switch-text">
+                            <span onClick={() => setMode('login')}>Zurück zum Login</span>
+                        </p>
+                    </>
+                ) : mode === 'reset' ? (
+                    <>
+                        <p className="centered-text">Trage das Einmalpasswort aus der E-Mail und dein neues Passwort ein.</p>
+                        <input
+                            placeholder="E-Mail"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <input
+                            placeholder="Einmalpasswort"
+                            value={resetCode}
+                            autoComplete="one-time-code"
+                            spellCheck={false}
+                            onChange={(e) => setResetCode(e.target.value)}
+                        />
+                        <input
+                            type="password"
+                            placeholder="Neues Passwort"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <input
+                            type="password"
+                            placeholder="Passwort wiederholen"
+                            value={repeatPassword}
+                            onChange={(e) => setRepeatPassword(e.target.value)}
+                        />
+                        <p className="centered-text">Mindestens 8 Zeichen, Groß- und Kleinbuchstaben, eine Zahl und ein Sonderzeichen.</p>
+                        <button onClick={handleReset} disabled={loading}>
+                            Passwort speichern
+                        </button>
+                        <p className="switch-text">
+                            <span onClick={() => setMode('forgot')}>Neues Einmalpasswort anfordern</span>
+                            <span onClick={() => setMode('login')}>Login</span>
                         </p>
                     </>
                 ) : (

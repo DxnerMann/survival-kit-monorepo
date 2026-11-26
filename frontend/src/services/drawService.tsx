@@ -111,6 +111,28 @@ const commitStroke = async (partner: string, stroke: DrawStroke): Promise<void> 
     });
 };
 
+const removeStroke = async (partner: string, strokeId: string): Promise<boolean> => {
+    const response = await apiFetch(`${API_URL}/draw/strokes/remove`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({partnerUsername: partner, strokeId}),
+    });
+    return response.ok;
+};
+
+const undoStroke = async (partner: string): Promise<DrawStroke | null> => {
+    const response = await apiFetch(`${API_URL}/draw/strokes/undo`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({partnerUsername: partner}),
+    });
+    if (!response.ok || response.status === 204) {
+        return null;
+    }
+    const stroke = await response.json() as unknown;
+    return isStroke(stroke) ? stroke : null;
+};
+
 export const drawService = {
     searchUsers,
     loadBoard,
@@ -118,5 +140,7 @@ export const drawService = {
     unpair,
     voteReset,
     commitStroke,
+    removeStroke,
+    undoStroke,
     emptyBoard,
 };

@@ -62,4 +62,19 @@ public class DrawController {
         var saved = drawBoardService.commitStroke(request.partnerUsername(), request.stroke());
         return saved ? ResponseEntity.noContent().build() : ResponseEntity.status(409).build();
     }
+
+    @Role(RoleLevel.USER)
+    @PostMapping("strokes/undo")
+    public ResponseEntity<DrawBoardResponse.Stroke> undo(@RequestBody DrawPartnerRequest request) {
+        return drawBoardService.undoLast(request.partnerUsername())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @Role(RoleLevel.USER)
+    @PostMapping("strokes/remove")
+    public ResponseEntity<Void> remove(@RequestBody DrawStrokeRemoveRequest request) {
+        var removed = drawBoardService.removeStroke(request.partnerUsername(), request.strokeId());
+        return removed ? ResponseEntity.noContent().build() : ResponseEntity.status(409).build();
+    }
 }

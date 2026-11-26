@@ -3,7 +3,7 @@ import {Component, useCallback, useEffect, useMemo, useRef, useState, type React
 import GridLayout from 'react-grid-layout';
 import type { Layout, LayoutItem } from 'react-grid-layout';
 
-import { Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -28,7 +28,7 @@ const widgetConstraints: Record<string, { minW: number; minH: number; maxW?: num
     COUNTER: { minW: 2, minH: 2, maxW: 6, maxH: 5, defaultW: 4, defaultH: 3 },
     LEADERBOARD: { minW: 2, minH: 3, maxW: 10, maxH: 8, defaultW: 3, defaultH: 4 },
     SECTION_HEADING: { minW: 10, maxW: 10, minH: 1, maxH: 1, defaultW: 10, defaultH: 1 },
-    DRAW: { minW: 3, minH: 3, maxH: 10, defaultW: 3, defaultH: 3 },
+    DRAW: { minW: 2, minH: 2, maxH: 10, defaultW: 2, defaultH: 2 },
     EMPTY: { minW: 2, minH: 2, defaultW: 2, defaultH: 2  }
 };
 
@@ -111,7 +111,9 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
     const droppingRef = useRef<PendingDrop | null>(null);
     const acceptedDropRef = useRef<LayoutItem | null>(null);
     const deleteZoneRef = useRef<HTMLDivElement | null>(null);
+    const toolboxScrollRef = useRef<HTMLDivElement | null>(null);
     const dragFinishedRef = useRef(false);
+    const [toolboxScroll, setToolboxScroll] = useState({left: false, right: false});
 
     const toolbox = useMemo(() => {
         const seen = new Set<string>();
@@ -121,6 +123,56 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
             return true;
         });
     }, [toolboxPool]);
+
+    const updateToolboxScroll = useCallback(() => {
+        const node = toolboxScrollRef.current;
+        if (!node) {
+            return;
+        }
+        const max = node.scrollWidth - node.clientWidth;
+        const left = node.scrollLeft > 4;
+        const right = max - node.scrollLeft > 4;
+        setToolboxScroll(current => current.left === left && current.right === right ? current : {left, right});
+    }, []);
+
+    const scrollToolbox = (direction: -1 | 1) => {
+        const node = toolboxScrollRef.current;
+        if (!node) {
+            return;
+        }
+        const step = Math.max(236, Math.floor(node.clientWidth * 0.72));
+        node.scrollBy({left: direction * step, behavior: "smooth"});
+    };
+
+    useEffect(() => {
+        const node = toolboxScrollRef.current;
+        if (!node) {
+            return;
+        }
+        updateToolboxScroll();
+        const observer = new ResizeObserver(updateToolboxScroll);
+        observer.observe(node);
+        node.addEventListener("scroll", updateToolboxScroll, {passive: true});
+        const onWheel = (event: WheelEvent) => {
+            const max = node.scrollWidth - node.clientWidth;
+            if (max <= 4 || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+                return;
+            }
+            const atStart = node.scrollLeft <= 0 && event.deltaY < 0;
+            const atEnd = node.scrollLeft >= max - 1 && event.deltaY > 0;
+            if (atStart || atEnd) {
+                return;
+            }
+            event.preventDefault();
+            node.scrollLeft += event.deltaY;
+        };
+        node.addEventListener("wheel", onWheel, {passive: false});
+        return () => {
+            observer.disconnect();
+            node.removeEventListener("scroll", updateToolboxScroll);
+            node.removeEventListener("wheel", onWheel);
+        };
+    }, [toolbox.length, updateToolboxScroll]);
 
     const findWidget = useCallback((id: string): UserWidget | undefined => {
         return layoutWidgets.find(w => w.id === id)
@@ -524,8 +576,18 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                         ? "Du hast die Grenze von 50 Widgets erreicht. Entferne zuerst eins."
                         : "Ziehe das gewünschte Widget in dein Dashboard und passe die Größe an."}
                 </p>
-                <div className="toolbox-scroll">
-                    {toolbox.map(widget => (
+                <div className="toolbox-rail">
+                    <button
+                        type="button"
+                        className="toolbox-arrow toolbox-arrow--left"
+                        aria-label="Vorherige Widgets"
+                        disabled={!toolboxScroll.left}
+                        onClick={() => scrollToolbox(-1)}
+                    >
+                        <ChevronLeft size={22} />
+                    </button>
+                    <div className="toolbox-scroll" ref={toolboxScrollRef}>
+                        {toolbox.map(widget => (
                         <div
                             key={widget.id}
                             className={`toolbox-item${atWidgetLimit ? " toolbox-item--blocked" : ""}`}
@@ -570,6 +632,16 @@ export default function WidgetGrid({editMode, closeEditMode} : WidgetGridProps) 
                             }, true)}
                         </div>
                     ))}
+                    </div>
+                    <button
+                        type="button"
+                        className="toolbox-arrow toolbox-arrow--right"
+                        aria-label="Weitere Widgets"
+                        disabled={!toolboxScroll.right}
+                        onClick={() => scrollToolbox(1)}
+                    >
+                        <ChevronRight size={22} />
+                    </button>
                 </div>
             </div>
         </div>

@@ -199,6 +199,13 @@
     flex-shrink: 0;
 }
 
+.toolbox-rail {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
 .toolbox-scroll {
     display: flex;
     flex-flow: row nowrap;
@@ -206,12 +213,51 @@
     justify-content: flex-start;
     gap: 1rem;
     flex: 1;
+    min-width: 0;
     min-height: 0;
     height: auto;
-    padding: 0.75rem 9rem 1rem 1rem;
+    padding: 0.75rem 3.5rem 1rem;
     overflow-x: auto;
     overflow-y: hidden;
     box-sizing: border-box;
+    scrollbar-width: none;
+}
+
+.toolbox-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.toolbox-arrow {
+    position: absolute;
+    top: calc(50% - 0.15rem);
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.toolbox-arrow--left {
+    left: 0.75rem;
+}
+
+.toolbox-arrow--right {
+    right: 0.75rem;
+}
+
+.toolbox-arrow:hover:not(:disabled) {
+    color: var(--color-primary-accent);
+}
+
+.toolbox-arrow:disabled {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .toolbox-item,

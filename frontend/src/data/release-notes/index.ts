@@ -18,6 +18,7 @@ import v355 from "./3.5.5.json";
 import v360 from "./3.6.0.json";
 import v361 from "./3.6.1.json";
 import v362 from "./3.6.2.json";
+import v363 from "./3.6.3.json";
 
 export type ReleaseNoteSection = {
     title: string;
@@ -42,7 +43,7 @@ const compareVersions = (a: string, b: string): number => {
     return 0;
 };
 
-const allNotes: ReleaseNote[] = [v300, v301, v302, v310, v320, v330, v331, v332, v340, v341, v342, v350, v351, v352, v353, v354, v355, v360, v361, v362];
+const allNotes: ReleaseNote[] = [v300, v301, v302, v310, v320, v330, v331, v332, v340, v341, v342, v350, v351, v352, v353, v354, v355, v360, v361, v362, v363];
 
 export const releaseNotes: ReleaseNote[] = [...allNotes].sort((a, b) =>
     compareVersions(a.version, b.version),

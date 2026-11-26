@@ -45,7 +45,30 @@ public class EmailService implements EmailPort {
         try {
             var helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(email);
-            helper.setSubject("Verifiziere deine Eimail");
+            helper.setSubject("Bestätige deine E-Mail");
+            helper.setText(html, true);
+            helper.addInline("icon", new ClassPathResource("static/icon.png"));
+            helper.setFrom("auth@lecture-survival-kit.jannis-saur.de", "Lecture Survival Kit");
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException(ErrorCode.FAILED_TO_SEND_EMAIL.getCode());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendPasswordResetEmail(String email, String name, String code, String resetUrl) {
+        var context = new Context();
+        context.setVariable("name", name);
+        context.setVariable("code", code);
+        context.setVariable("resetUrl", resetUrl);
+
+        var html = templateEngine.process("password-reset-email", context);
+        var message = mailSender.createMimeMessage();
+        try {
+            var helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(email);
+            helper.setSubject("Dein Einmalpasswort");
             helper.setText(html, true);
             helper.addInline("icon", new ClassPathResource("static/icon.png"));
             helper.setFrom("auth@lecture-survival-kit.jannis-saur.de", "Lecture Survival Kit");

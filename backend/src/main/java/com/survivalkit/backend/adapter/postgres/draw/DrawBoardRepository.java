@@ -92,6 +92,34 @@ public class DrawBoardRepository {
     }
 
     @Transactional
+    public Optional<Written> remove(String userLow, String userHigh, String today, String strokeId, String authorId) {
+        var row = ensure(userLow, userHigh, today).row();
+        var strokes = readStrokes(row.strokes());
+        var index = indexOf(strokes, strokeId);
+        if (index < 0 || !authorId.equals(strokes.get(index).authorId())) {
+            return Optional.empty();
+        }
+        var removed = strokes.remove(index);
+        save(row, today, writeStrokes(strokes), row.resetLow(), row.resetHigh());
+        return Optional.of(new Written(row.id(), removed));
+    }
+
+    @Transactional
+    public Optional<Written> removeLastByAuthor(String userLow, String userHigh, String today, String authorId) {
+        var row = ensure(userLow, userHigh, today).row();
+        var strokes = readStrokes(row.strokes());
+        for (var index = strokes.size() - 1; index >= 0; index--) {
+            if (!authorId.equals(strokes.get(index).authorId())) {
+                continue;
+            }
+            var removed = strokes.remove(index);
+            save(row, today, writeStrokes(strokes), row.resetLow(), row.resetHigh());
+            return Optional.of(new Written(row.id(), removed));
+        }
+        return Optional.empty();
+    }
+
+    @Transactional
     public Vote vote(String userLow, String userHigh, String today, boolean selfIsLow, boolean want) {
         var row = ensure(userLow, userHigh, today).row();
         if (userLow.equals(userHigh)) {

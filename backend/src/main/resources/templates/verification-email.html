@@ -1,44 +1,50 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<body style="margin:0; padding:0; background:#f0f0f0; font-family: Arial, sans-serif;">
-<div style="padding: 40px;">
-    <div style="max-width:580px; margin:auto; background:white; border-radius:8px; overflow:hidden; border:1px solid #ddd;">
-
-        <div style="background:#D84020; padding:24px 40px; display:flex; align-items:center; gap:14px;">
-            <div style="background:#D84020; padding:24px 40px; display:flex; align-items:center; gap:14px;">
-                <img src="cid:icon" width="42" height="42" style="border-radius:8px;" />
-                <span style="color:white; font-size:15px; font-weight:bold;">DHBW Karlsruhe Lecture Survival Kit</span>
-            </div>
-        </div>
-
-        <div style="padding:40px;">
-            <h2 style="margin:0 0 8px; font-size:22px; color:#1a1a1a;">E-Mail-Adresse bestätigen</h2>
-            <p style="color:#555; font-size:15px; line-height:1.7; margin:0 0 8px;">
-                Hallo <strong th:text="${name}">Max</strong>,
-            </p>
-            <p style="color:#555; font-size:15px; line-height:1.7; margin:0 0 28px;">
-                vielen Dank für deine Registrierung beim <strong>DHBW Karlsruhe Lecture Survival Kit</strong>.
-                Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.
-            </p>
-            <a th:href="${verifyUrl}" style="display:inline-block; background:#D84020; color:white; padding:13px 28px; border-radius:8px; text-decoration:none; font-size:15px; font-weight:bold;">
-                E-Mail bestätigen
-            </a>
-            <p style="color:#888; font-size:13px; line-height:1.7; margin:32px 0 0;">
-                Diese Schaltfläche ist <strong>24 Stunden</strong> gültig. Falls du dich nicht registriert hast, kannst du diese E-Mail ignorieren.
-            </p>
-            <p style="color:#aaa; font-size:12px; margin:8px 0 0;">
-                Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br>
-                <span th:text="${verifyUrl}" style="color:#D84020;"></span>
-            </p>
-        </div>
-
-        <div style="border-top:1px solid #eee; padding:20px 40px; background:#fafafa;">
-            <p style="color:#aaa; font-size:12px; margin:0; text-align:center;">
-                © 2026 DHBW Karlsruhe Lecture Survival Kit · Dies ist eine automatisch generierte E-Mail, bitte nicht antworten.
-            </p>
-        </div>
-
-    </div>
-</div>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<body style="margin:0; padding:0; background:#e7eaf0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e7eaf0; margin:0; padding:0;">
+    <tr>
+        <td align="center" style="padding:40px 16px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background:#ffffff; border:1px solid #c9d0db; border-radius:20px; overflow:hidden;">
+                <tr>
+                    <td style="height:4px; background-color:#d9152b; background-image:linear-gradient(90deg,#d9152b,#ff6a3d); font-size:0; line-height:0;">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td style="padding:28px 36px 0; font-family:'Segoe UI', Helvetica, Arial, sans-serif;">
+                        <img src="cid:icon" width="36" height="36" alt="" style="border-radius:10px; vertical-align:middle;" />
+                        <span style="display:inline-block; margin-left:12px; color:#151924; font-size:15px; font-weight:700; vertical-align:middle;">Lecture Survival Kit</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:28px 36px 36px; font-family:'Segoe UI', Helvetica, Arial, sans-serif;">
+                        <h1 style="margin:0 0 12px; font-size:24px; line-height:1.25; letter-spacing:-0.03em; color:#151924;">E-Mail-Adresse bestätigen</h1>
+                        <p style="margin:0 0 8px; color:#545c70; font-size:15px; line-height:1.6;">
+                            Hallo <strong style="color:#151924;" th:text="${name}">Max</strong>,
+                        </p>
+                        <p style="margin:0 0 28px; color:#545c70; font-size:15px; line-height:1.6;">
+                            schön, dass du dabei bist. Bestätige deine E-Mail-Adresse, damit dein Konto fertig eingerichtet ist.
+                        </p>
+                        <a th:href="${verifyUrl}" style="display:inline-block; background-color:#d9152b; background-image:linear-gradient(135deg,#d9152b,#e24a3a); color:#ffffff; padding:13px 26px; border-radius:14px; text-decoration:none; font-size:15px; font-weight:700;">
+                            E-Mail bestätigen
+                        </a>
+                        <p style="margin:28px 0 0; color:#868da0; font-size:13px; line-height:1.6;">
+                            Der Link gilt 24 Stunden. Wenn du dich nicht registriert hast, kannst du diese E-Mail ignorieren.
+                        </p>
+                        <p style="margin:12px 0 0; color:#868da0; font-size:12px; line-height:1.6;">
+                            Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br />
+                            <span th:text="${verifyUrl}" style="color:#d9152b; word-break:break-all;"></span>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:16px 36px 22px; border-top:1px solid #dde2ea; font-family:'Segoe UI', Helvetica, Arial, sans-serif;">
+                        <p style="margin:0; color:#868da0; font-size:12px; line-height:1.5; text-align:center;">
+                            Lecture Survival Kit · Diese E-Mail wurde automatisch verschickt.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 </body>
 </html>

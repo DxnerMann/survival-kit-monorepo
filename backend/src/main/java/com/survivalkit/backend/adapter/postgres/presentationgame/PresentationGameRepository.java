@@ -306,6 +306,7 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                            r.name,
                            r.host_username AS hostUsername,
                            r.difficulty,
+                           r.status,
                            (
                                SELECT COUNT(*)::int
                                FROM presentation_game_room_members m
@@ -314,8 +315,8 @@ public class PresentationGameRepository implements PresentationGamePersistancePo
                     FROM presentation_game_rooms r
                     WHERE r.is_public = true
                       AND r.course = :course
-                      AND r.status = 'LOBBY'
-                    ORDER BY r.created_at DESC
+                      AND r.status IN ('LOBBY', 'IN_PROGRESS')
+                    ORDER BY CASE WHEN r.status = 'IN_PROGRESS' THEN 0 ELSE 1 END, r.created_at DESC
                     """
         ),
         FIND_MEMBERS(

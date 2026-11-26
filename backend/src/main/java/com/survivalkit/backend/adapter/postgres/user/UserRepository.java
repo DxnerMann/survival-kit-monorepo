@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.util.List;
@@ -268,6 +269,30 @@ public class UserRepository implements UserPersistancePort {
     }
 
     @Override
+    public Optional<PasswordReset> findPasswordReset(String userId) {
+        return jdbcClient.sql(Statements.PASSWORD_RESET.sql)
+                .paramSource(new MapSqlParameterSource("id", userId))
+                .query((rs, rowNum) -> {
+                    var expires = rs.getTimestamp("passwordResetExpiresAt");
+                    return new PasswordReset(
+                            rs.getString("passwordResetCode"),
+                            expires == null ? null : expires.toInstant()
+                    );
+                })
+                .optional()
+                .filter(reset -> reset.codeHash() != null && reset.expiresAt() != null);
+    }
+
+    @Override
+    public void savePasswordReset(String userId, String codeHash, Instant expiresAt) {
+        jdbcClient.sql(Statements.SAVE_PASSWORD_RESET.sql)
+                .paramSource(new MapSqlParameterSource("id", userId)
+                        .addValue("code", codeHash)
+                        .addValue("expiresAt", expiresAt == null ? null : Timestamp.from(expiresAt)))
+                .update();
+    }
+
+    @Override
     public Page<UserProfile> getUsers(int pageSize, String continuation) {
         var users = jdbcClient.sql(Statements.GET_USERS.sql)
                 .paramSource(new MapSqlParameterSource("pageSize", pageSize)
@@ -437,7 +462,11 @@ public class UserRepository implements UserPersistancePort {
         // language=sql
         UPDATE_PASSWORD(
         """
-                UPDATE users SET password = :password WHERE id = :id 
+                UPDATE users
+                SET password = :password,
+                    passwordResetCode = NULL,
+                    passwordResetExpiresAt = NULL
+                WHERE id = :id
             """
         ),
         // language=sql
@@ -500,6 +529,15 @@ public class UserRepository implements UserPersistancePort {
                 ORDER BY CASE WHEN lower(username) LIKE :prefix ESCAPE '!' THEN 0 ELSE 1 END,
                          lower(username)
                 LIMIT 8
+        """),
+        PASSWORD_RESET("""
+                SELECT passwordResetCode, passwordResetExpiresAt FROM users WHERE id = :id
+        """),
+        SAVE_PASSWORD_RESET("""
+                UPDATE users
+                SET passwordResetCode = :code,
+                    passwordResetExpiresAt = :expiresAt
+                WHERE id = :id
         """);
 
         private String sql;

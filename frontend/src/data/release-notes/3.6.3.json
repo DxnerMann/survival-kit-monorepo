@@ -1,0 +1,36 @@
+{
+  "version": "3.6.3",
+  "date": "2026-11-26",
+  "sections": [
+    {
+      "title": "Passwort",
+      "items": [
+        "Auf der Anmeldung gibt es Passwort vergessen. Du bekommst eine Mail mit einem Einmalpasswort und der Anleitung für ein neues Passwort, wenn zu der Adresse ein Konto gehört",
+        "Das Einmalpasswort gilt 30 Minuten und nur einmal",
+        "Mails zum Bestätigen und zum neuen Passwort haben das neue Aussehen"
+      ]
+    },
+    {
+      "title": "Präsi-Spiel",
+      "items": [
+        "Einer laufenden Runde kannst du noch als Jury beitreten, aus der Liste oder mit dem Code. Beendete Spiele bleiben zu",
+        "Laufende öffentliche Räume bleiben in der Liste und sind mit „Läuft“ markiert",
+        "Wer dazukommt oder geht, siehst du gleich, in der Lobby und während des Spiels. Die nötige Stimmenzahl passt sich an"
+      ]
+    },
+    {
+      "title": "DRAW",
+      "items": [
+        "Im Vollbild machst du deinen letzten Strich rückgängig oder holst ihn wieder, auch mit Strg+Z und Strg+Y. Auf dem Mac gilt dasselbe mit Cmd",
+        "Änderst du Farbe oder Pinselgröße, bleibst du beim Pinsel oder Radierer, den du zuletzt benutzt hast",
+        "DRAW startet kleiner und lässt sich kleiner ziehen"
+      ]
+    },
+    {
+      "title": "Dashboard",
+      "items": [
+        "In der Widget-Leiste blätterst du mit den Pfeilen weiter. Liegt die Maus darüber, geht das auch mit dem Mausrad"
+      ]
+    }
+  ]
+}

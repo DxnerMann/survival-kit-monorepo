@@ -1,7 +1,7 @@
 import "@/components/widgets/draw/DrawBoard.css";
 import {useEffect, useRef, useState, type PointerEvent as ReactPointerEvent} from "react";
 import {createPortal} from "react-dom";
-import {Brush, Eraser, Fullscreen, RotateCcw, Settings} from "lucide-react";
+import {Brush, Eraser, Fullscreen, Redo2, RotateCcw, Settings, Undo2} from "lucide-react";
 import type {WidgetProps} from "@/models/WidgetProps.tsx";
 import Button from "@/components/ui/Button.tsx";
 import {dashboardService} from "@/services/dashboardService.tsx";
@@ -74,6 +74,7 @@ const hueThumb = (hsv: Hsv) => {
 
 type DrawEvent = {
     action?: string;
+    id?: string;
     withUsername?: string;
     voterUsername?: string;
     want?: boolean;
@@ -207,6 +208,17 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
     const activeIdRef = useRef<string | null>(null);
     const liveTimer = useRef<number | null>(null);
     const pendingIds = useRef<Set<string>>(new Set());
+    const ownIdsRef = useRef<string[]>([]);
+    const redoRef = useRef<DrawStroke[]>([]);
+    const suppressedRef = useRef<Set<string>>(new Set());
+    const removingRef = useRef<Set<string>>(new Set());
+    const undoExhaustedRef = useRef(false);
+    const historyChain = useRef(Promise.resolve());
+    const drawToolRef = useRef<DrawTool>("pen");
+    const undoRef = useRef<() => void>(() => undefined);
+    const redoActionRef = useRef<() => void>(() => undefined);
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
     const applyRef = useRef<(board: DrawBoardState) => void>(() => undefined);
     const loadRef = useRef<() => Promise<void>>(async () => undefined);
 
@@ -231,20 +243,89 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
         paintBoard(canvas, strokesRef.current, squareRef.current);
     };
 
+    const syncHistory = () => {
+        const canStepBack = ownIdsRef.current.length > 0
+            || (!undoExhaustedRef.current && strokesRef.current.length > 0);
+        setCanUndo(canStepBack);
+        setCanRedo(redoRef.current.length > 0);
+    };
+
+    const enqueue = (job: () => Promise<void>) => {
+        const run = historyChain.current.then(job, job);
+        historyChain.current = run.then(() => undefined, () => undefined);
+    };
+
+    const forgetStroke = (strokeId: string) => {
+        if (removingRef.current.has(strokeId)) {
+            return;
+        }
+        removingRef.current.add(strokeId);
+        enqueue(async () => {
+            try {
+                await drawService.removeStroke(partnerRef.current, strokeId);
+            } finally {
+                removingRef.current.delete(strokeId);
+            }
+        });
+    };
+
+    const dropStroke = (strokeId: string) => {
+        if (activeIdRef.current === strokeId) {
+            activeIdRef.current = null;
+            if (liveTimer.current != null) {
+                window.clearTimeout(liveTimer.current);
+                liveTimer.current = null;
+            }
+        }
+        strokesRef.current = strokesRef.current.filter(stroke => stroke.id !== strokeId);
+        pendingIds.current.delete(strokeId);
+        ownIdsRef.current = ownIdsRef.current.filter(id => id !== strokeId);
+        paintRef.current();
+    };
+
+    const clearHistory = () => {
+        ownIdsRef.current = [];
+        redoRef.current = [];
+        suppressedRef.current.clear();
+        undoExhaustedRef.current = false;
+        syncHistory();
+    };
+
     applyRef.current = (board) => {
+        const suppressed = suppressedRef.current;
         const serverIds = new Set(board.strokes.map(stroke => stroke.id));
         const kept = activeIdRef.current
-            ? strokesRef.current.filter(stroke => stroke.id === activeIdRef.current || (pendingIds.current.has(stroke.id) && !serverIds.has(stroke.id)))
-            : strokesRef.current.filter(stroke => pendingIds.current.has(stroke.id) && !serverIds.has(stroke.id));
+            ? strokesRef.current.filter(stroke => stroke.id === activeIdRef.current || (pendingIds.current.has(stroke.id) && !serverIds.has(stroke.id) && !suppressed.has(stroke.id)))
+            : strokesRef.current.filter(stroke => pendingIds.current.has(stroke.id) && !serverIds.has(stroke.id) && !suppressed.has(stroke.id));
         pendingIds.current.forEach(strokeId => {
             if (serverIds.has(strokeId)) {
                 pendingIds.current.delete(strokeId);
             }
         });
-        strokesRef.current = board.status === "open" ? [...board.strokes.filter(stroke => stroke.id !== activeIdRef.current), ...kept] : [];
+        const visible = board.status === "open"
+            ? board.strokes.filter(stroke => stroke.id !== activeIdRef.current && !suppressed.has(stroke.id))
+            : [];
+        strokesRef.current = [...visible, ...kept];
         if (board.status !== "open") {
             activeIdRef.current = null;
+            ownIdsRef.current = [];
+            redoRef.current = [];
+            suppressed.clear();
+            undoExhaustedRef.current = true;
+        } else {
+            ownIdsRef.current = ownIdsRef.current.filter(id =>
+                id === activeIdRef.current || pendingIds.current.has(id) || (serverIds.has(id) && !suppressed.has(id))
+            );
+            board.strokes.forEach(stroke => {
+                if (suppressed.has(stroke.id)) {
+                    forgetStroke(stroke.id);
+                }
+            });
+            if (board.strokes.length === 0 && ownIdsRef.current.length === 0) {
+                undoExhaustedRef.current = true;
+            }
         }
+        syncHistory();
         setStatus(board.status);
         setChannel(board.channel);
         setDisplayName(board.partnerUsername || (board.status === "open" ? "" : partnerRef.current));
@@ -261,6 +342,7 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
     useEffect(() => {
         if (isPreview || getUserRole() === "GUEST") {
             strokesRef.current = [];
+            clearHistory();
             setStatus("idle");
             setChannel(null);
             setDisplayName(partner);
@@ -270,6 +352,7 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
         }
 
         strokesRef.current = [];
+        clearHistory();
         paintRef.current();
         let stop = false;
         let timer = 0;
@@ -327,6 +410,10 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
                 return;
             }
             if (payload.action === "stroke" && payload.stroke && isIncomingStroke(payload.stroke)) {
+                if (suppressedRef.current.has(payload.stroke.id)) {
+                    forgetStroke(payload.stroke.id);
+                    return;
+                }
                 if (payload.stroke.id === activeIdRef.current) {
                     return;
                 }
@@ -335,6 +422,12 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
                 strokesRef.current = next;
                 pendingIds.current.delete(payload.stroke.id);
                 paintRef.current();
+                syncHistory();
+                return;
+            }
+            if (payload.action === "remove" && payload.id) {
+                dropStroke(payload.id);
+                syncHistory();
                 return;
             }
             if (payload.action === "reset") {
@@ -342,6 +435,7 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
                     strokesRef.current = [];
                     activeIdRef.current = null;
                     pendingIds.current.clear();
+                    clearHistory();
                     setSelfWantsReset(false);
                     setPartnerWantsReset(false);
                     paintRef.current();
@@ -379,12 +473,29 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
             return;
         }
         const onKey = (event: KeyboardEvent) => {
+            const target = event.target;
+            const typing = target instanceof HTMLElement
+                && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
             if (event.key === "Escape") {
                 if (openToolRef.current) {
                     setOpenTool(null);
                     return;
                 }
                 setInFullscreen(false);
+                return;
+            }
+            if (typing || !(event.ctrlKey || event.metaKey) || event.altKey) {
+                return;
+            }
+            const key = event.key.toLowerCase();
+            if (key === "z" && !event.shiftKey) {
+                event.preventDefault();
+                undoRef.current();
+                return;
+            }
+            if (key === "y" || (key === "z" && event.shiftKey)) {
+                event.preventDefault();
+                redoActionRef.current();
             }
         };
         window.addEventListener("keydown", onKey);
@@ -456,8 +567,69 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
         const copy = cloneStroke(stroke);
         pendingIds.current.add(copy.id);
         sendLive(copy);
-        void drawService.commitStroke(partnerRef.current, copy);
+        enqueue(async () => {
+            await drawService.commitStroke(partnerRef.current, copy);
+        });
     };
+
+    const undo = () => {
+        if (statusRef.current !== "open") {
+            return;
+        }
+        const ownId = ownIdsRef.current[ownIdsRef.current.length - 1];
+        if (ownId) {
+            const stroke = strokesRef.current.find(item => item.id === ownId);
+            if (!stroke) {
+                ownIdsRef.current = ownIdsRef.current.filter(id => id !== ownId);
+                syncHistory();
+                return;
+            }
+            redoRef.current = [...redoRef.current, cloneStroke(stroke)];
+            suppressedRef.current.add(ownId);
+            dropStroke(ownId);
+            syncHistory();
+            forgetStroke(ownId);
+            return;
+        }
+        enqueue(async () => {
+            const stroke = await drawService.undoStroke(partnerRef.current);
+            if (!stroke) {
+                undoExhaustedRef.current = true;
+                syncHistory();
+                return;
+            }
+            const copy = cloneStroke(stroke);
+            redoRef.current = [...redoRef.current, copy];
+            suppressedRef.current.add(copy.id);
+            dropStroke(copy.id);
+            syncHistory();
+        });
+    };
+
+    const redo = () => {
+        if (statusRef.current !== "open" || activeIdRef.current) {
+            return;
+        }
+        const stroke = redoRef.current[redoRef.current.length - 1];
+        if (!stroke) {
+            return;
+        }
+        redoRef.current = redoRef.current.slice(0, -1);
+        suppressedRef.current.delete(stroke.id);
+        const copy = cloneStroke(stroke);
+        ownIdsRef.current = [...ownIdsRef.current, copy.id];
+        strokesRef.current = [...strokesRef.current.filter(item => item.id !== copy.id), copy];
+        pendingIds.current.add(copy.id);
+        undoExhaustedRef.current = false;
+        paintRef.current();
+        syncHistory();
+        enqueue(async () => {
+            await drawService.commitStroke(partnerRef.current, cloneStroke(copy));
+        });
+    };
+
+    undoRef.current = undo;
+    redoActionRef.current = redo;
 
     const startStroke = (event: ReactPointerEvent<HTMLCanvasElement>) => {
         if (!canDraw || event.button !== 0) {
@@ -477,8 +649,12 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
             points: [point],
         };
         activeIdRef.current = stroke.id;
+        ownIdsRef.current = [...ownIdsRef.current, stroke.id];
+        redoRef.current = [];
+        undoExhaustedRef.current = false;
         strokesRef.current = [...strokesRef.current, stroke];
         paintRef.current();
+        syncHistory();
         scheduleLive();
     };
 
@@ -567,7 +743,7 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
         hsvRef.current = safe;
         setHsv(safe);
         setColor(hsvToHex(safe.h, safe.s, safe.v));
-        setTool("pen");
+        setTool(drawToolRef.current);
     };
 
     const applyHue = (clientY: number) => {
@@ -608,7 +784,7 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
         }
         const ratio = clamp01((clientY - rect.top) / rect.height);
         setBrush(BRUSH_MAX - ratio * (BRUSH_MAX - BRUSH_MIN));
-        setTool("pen");
+        setTool(drawToolRef.current);
     };
 
     const capture = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -809,6 +985,7 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
                                     aria-label="Pinsel"
                                     aria-pressed={tool === "pen"}
                                     onClick={() => {
+                                        drawToolRef.current = "pen";
                                         setOpenTool(null);
                                         setTool("pen");
                                     }}
@@ -821,11 +998,31 @@ const DrawBoard = ({title, data, id, isPreview}: WidgetProps) => {
                                     aria-label="Radierer"
                                     aria-pressed={tool === "eraser"}
                                     onClick={() => {
+                                        const next = tool === "eraser" ? "pen" : "eraser";
+                                        drawToolRef.current = next;
                                         setOpenTool(null);
-                                        setTool(current => current === "eraser" ? "pen" : "eraser");
+                                        setTool(next);
                                     }}
                                 >
                                     <Eraser size={15} />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="draw-dot"
+                                    aria-label="Rückgängig"
+                                    disabled={status !== "open" || !canUndo}
+                                    onClick={() => undo()}
+                                >
+                                    <Undo2 size={15} />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="draw-dot"
+                                    aria-label="Wiederholen"
+                                    disabled={status !== "open" || !canRedo}
+                                    onClick={() => redo()}
+                                >
+                                    <Redo2 size={15} />
                                 </button>
                                 <button
                                     type="button"

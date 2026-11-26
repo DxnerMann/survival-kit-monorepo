@@ -3,7 +3,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {Copy, ThumbsUp} from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading.tsx";
 import Button from "@/components/ui/Button.tsx";
-import type {PresentationGameAction, PresentationGameRoomDetail, PresentationGameState} from "@/models/PresentationGameRoom.tsx";
+import type {PresentationGameAction, PresentationGameRoomDetail, PresentationGameRoomMember, PresentationGameState} from "@/models/PresentationGameRoom.tsx";
 import {
     approvePresentationWord,
     finishPresentationRoom,
@@ -54,36 +54,40 @@ const isSameSnapshot = (incoming: WordSnapshot, current: WordSnapshot) =>
     && incoming.currentWord === current.currentWord
     && incoming.presenterPoints === current.presenterPoints;
 
+const membersAfter = (
+    members: PresentationGameRoomMember[],
+    action: PresentationGameAction
+): PresentationGameRoomMember[] => {
+    if (!action.userId) {
+        return members;
+    }
+    if (action.event === "MEMBER_LEFT") {
+        return members.filter(member => member.userId !== action.userId);
+    }
+    if (action.event === "MEMBER_JOINED" && !members.some(member => member.userId === action.userId)) {
+        return [...members, {userId: action.userId, username: action.username ?? "Spieler", host: false}];
+    }
+    return members;
+};
+
 const applyActionToState = (
     prev: PresentationGameState,
     action: PresentationGameAction,
     myUserId: string | null
 ): PresentationGameState => {
-    if (action.event === "MEMBER_LEFT") {
-        const members = action.userId
-            ? prev.members.filter(member => member.userId !== action.userId)
-            : prev.members;
+    if (action.event === "MEMBER_LEFT" || action.event === "MEMBER_JOINED") {
+        const members = membersAfter(prev.members, action);
         const jurySize = Math.max(0, members.length - 1);
-        const keepWord = isOlderSnapshot(action, prev) || isSameSnapshot(action, prev);
-        const wordIndex = keepWord ? prev.wordIndex : action.wordIndex;
-        const totalWords = keepWord ? prev.totalWords : action.totalWords;
-        const hasVotedCurrentWord = keepWord ? prev.hasVotedCurrentWord : false;
+        const percent = Math.min(100, Math.max(1, prev.approvalPercent));
+        const approvalThreshold = jurySize === 0 ? 1 : Math.max(1, Math.ceil(jurySize * (percent / 100)));
         const canVote = (!prev.isHost && jurySize > 0) || (prev.isHost && jurySize === 0);
         return {
             ...prev,
             members,
             jurySize,
             isJury: !prev.isHost && jurySize > 0,
-            currentWord: keepWord ? prev.currentWord : action.currentWord,
-            wordIndex,
-            totalWords,
-            presenterPoints: keepWord ? prev.presenterPoints : action.presenterPoints,
-            currentApprovals: keepWord ? prev.currentApprovals : action.currentApprovals,
-            approvalThreshold: action.approvalThreshold,
-            cooldownUntil: keepWord ? prev.cooldownUntil : action.cooldownUntil,
-            approvingUserIds: keepWord ? prev.approvingUserIds : [],
-            hasVotedCurrentWord,
-            canApprove: canVote && !hasVotedCurrentWord && wordIndex < totalWords,
+            approvalThreshold,
+            canApprove: canVote && !prev.hasVotedCurrentWord && prev.wordIndex < prev.totalWords,
         };
     }
 
@@ -239,7 +243,7 @@ const PresentationGameRoomPage = () => {
             return null;
         }
 
-        if (detail.status === "LOBBY" && gameStateRef.current) {
+        if (detail.status === "LOBBY" && gameStateRef.current?.status === "IN_PROGRESS") {
             return detail;
         }
 
@@ -272,6 +276,9 @@ const PresentationGameRoomPage = () => {
         }
         try {
             const state = await getPresentationGameState(code);
+            if (state.status !== "IN_PROGRESS") {
+                return;
+            }
             commitServerState(state);
             setRoom(prev => prev ? {...prev, status: state.status, members: state.members} : prev);
         } catch {
@@ -328,15 +335,13 @@ const PresentationGameRoomPage = () => {
         }
 
         const pending = pendingActionRef.current;
-        if (!pending || !isOlderSnapshot(action, pending)) {
+        const membershipEvent = action.event === "MEMBER_JOINED" || action.event === "MEMBER_LEFT";
+        if (!membershipEvent && (!pending || !isOlderSnapshot(action, pending))) {
             pendingActionRef.current = action;
         }
 
-        if (action.event === "MEMBER_LEFT" && action.userId) {
-            setRoom(prev => prev ? {
-                ...prev,
-                members: prev.members.filter(member => member.userId !== action.userId),
-            } : prev);
+        if (action.event === "MEMBER_JOINED" || action.event === "MEMBER_LEFT") {
+            setRoom(prev => prev ? {...prev, members: membersAfter(prev.members, action)} : prev);
         }
 
         if (action.event === "STARTED") {
@@ -346,7 +351,10 @@ const PresentationGameRoomPage = () => {
         }
 
         const current = gameStateRef.current;
-        if (!current) {
+        if (!current || current.status !== "IN_PROGRESS") {
+            if (action.event === "MEMBER_JOINED" || action.event === "MEMBER_LEFT") {
+                return;
+            }
             void refreshGameState();
             return;
         }

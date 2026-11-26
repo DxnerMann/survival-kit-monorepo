@@ -30,6 +30,7 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "01x0000000C": { text: "Zu viele Anfragen. Bitte warte einen Moment.", type: "warning" },
     "01x0000000D": { text: "Bitte gib einen Nachnamen ein.", type: "warning" },
     "01x0000000E": { text: "Wegwerf-Adressen sind nicht erlaubt. Bitte nutze einen gängigen Anbieter wie Gmail, GMX, Web.de, T-Online, iCloud oder deine DHBW-Adresse.", type: "error" },
+    "01x0000000F": { text: "Das Einmalpasswort ist ungültig oder abgelaufen.", type: "error" },
 
     "03x00000001": { text: "Dieses Bildformat wird nicht unterstützt.", type: "error" },
     "03x00000004": { text: "Ungültige Farbe.", type: "error" },
@@ -73,7 +74,7 @@ const ERROR_CODE_MAP: Record<string, ErrorMapping> = {
     "09x00000002": { text: "Ungültiger Raumcode.", type: "error" },
     "09x00000003": { text: "Lege zuerst deinen Kurs im Profil fest, um öffentliche Räume zu erstellen.", type: "warning" },
     "09x00000004": { text: "Du kannst diesem Raum nicht beitreten.", type: "error" },
-    "09x00000005": { text: "Dieser Raum hat bereits begonnen.", type: "warning" },
+    "09x00000005": { text: "Dieses Spiel ist schon vorbei.", type: "warning" },
     "09x00000006": { text: "Nur der Host kann diese Aktion ausführen.", type: "error" },
     "09x00000007": { text: "Der Raum ist nicht mehr in der Lobby.", type: "warning" },
     "09x00000008": { text: "Das Spiel läuft gerade nicht.", type: "warning" },

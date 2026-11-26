@@ -232,14 +232,15 @@ public class PresentationGameService implements PresentationGamePort {
         var authUser = SecurityContext.current();
         var user = currentUser();
         var isMember = persistancePort.isMember(room.id(), user.id());
-        var canJoin = room.status() == PresentationGameRoom.Status.LOBBY;
+        var canJoin = room.status() == PresentationGameRoom.Status.LOBBY
+                || room.status() == PresentationGameRoom.Status.IN_PROGRESS;
 
         if (autoJoin && canJoin && !isMember) {
             joinRoom(room, user.id(), user.username());
             isMember = true;
         }
 
-        if (!isMember && room.status() != PresentationGameRoom.Status.LOBBY) {
+        if (!isMember && !canJoin) {
             throw new IllegalArgumentException(ErrorCode.PRESENTATION_ROOM_ALREADY_STARTED.getCode());
         }
 
@@ -575,16 +576,26 @@ public class PresentationGameService implements PresentationGamePort {
             String userId,
             PresentationGameRoom room
     ) {
+        return buildStateEvent(event, roomId, userId, null, room);
+    }
+
+    private PresentationGameActionResponse buildStateEvent(
+            String event,
+            String roomId,
+            String userId,
+            String username,
+            PresentationGameRoom room
+    ) {
         return new PresentationGameActionResponse(
                 event,
                 0,
                 userId,
-                null,
+                username,
                 room.presenterPoints(),
                 currentWord(room),
                 room.currentWordIndex(),
                 persistancePort.countWords(roomId),
-                0,
+                persistancePort.countApprovals(roomId, room.currentWordIndex()),
                 PresentationGameRules.approvalThreshold(
                         PresentationGameRules.jurySize(persistancePort.findMembers(roomId).size()),
                         room.approvalPercent()
@@ -667,15 +678,18 @@ public class PresentationGameService implements PresentationGamePort {
     }
 
     private void joinRoom(PresentationGameRoom room, String userId, String username) {
-        if (!persistancePort.isMember(room.id(), userId)) {
-            persistancePort.addMember(room.id(), userId, username);
-            statisticsPort.saveTrackAction(TrackAction.Action.PRESENTATION_GAME_PLAYED);
-            xpPort.award(userId, XpRules.Action.PRESENTATION_GAME);
+        if (persistancePort.isMember(room.id(), userId)) {
+            return;
         }
+        persistancePort.addMember(room.id(), userId, username);
+        statisticsPort.saveTrackAction(TrackAction.Action.PRESENTATION_GAME_PLAYED);
+        xpPort.award(userId, XpRules.Action.PRESENTATION_GAME);
+        var latest = persistancePort.findById(room.id()).orElse(room);
+        broadcastGameEvent(room.id(), buildStateEvent("MEMBER_JOINED", room.id(), userId, username, latest));
     }
 
     private void assertCanJoin(PresentationGameRoom room) {
-        if (room.status() != PresentationGameRoom.Status.LOBBY) {
+        if (room.status() == PresentationGameRoom.Status.FINISHED) {
             throw new IllegalArgumentException(ErrorCode.PRESENTATION_ROOM_ALREADY_STARTED.getCode());
         }
     }

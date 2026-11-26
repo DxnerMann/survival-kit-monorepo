@@ -182,6 +182,30 @@ const resendVerification = async () => {
     await checkResponse(response);
 };
 
+const requestPasswordReset = async (email: string): Promise<void> => {
+    const response = await apiFetch(`${API_URL}/auth/password/forgot`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({email}),
+    });
+
+    await checkResponse(response);
+};
+
+const resetPassword = async (email: string, code: string, newPassword: string): Promise<void> => {
+    const response = await apiFetch(`${API_URL}/auth/password/reset`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({email, code, newPassword}),
+    });
+
+    await checkResponse(response);
+};
+
 const hasSession = (): boolean => hasSessionMeta();
 
 export const authService = {
@@ -196,5 +220,7 @@ export const authService = {
     deleteAccount,
     changeEmail,
     resendVerification,
+    requestPasswordReset,
+    resetPassword,
     hasSession,
 }
